@@ -1,0 +1,18 @@
+{
+  "name": "@logic-arena/engine",
+  "version": "1.0.0",
+  "description": "Core Game Engine for Logic Arena",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2"
+  }
+}
