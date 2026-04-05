@@ -66,7 +66,7 @@ export class GameLoop {
     this.animationFrameId = requestAnimationFrame(this.loop);
   };
 
-  private update(deltaTime: number): void {
+  public update(deltaTime: number): Robot[] {
     this.robots.forEach(robot => {
       // Update position
       robot.position.x += robot.velocity.x * deltaTime;
@@ -89,6 +89,7 @@ export class GameLoop {
         robot.velocity.y *= -1; // Reverse Y velocity
       }
     });
+    return this.robots;
   }
 
   private render(): void {
