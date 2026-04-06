@@ -17,7 +17,9 @@ interface ProjectileState {
 }
 
 const Arena: React.FC = () => {
+  const socketRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const [gameState, setGameState] = useState<{
     robots: RobotState[];
     projectiles: ProjectileState[];
@@ -25,10 +27,10 @@ const Arena: React.FC = () => {
 
   useEffect(() => {
     const socket = io("http://localhost:3001");
+    socketRef.current = socket;
 
     socket.on("connect", () => console.log("✅ Socket Connected!"));
 
-    // Receive the full game state object
     socket.on("gameState", (data: any) => {
       if (data && data.robots) {
         setGameState({
@@ -52,50 +54,46 @@ const Arena: React.FC = () => {
     if (!ctx) return;
 
     const updateSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = 256;
+      canvas.height = 192;
     };
     updateSize();
-    window.addEventListener("resize", updateSize);
 
     let animationFrameId: number;
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. Draw Projectiles (Neon Sparks)
+      // Draw Projectiles on Mini-map (Scaled down)
       gameState.projectiles.forEach((p) => {
         ctx.beginPath();
-        ctx.arc(p.position.x, p.position.y, 4, 0, Math.PI * 2)
+        ctx.arc(p.position.x / 3, p.position.y / 3, 2, 0, Math.PI * 2);
         ctx.fillStyle = "#00FFFF";
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "#FFFFFF";
         ctx.fill();
         ctx.closePath();
       });
 
-      // 2. Draw Robots and Health Bars
+      // Draw Robots on Mini-map (Scaled down)
       gameState.robots.forEach((robot) => {
         if (robot.position) {
-          // Robot Body
+          // 800 / 256 = 3.125 (This is the perfect scale)
+          const scale = 3.125;
+          const radius = 5; // Visual radius
+
+          // We subtract half the radius to keep it inside the stroke
+          const x = robot.position.x / scale;
+          const y = robot.position.y / scale;
+
           ctx.beginPath();
-          ctx.arc(robot.position.x, robot.position.y, 15, 0, Math.PI * 2);
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
           ctx.fillStyle = robot.color;
-          ctx.shadowColor = robot.color;
-          ctx.shadowBlur = 20;
           ctx.fill();
           ctx.closePath();
 
-          // Health Bar Background
-          const barWidth = 30;
-          const barHeight = 4;
-          ctx.shadowBlur = 0; // Disable glow for UI elements
-          ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-          ctx.fillRect(robot.position.x - 15, robot.position.y - 25, barWidth, barHeight);
-
-          // Health Bar Foreground
-          const healthWidth = (robot.health / 100) * barWidth;
-          ctx.fillStyle = robot.health > 30 ? "#00FF00" : "#FF0000";
-          ctx.fillRect(robot.position.x - 15, robot.position.y - 25, healthWidth, barHeight);
+          // Health Bar exactly above the circle
+          ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+          ctx.fillRect(x - 5, y - 12, 10, 2);
+          ctx.fillStyle = "#00FF00";
+          ctx.fillRect(x - 5, y - 12, (robot.health / 100) * 10, 2);
         }
       });
 
@@ -103,25 +101,35 @@ const Arena: React.FC = () => {
     };
 
     render();
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", updateSize);
-    };
+    return () => cancelAnimationFrame(animationFrameId);
   }, [gameState]);
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <Scene3D robots={gameState.robots} />
+        <Scene3D
+          robots={gameState.robots}
+          projectiles={gameState.projectiles}
+        />
       </div>
 
       <canvas
         ref={canvasRef}
-        className="absolute top-4 right-4 w-64 h-48 border border-blue-500/30 pointer-events-none z-10"
+        className="absolute top-4 right-4 w-64 h-48 border border-blue-500/30 pointer-events-none z-10 bg-black/40 backdrop-blur-sm"
       />
 
-      <div className="absolute bottom-10 left-10 text-blue-400 font-mono z-20">
-        LOGIC ARENA v0.4.0 [3D MODE ENABLED]
+      <div className="absolute top-10 left-10 flex flex-col gap-4 z-30">
+        <button
+          type="button"
+          onClick={() => socketRef.current?.emit("resetGame")}
+          className="px-6 py-2 bg-green-500/10 border border-green-500/50 text-green-400 font-mono text-sm hover:bg-green-500/30 transition-all rounded-md uppercase tracking-wider shadow-[0_0_15px_rgba(34,197,94,0.2)]"
+        >
+          [ INITIALIZE RESPAWN ]
+        </button>
+
+        <div className="text-blue-400 font-mono text-xs opacity-70">
+          LOGIC ARENA v0.4.0 [3D MODE ENABLED]
+        </div>
       </div>
     </div>
   );

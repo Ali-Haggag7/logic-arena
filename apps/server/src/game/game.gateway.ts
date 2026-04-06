@@ -1,4 +1,4 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayInit } from "@nestjs/websockets";
+import { WebSocketGateway, WebSocketServer, OnGatewayInit, SubscribeMessage } from "@nestjs/websockets";
 import { Server } from "socket.io";
 import { GameService } from "./game.service";
 
@@ -13,7 +13,7 @@ export class GameGateway implements OnGatewayInit {
 
   afterInit(server: Server) {
     this.server = server;
-    console.log("🚀 Gateway is LIVE...");
+    console.log("🚀 Gateway is LIVE. Starting Real-time Broadcast...");
 
     setInterval(() => {
       const robots = this.gameService.getGameState();
@@ -21,5 +21,11 @@ export class GameGateway implements OnGatewayInit {
 
       this.server.emit("gameState", { robots, projectiles });
     }, 16);
+  }
+
+  @SubscribeMessage("resetGame")
+  handleReset() {
+    console.log("💉 [Gateway] Revive command received! Respawning robots...");
+    this.gameService.resetGame();
   }
 }

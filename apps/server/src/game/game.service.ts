@@ -78,4 +78,10 @@ export class GameService {
       this.connectedClients.delete(userId);
     });
   }
+
+  resetGame(): void {
+    this.gameLoop.getRobots().forEach(robot => {
+      robot.health = 100;
+    });
+  }
 }
