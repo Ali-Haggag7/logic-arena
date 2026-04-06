@@ -2,28 +2,46 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import io from "socket.io-client";
-import { motion } from "framer-motion";
 
 interface RobotState {
   id: string;
   position: { x: number; y: number };
   color: string;
+  health: number;
+}
+
+interface ProjectileState {
+  id: string;
+  position: { x: number; y: number };
 }
 
 const Arena: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [robots, setRobots] = useState<RobotState[]>([]);
+  const [gameState, setGameState] = useState<{
+    robots: RobotState[];
+    projectiles: ProjectileState[];
+  }>({ robots: [], projectiles: [] });
 
   useEffect(() => {
     const socket = io("http://localhost:3001");
 
     socket.on("connect", () => console.log("✅ Socket Connected!"));
 
-    socket.on("gameState", (newRobots: RobotState[]) => {
-      setRobots([...newRobots]);
+    // Receive the full game state object
+    socket.on("gameState", (data: any) => {
+      if (data && data.robots) {
+        setGameState({
+          robots: Array.isArray(data.robots) ? [...data.robots] : [],
+          projectiles: Array.isArray(data.projectiles) ? [...data.projectiles] : [],
+        });
+      } else if (Array.isArray(data)) {
+        setGameState({ robots: [...data], projectiles: [] });
+      }
     });
 
-    return () => { socket.disconnect(); };
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -37,14 +55,27 @@ const Arena: React.FC = () => {
       canvas.height = window.innerHeight;
     };
     updateSize();
-    window.addEventListener('resize', updateSize);
+    window.addEventListener("resize", updateSize);
 
     let animationFrameId: number;
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      robots.forEach((robot) => {
+      // 1. Draw Projectiles (Neon Sparks)
+      gameState.projectiles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.position.x, p.position.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowColor = "#FFFFFF";
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.closePath();
+      });
+
+      // 2. Draw Robots and Health Bars
+      gameState.robots.forEach((robot) => {
         if (robot.position) {
+          // Robot Body
           ctx.beginPath();
           ctx.arc(robot.position.x, robot.position.y, 15, 0, Math.PI * 2);
           ctx.fillStyle = robot.color;
@@ -52,21 +83,37 @@ const Arena: React.FC = () => {
           ctx.shadowBlur = 20;
           ctx.fill();
           ctx.closePath();
+
+          // Health Bar Background
+          const barWidth = 30;
+          const barHeight = 4;
+          ctx.shadowBlur = 0; // Disable glow for UI elements
+          ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+          ctx.fillRect(robot.position.x - 15, robot.position.y - 25, barWidth, barHeight);
+
+          // Health Bar Foreground
+          const healthWidth = (robot.health / 100) * barWidth;
+          ctx.fillStyle = robot.health > 30 ? "#00FF00" : "#FF0000";
+          ctx.fillRect(robot.position.x - 15, robot.position.y - 25, healthWidth, barHeight);
         }
       });
+
       animationFrameId = requestAnimationFrame(render);
     };
 
     render();
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', updateSize);
+      window.removeEventListener("resize", updateSize);
     };
-  }, [robots]);
+  }, [gameState]);
 
   return (
     <div className="w-full h-full bg-black overflow-hidden flex items-center justify-center">
-      <canvas ref={canvasRef} className="block shadow-[0_0_50px_rgba(0,163,255,0.2)]" />
+      <canvas
+        ref={canvasRef}
+        className="block shadow-[0_0_50px_rgba(0,163,255,0.1)]"
+      />
     </div>
   );
 };
