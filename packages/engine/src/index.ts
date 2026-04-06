@@ -27,6 +27,10 @@ export class GameLoop {
     this.robots = this.robots.filter(robot => robot.id !== id);
   }
 
+  getRobots(): Robot[] {
+    return this.robots;
+  }
+
   start(): void {
     if (this.isRunning) {
       console.warn("GameLoop is already running.");
@@ -107,7 +111,7 @@ export class GameLoop {
   }
 }
 
-const game = new GameLoop();
-game.addRobot({ id: "bot-1", position: { x: 0, y: 0 }, velocity: { x: 10, y: 5 } });
-game.addRobot({ id: "bot-2", position: { x: 50, y: 100 }, velocity: { x: -7, y: 3 } });
-game.start();
+
+
+export type { Robot };
+

@@ -1,9 +1,10 @@
-
-import { Module } from "@nestjs/common";
+import { Module, Global } from "@nestjs/common";
 import { GameGateway } from "./game.gateway";
 import { GameService } from "./game.service";
 
+@Global() 
 @Module({
   providers: [GameGateway, GameService],
+  exports: [GameService],
 })
-export class GameModule {}
+export class GameModule { }

@@ -12,10 +12,10 @@
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
     "@nestjs/websockets": "^11.1.18",
-    "@types/node": "^25.5.2",
     "typescript": "^6.0.2"
   },
   "devDependencies": {
+    "@types/node": "^25.5.2",
     "ts-node": "^10.9.2"
   }
 }

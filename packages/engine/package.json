@@ -2,6 +2,7 @@
   "name": "@logic-arena/engine",
   "version": "1.0.0",
   "description": "Core Game Engine for Logic Arena",
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
