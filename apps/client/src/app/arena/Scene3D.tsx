@@ -1,5 +1,5 @@
 "use client";
-import { Component, useEffect, useRef } from "react";
+import { Component, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, PerspectiveCamera, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -9,16 +9,28 @@ type RobotModelProps = {
   color: string;
   health: number;
   velocity: { x: number; y: number };
+  hitTimestamp?: number | null;
+};
+
+type HitBurst = {
+  id: string;
+  position: [number, number, number];
+  color: string;
+  createdAt: number;
 };
 
 type RobotErrorBoundaryProps = {
-  fallback: React.ReactNode;
-  children: React.ReactNode;
+  fallback: ReactNode;
+  children: ReactNode;
 };
 
 type RobotErrorBoundaryState = {
   hasError: boolean;
 };
+
+const HIT_FLASH_DURATION = 0.22;
+const HIT_BURST_LIFETIME = 0.35;
+const HIT_BURST_PARTICLES = 12;
 
 class RobotErrorBoundary extends Component<RobotErrorBoundaryProps, RobotErrorBoundaryState> {
   state: RobotErrorBoundaryState = { hasError: false };
@@ -46,11 +58,112 @@ const FallbackRobot = ({ position, color }: { position: [number, number, number]
   </mesh>
 );
 
-const RobotModel = ({ position, color, health, velocity }: RobotModelProps) => {
+const HitBurstEffect = ({
+  burst,
+  now
+}: {
+  burst: HitBurst;
+  now: number;
+}) => {
+  const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.PointsMaterial>(null);
+
+  const { positions, velocities } = useMemo(() => {
+    const positionsArray = new Float32Array(HIT_BURST_PARTICLES * 3);
+    const velocitiesArray = new Float32Array(HIT_BURST_PARTICLES * 3);
+
+    for (let i = 0; i < HIT_BURST_PARTICLES; i += 1) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      const speed = 0.8 + Math.random() * 1.2;
+
+      const vx = Math.sin(phi) * Math.cos(theta) * speed;
+      const vy = Math.cos(phi) * speed;
+      const vz = Math.sin(phi) * Math.sin(theta) * speed;
+
+      const index = i * 3;
+      velocitiesArray[index] = vx;
+      velocitiesArray[index + 1] = vy;
+      velocitiesArray[index + 2] = vz;
+
+      positionsArray[index] = burst.position[0];
+      positionsArray[index + 1] = burst.position[1];
+      positionsArray[index + 2] = burst.position[2];
+    }
+
+    return { positions: positionsArray, velocities: velocitiesArray };
+  }, [burst.position]);
+
+  useFrame(() => {
+    const timeAlive = Math.max(0, now - burst.createdAt);
+    const progress = Math.min(1, timeAlive / HIT_BURST_LIFETIME);
+
+    const positionAttr = pointsRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+    if (!positionAttr) return;
+
+    for (let i = 0; i < HIT_BURST_PARTICLES; i += 1) {
+      const index = i * 3;
+      positionAttr.array[index] = burst.position[0] + velocities[index] * timeAlive;
+      positionAttr.array[index + 1] = burst.position[1] + velocities[index + 1] * timeAlive;
+      positionAttr.array[index + 2] = burst.position[2] + velocities[index + 2] * timeAlive;
+    }
+    positionAttr.needsUpdate = true;
+
+    if (materialRef.current) {
+      materialRef.current.opacity = 1 - progress;
+    }
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        ref={materialRef}
+        color={burst.color}
+        size={0.06}
+        transparent
+        opacity={1}
+        depthWrite={false}
+      />
+    </points>
+  );
+};
+
+const HitParticles = ({
+  bursts,
+  setBursts
+}: {
+  bursts: HitBurst[];
+  setBursts: React.Dispatch<React.SetStateAction<HitBurst[]>>;
+}) => {
+  useFrame(() => {
+    const now = performance.now() / 1000;
+    setBursts(current => current.filter(burst => now - burst.createdAt < HIT_BURST_LIFETIME));
+  });
+
+  const now = performance.now() / 1000;
+
+  return (
+    <>
+      {bursts.map(burst => (
+        <HitBurstEffect key={burst.id} burst={burst} now={now} />
+      ))}
+    </>
+  );
+};
+
+const RobotModel = ({ position, color, health, velocity, hitTimestamp }: RobotModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const basePosition = useRef(new THREE.Vector3(...position));
   const hoverOffset = useRef(Math.random() * Math.PI * 2);
   const thrusterMaterials = useRef<THREE.MeshStandardMaterial[]>([]);
+  const bodyMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const headMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const baseColorRef = useRef(new THREE.Color(color));
+  const tempColorRef = useRef(new THREE.Color());
+  const flashWhite = useRef(new THREE.Color("#ffffff"));
 
   useEffect(() => {
     basePosition.current.set(position[0], position[1], position[2]);
@@ -58,6 +171,10 @@ const RobotModel = ({ position, color, health, velocity }: RobotModelProps) => {
       groupRef.current.position.set(position[0], position[1], position[2]);
     }
   }, [position]);
+
+  useEffect(() => {
+    baseColorRef.current.set(color);
+  }, [color]);
 
   useFrame((state, delta) => {
     const group = groupRef.current;
@@ -81,6 +198,21 @@ const RobotModel = ({ position, color, health, velocity }: RobotModelProps) => {
         material.emissiveIntensity = flicker;
       }
     });
+
+    const now = performance.now() / 1000;
+    const timeSinceHit = hitTimestamp ? now - hitTimestamp : Infinity;
+    const flash = timeSinceHit < HIT_FLASH_DURATION
+      ? 1 - timeSinceHit / HIT_FLASH_DURATION
+      : 0;
+
+    if (bodyMaterialRef.current) {
+      tempColorRef.current.copy(baseColorRef.current).lerp(flashWhite.current, flash);
+      bodyMaterialRef.current.color.copy(tempColorRef.current);
+    }
+    if (headMaterialRef.current) {
+      tempColorRef.current.copy(baseColorRef.current).lerp(flashWhite.current, flash);
+      headMaterialRef.current.color.copy(tempColorRef.current);
+    }
   });
 
   const thrusterMaterialRef = (index: number) => (material: THREE.MeshStandardMaterial | null) => {
@@ -90,18 +222,32 @@ const RobotModel = ({ position, color, health, velocity }: RobotModelProps) => {
   };
 
   const bodyColor = new THREE.Color(color);
-  const emissiveColor = new THREE.Color(color).multiplyScalar(1.5);
+  const emissiveColor = new THREE.Color("#000000");
 
   return (
     <group ref={groupRef}>
       <mesh position={[0, 0.35, 0]}>
         <boxGeometry args={[0.7, 0.4, 0.9]} />
-        <meshStandardMaterial color={bodyColor} emissive={emissiveColor} emissiveIntensity={1.2} />
+      <meshStandardMaterial
+        ref={bodyMaterialRef}
+        color={bodyColor}
+        emissive={emissiveColor}
+        emissiveIntensity={0}
+        roughness={0.85}
+        metalness={0.05}
+      />
       </mesh>
 
       <mesh position={[0, 0.7, 0]}>
         <sphereGeometry args={[0.22, 24, 24]} />
-        <meshStandardMaterial color={bodyColor} emissive={emissiveColor} emissiveIntensity={1.1} />
+      <meshStandardMaterial
+        ref={headMaterialRef}
+        color={bodyColor}
+        emissive={emissiveColor}
+        emissiveIntensity={0}
+        roughness={0.85}
+        metalness={0.05}
+      />
       </mesh>
 
       <mesh position={[-0.08, 0.72, 0.2]}>
@@ -115,19 +261,19 @@ const RobotModel = ({ position, color, health, velocity }: RobotModelProps) => {
 
       <mesh position={[-0.25, 0.05, -0.25]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.08, 0.12, 12]} />
-        <meshStandardMaterial ref={thrusterMaterialRef(0)} color="#111111" emissive="#00FFFF" emissiveIntensity={1.2} />
+        <meshStandardMaterial ref={thrusterMaterialRef(0)} color="#1a1a1a" emissive="#00FFFF" emissiveIntensity={0.3} />
       </mesh>
       <mesh position={[0.25, 0.05, -0.25]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.08, 0.12, 12]} />
-        <meshStandardMaterial ref={thrusterMaterialRef(1)} color="#111111" emissive="#00FFFF" emissiveIntensity={1.2} />
+        <meshStandardMaterial ref={thrusterMaterialRef(1)} color="#1a1a1a" emissive="#00FFFF" emissiveIntensity={0.3} />
       </mesh>
       <mesh position={[-0.25, 0.05, 0.25]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.08, 0.12, 12]} />
-        <meshStandardMaterial ref={thrusterMaterialRef(2)} color="#111111" emissive="#00FFFF" emissiveIntensity={1.2} />
+        <meshStandardMaterial ref={thrusterMaterialRef(2)} color="#1a1a1a" emissive="#00FFFF" emissiveIntensity={0.3} />
       </mesh>
       <mesh position={[0.25, 0.05, 0.25]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.08, 0.12, 12]} />
-        <meshStandardMaterial ref={thrusterMaterialRef(3)} color="#111111" emissive="#00FFFF" emissiveIntensity={1.2} />
+        <meshStandardMaterial ref={thrusterMaterialRef(3)} color="#1a1a1a" emissive="#00FFFF" emissiveIntensity={0.3} />
       </mesh>
 
       <pointLight position={[0, 0.4, 0]} intensity={1.8} distance={3} color={color} />
@@ -159,6 +305,37 @@ const LaserModel = ({ position }: { position: [number, number, number] }) => (
     <meshStandardMaterial color="#FFFFFF" emissive="#00FFFF" emissiveIntensity={10} toneMapped={false} />
   </mesh>
 );
+
+const LaserBeam = ({ start, end }: { start: [number, number, number]; end: [number, number, number] }) => {
+  const midpoint = useMemo(() => {
+    return new THREE.Vector3(
+      (start[0] + end[0]) / 2,
+      (start[1] + end[1]) / 2,
+      (start[2] + end[2]) / 2
+    );
+  }, [start, end]);
+
+  const direction = useMemo(() => {
+    return new THREE.Vector3(
+      end[0] - start[0],
+      end[1] - start[1],
+      end[2] - start[2]
+    );
+  }, [start, end]);
+
+  const length = direction.length();
+  const quaternion = useMemo(() => {
+    const axis = new THREE.Vector3(0, 1, 0);
+    return new THREE.Quaternion().setFromUnitVectors(axis, direction.clone().normalize());
+  }, [direction]);
+
+  return (
+    <mesh position={midpoint} quaternion={quaternion}>
+      <cylinderGeometry args={[0.03, 0.05, length, 12]} />
+      <meshStandardMaterial color="#FF00FF" emissive="#FF00FF" emissiveIntensity={6} toneMapped={false} />
+    </mesh>
+  );
+};
 
 const SpeechBubble = ({ position, message }: { position: [number, number, number], message: string }) => {
   return (
@@ -195,14 +372,43 @@ export const Scene3D = ({
   const arenaWidth = 20; // 800 / 40
   const arenaHeight = 15; // 600 / 40
 
+  const [hitBursts, setHitBursts] = useState<HitBurst[]>([]);
+  const hitFlashRef = useRef<Map<string, number>>(new Map());
+  const prevHealthRef = useRef<Map<string, number>>(new Map());
+  const [, setHitTick] = useState(0);
+
+  useEffect(() => {
+    const now = performance.now() / 1000;
+
+    robots.forEach(robot => {
+      const prevHealth = prevHealthRef.current.get(robot.id);
+      if (prevHealth !== undefined && robot.health < prevHealth) {
+        const burst: HitBurst = {
+          id: `${robot.id}-${now}`,
+          position: [
+            (robot.position.x / 40) - 10,
+            0.45,
+            (robot.position.y / 40) - 7.5
+          ],
+          color: robot.color,
+          createdAt: now
+        };
+        setHitBursts(current => [...current, burst]);
+        hitFlashRef.current.set(robot.id, now);
+        setHitTick(tick => tick + 1);
+      }
+      prevHealthRef.current.set(robot.id, robot.health);
+    });
+  }, [robots]);
+
   return (
     <div className="w-full h-screen bg-black">
-      <Canvas>
+      <Canvas dpr={[1, 1.5]} gl={{ powerPreference: "high-performance" }}>
         <PerspectiveCamera makeDefault position={[0, 18, 18]} />
         <OrbitControls target={[0, 0, 0]} />
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        <ambientLight intensity={0.6} />
-        <pointLight position={[10, 10, 10]} intensity={2} />
+        <ambientLight intensity={0.85} />
+        <pointLight position={[10, 10, 10]} intensity={1.6} />
 
         {/* Custom Grid: Scaled to match the 20x15 (800x600) Arena */}
         <gridHelper
@@ -238,6 +444,8 @@ export const Scene3D = ({
           <lineBasicMaterial attach="material" color="#00FFFF" linewidth={2} />
         </lineLoop>
 
+        <HitParticles bursts={hitBursts} setBursts={setHitBursts} />
+
         {/* Draw Robots */}
         {robots.map((robot: any) => {
           const robotPosition: [number, number, number] = [
@@ -256,6 +464,7 @@ export const Scene3D = ({
                 color={robot.color}
                 health={robot.health}
                 velocity={robot.velocity ?? { x: 0, y: 0 }}
+                hitTimestamp={hitFlashRef.current.get(robot.id)}
               />
             </RobotErrorBoundary>
           );
@@ -264,32 +473,17 @@ export const Scene3D = ({
         {/* Draw Tracer Line for Fired Projectiles */}
         {firedTracer && robots.map(robot => {
           if (robot.id === firedTracer.robotId) {
-            const startPos = [
+            const startPos: [number, number, number] = [
               (robot.position.x / 40) - 10,
               0.375,
               (robot.position.y / 40) - 7.5
             ];
-            const endPos = [
+            const endPos: [number, number, number] = [
               (firedTracer.targetPosition.x / 40) - 10,
               0.375,
               (firedTracer.targetPosition.y / 40) - 7.5
             ];
-            return (
-              <line key={`tracer-${robot.id}`}>
-                <bufferGeometry attach="geometry">
-                  <bufferAttribute
-                    attach="attributes-position"
-                    count={2}
-                    itemSize={3}
-                    args={[
-                      new Float32Array([...startPos, ...endPos]),
-                      3
-                    ]}
-                  />
-                </bufferGeometry>
-                <lineBasicMaterial attach="material" color="#FF00FF" linewidth={3} />
-              </line>
-            );
+            return <LaserBeam key={`tracer-${robot.id}`} start={startPos} end={endPos} />;
           }
           return null;
         })}
