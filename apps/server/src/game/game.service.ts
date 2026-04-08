@@ -10,7 +10,8 @@ import {
   NumberLiteral,
   Identifier,
   StringLiteral,
-  IfStatement
+  IfStatement,
+  AssignmentStatement
 } from "../../../../packages/logic-parser/src";
 
 @Injectable()
@@ -22,6 +23,7 @@ export class GameService {
   private lastExecutedAction: Map<string, string> = new Map(); // Store the last executed action for feedback
   private gameLoop: GameLoop;
   private logicStates: Map<string, Map<string, boolean>> = new Map();
+  private robotMemory: Map<string, Map<string, any>> = new Map();
 
   constructor() {
     this.gameLoop = new GameLoop();
@@ -138,14 +140,25 @@ export class GameService {
     if (!this.logicStates.has(robotId)) {
       this.logicStates.set(robotId, new Map());
     }
+    if (!this.robotMemory.has(robotId)) {
+      this.robotMemory.set(robotId, new Map());
+    }
     const robotStates = this.logicStates.get(robotId)!;
+    const robotMemory = this.robotMemory.get(robotId)!;
 
     program.body.forEach((statement, index) => {
+      if (statement.type === NodeType.AssignmentStatement) {
+        const assignment = statement as AssignmentStatement;
+        const value = this.resolveValue(robotId, robot, assignment.value);
+        robotMemory.set(assignment.name.value, value);
+        return;
+      }
+
       if (statement.type === NodeType.IfStatement) {
         const ifStatement = statement as IfStatement;
 
         // 1. Evaluate current condition
-        const isConditionMet = this.evaluateComparison(robot, ifStatement.condition);
+        const isConditionMet = this.evaluateComparison(robotId, robot, ifStatement.condition);
 
         // 2. Get previous state of this specific IF statement
         const wasConditionMetBefore = robotStates.get(index.toString()) || false;
@@ -161,9 +174,9 @@ export class GameService {
     });
   }
 
-  private evaluateComparison(robot: Robot, expression: ComparisonExpression): boolean {
-    const leftValue = this.resolveValue(robot, expression.left);
-    const rightValue = this.resolveValue(robot, expression.right);
+  private evaluateComparison(robotId: string, robot: Robot, expression: ComparisonExpression): boolean {
+    const leftValue = this.resolveValue(robotId, robot, expression.left);
+    const rightValue = this.resolveValue(robotId, robot, expression.right);
 
     // Dynamic Debugging: Logs real-time distance to Server Terminal
     if (expression.left.type === NodeType.Identifier && expression.left.value === 'distance') {
@@ -212,15 +225,38 @@ export class GameService {
     }
   }
 
-  private resolveValue(robot: Robot, node: Identifier | NumberLiteral | StringLiteral): any {
+  private getClosestTarget(robot: Robot): Robot | null {
+    const targets = this.gameLoop.getRobots().filter(r => r.id !== robot.id && r.health > 0);
+    if (targets.length === 0) return null;
+
+    return targets.reduce((closest, current) => {
+      const closestDx = robot.position.x - closest.position.x;
+      const closestDy = robot.position.y - closest.position.y;
+      const currentDx = robot.position.x - current.position.x;
+      const currentDy = robot.position.y - current.position.y;
+
+      const closestDistance = closestDx * closestDx + closestDy * closestDy;
+      const currentDistance = currentDx * currentDx + currentDy * currentDy;
+
+      return currentDistance < closestDistance ? current : closest;
+    });
+  }
+
+  private resolveValue(robotId: string, robot: Robot, node: Identifier | NumberLiteral | StringLiteral): any {
     if (node.type === NodeType.NumberLiteral || node.type === NodeType.StringLiteral) {
       return node.value;
     }
 
     if (node.type === NodeType.Identifier) {
+      const memory = this.robotMemory.get(robotId);
+      if (memory && memory.has(node.value)) {
+        return memory.get(node.value);
+      }
+
+      const target = this.getClosestTarget(robot);
+
       switch (node.value) {
         case "distance":
-          const target = this.gameLoop.getRobots().find(r => r.id !== robot.id && r.health > 0);
           if (target) {
             const dx = robot.position.x - target.position.x;
             const dy = robot.position.y - target.position.y;
@@ -229,6 +265,12 @@ export class GameService {
           return Infinity;
         case "health":
           return robot.health;
+        case "target_vx":
+          return target ? target.velocity.x : 0;
+        case "target_vy":
+          return target ? target.velocity.y : 0;
+        case "bullet_speed":
+          return 400;
         default:
           return undefined;
       }

@@ -4,9 +4,11 @@ import { Socket } from "socket.io-client";
 interface CommandConsoleProps {
     socket: Socket | null;
     robotId: string;
+    availableRobots: string[];
+    onRobotChange: (id: string) => void;
 }
 
-export const CommandConsole: React.FC<CommandConsoleProps> = ({ socket, robotId }) => {
+export const CommandConsole: React.FC<CommandConsoleProps> = ({ socket, robotId, availableRobots, onRobotChange }) => {
     const [commandInput, setCommandInput] = useState<string>("");
     const [output, setOutput] = useState<string[]>([]);
     const outputRef = useRef<HTMLDivElement>(null);
@@ -65,6 +67,21 @@ export const CommandConsole: React.FC<CommandConsoleProps> = ({ socket, robotId 
 
     return (
         <div className="absolute bottom-4 left-4 w-96 bg-black/70 border border-green-500/30 p-4 font-mono text-sm text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)] z-20 backdrop-blur-sm">
+            <div className="flex gap-2 mb-4 border-b border-green-500/20 pb-2">
+                {availableRobots.map(id => (
+                    <button
+                        type="button"
+                        key={id}
+                        onClick={() => onRobotChange(id)}
+                        className={`px-3 py-1 text-xs font-bold transition-all ${robotId === id
+                            ? "bg-green-500 text-black shadow-[0_0_10px_#22c55e]"
+                            : "bg-gray-800 text-gray-400 hover:text-green-400"
+                            } rounded`}
+                    >
+                        {id.toUpperCase()}
+                    </button>
+                ))}
+            </div>
             <div className="h-48 overflow-y-auto pr-2 mb-2" ref={outputRef}>
                 {output.map((line, index) => (
                     <p key={index} className={line.startsWith("Command Sent:") || line.startsWith("Script Deployed:") || line.includes("Logic Triggered:") ? "text-blue-400" : ""}>

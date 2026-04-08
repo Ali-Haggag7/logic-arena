@@ -27,6 +27,7 @@ const Arena: React.FC = () => {
   }>({ robots: [], projectiles: [] });
   const [firedTracer, setFiredTracer] = useState<{ robotId: string; targetPosition: { x: number; y: number; }; } | null>(null);
   const [speechBubble, setSpeechBubble] = useState<{ robotId: string; message: string; } | null>(null);
+  const [selectedRobotId, setSelectedRobotId] = useState<string>("bot-1");
 
   useEffect(() => {
     const socket = io("http://localhost:3001");
@@ -154,7 +155,12 @@ const Arena: React.FC = () => {
         </div>
       </div>
 
-      <CommandConsole socket={socketRef.current} robotId="bot-1" /> {/* Assuming bot-1 is the player-controlled robot */}
+      <CommandConsole
+        socket={socketRef.current}
+        robotId={selectedRobotId}
+        availableRobots={gameState.robots.map(r => r.id)}
+        onRobotChange={setSelectedRobotId}
+      />
     </div>
   );
 };

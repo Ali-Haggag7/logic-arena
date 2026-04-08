@@ -5,6 +5,9 @@ export enum TokenType {
   KEYWORD = "KEYWORD",
   STRING = "STRING",
   EOF = "EOF", // End Of File
+  ASSIGN = "ASSIGN", // For "SET" keyword
+  COMMA = "COMMA", // For separating arguments
+  COLON = "COLON", // For separating arguments
 }
 
 export interface Token {
@@ -20,6 +23,7 @@ export enum NodeType {
   Identifier = "Identifier",
   NumberLiteral = "NumberLiteral",
   StringLiteral = "StringLiteral",
+  AssignmentStatement = "AssignmentStatement",
 }
 
 export type Expression = Identifier | NumberLiteral | StringLiteral | ComparisonExpression | ActionExpression;
@@ -29,6 +33,12 @@ export interface BaseNode {
 }
 
 export interface Statement extends BaseNode {
+}
+
+export interface AssignmentStatement extends Statement {
+  type: NodeType.AssignmentStatement;
+  name: Identifier;
+  value: Identifier | NumberLiteral | StringLiteral;
 }
 
 export interface Program extends Statement {

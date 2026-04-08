@@ -1,4 +1,18 @@
-import { Token, TokenType, NodeType, Program, IfStatement, ComparisonExpression, ActionExpression, Identifier, NumberLiteral, StringLiteral } from "./types";
+import {
+  Token,
+  TokenType,
+  NodeType,
+  Program,
+  IfStatement,
+  ComparisonExpression,
+  ActionExpression,
+  Identifier,
+  NumberLiteral,
+  StringLiteral,
+  AssignmentStatement,
+  Expression,
+  Statement
+} from "./types";
 
 class Lexer {
     private input: string;
@@ -59,13 +73,17 @@ class Lexer {
 
         switch (this.char) {
             case '<':
+                token = { type: TokenType.OPERATOR, value: this.char };
+                break;
             case '>':
+                token = { type: TokenType.OPERATOR, value: this.char };
+                break;
             case '=':
-                if (this.char === '=' && this.peekChar() === '=') {
+                if (this.peekChar() === '=') {
                     this.readChar();
                     token = { type: TokenType.OPERATOR, value: "==" };
                 } else {
-                    token = { type: TokenType.OPERATOR, value: this.char };
+                    token = { type: TokenType.ASSIGN, value: "=" };
                 }
                 break;
             case '"':
@@ -82,6 +100,7 @@ class Lexer {
                         case "THEN":
                         case "FIRE":
                         case "MOVE":
+                        case "SET": // Add SET as a keyword
                             token = { type: TokenType.KEYWORD, value: value.toUpperCase() };
                             break;
                         default:
@@ -95,6 +114,12 @@ class Lexer {
                 } else {
                     token = { type: TokenType.EOF, value: "" }; // Fallback for unexpected characters
                 }
+                break;
+            case ",": // Handle comma for potential future use
+                token = { type: TokenType.COMMA, value: "," };
+                break;
+            case ":": // Handle colon for potential future use
+                token = { type: TokenType.COLON, value: ":" };
                 break;
         }
         this.readChar();
@@ -139,11 +164,31 @@ export class Parser {
         return program;
     }
 
-    private parseStatement(): IfStatement | null {
+    private parseStatement(): Statement | null {
         if (this.currentToken.type === TokenType.KEYWORD && this.currentToken.value === "IF") {
             return this.parseIfStatement();
         }
+        if (this.currentToken.type === TokenType.KEYWORD && this.currentToken.value === "SET") {
+            return this.parseAssignmentStatement();
+        }
         return null;
+    }
+
+    private parseAssignmentStatement(): AssignmentStatement | null {
+        if (!this.expectPeek(TokenType.IDENTIFIER)) return null;
+        const name: Identifier = { type: NodeType.Identifier, value: this.currentToken.value };
+
+        if (!this.expectPeek(TokenType.ASSIGN)) return null;
+
+        this.nextToken(); // Move to the assigned value
+        const value = this.parseExpression();
+        if (!value) return null;
+
+        return {
+            type: NodeType.AssignmentStatement,
+            name,
+            value
+        };
     }
 
     private parseIfStatement(): IfStatement | null {
