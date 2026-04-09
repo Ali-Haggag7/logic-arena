@@ -54,12 +54,21 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
     const [scriptInput, setScriptInput] = useState<string>("");
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [isReferenceOpen, setIsReferenceOpen] = useState(false);
+    const [activePrebuilt, setActivePrebuilt] = useState<string | null>(null);
+
+    const appendOutputLine = (line: string) => {
+        setOutput((prev) => {
+            const next = [...prev, line];
+            return next.slice(-50);
+        });
+    };
 
     const appendScriptLine = (line: string) => {
         setScriptInput((prev) => {
             const sanitizedPrev = prev.trim();
             return sanitizedPrev ? `${sanitizedPrev}\n${line}` : `${line}\n`;
         });
+        setActivePrebuilt(null);
     };
 
     const prebuiltScripts = {
@@ -73,17 +82,17 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
         const command = commandInput.trim().toUpperCase();
         if (command === "") return;
 
-        setOutput((prev) => [...prev, `$ ${commandInput}`]);
+        appendOutputLine(`$ ${commandInput}`);
 
         if (socket) {
             if (command === "FIRE") {
                 socket.emit("manualCommand", { robotId, targetX: 600, targetY: 400 });
-                setOutput((prev) => [...prev, `Command Sent: ${command}`]);
+                appendOutputLine(`Command Sent: ${command}`);
             } else {
-                setOutput((prev) => [...prev, `Unknown command: ${command}`]);
+                appendOutputLine(`Unknown command: ${command}`);
             }
         } else {
-            setOutput((prev) => [...prev, "Error: Socket not connected."]);
+            appendOutputLine("Error: Socket not connected.");
         }
         setCommandInput("");
     };
@@ -91,9 +100,9 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
     const handleDeployBrain = (scriptToDeploy: string = scriptInput) => {
         if (socket) {
             socket.emit("updateLogic", { robotId, script: scriptToDeploy });
-            setOutput((prev) => [...prev, `Script Deployed for ${robotId}: ${scriptToDeploy.substring(0, 30)}...`]);
+            appendOutputLine(`Script Deployed for ${robotId}: ${scriptToDeploy.substring(0, 30)}...`);
         } else {
-            setOutput((prev) => [...prev, "Error: Socket not connected."]);
+            appendOutputLine("Error: Socket not connected.");
         }
     };
 
@@ -102,7 +111,7 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
 
         const handleLogicExecuted = (data: { robotId: string; action: string }) => {
             if (data.robotId === robotId) {
-                setOutput((prev) => [...prev, `[${data.robotId}] Logic Triggered: ${data.action}`]);
+                appendOutputLine(`[${data.robotId}] Logic Triggered: ${data.action}`);
             }
         };
 
@@ -159,7 +168,10 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
                     className="w-full h-24 bg-black/50 border border-green-500/30 p-2 text-green-400 font-mono text-xs outline-none focus:border-green-400"
                     placeholder="Enter robot logic (e.g., IF distance < 100 THEN FIRE)"
                     value={scriptInput}
-                    onChange={(e) => setScriptInput(e.target.value)}
+                    onChange={(e) => {
+                        setScriptInput(e.target.value);
+                        setActivePrebuilt(null);
+                    }}
                 ></textarea>
                 <div className="mt-2 flex gap-2 relative">
                     <button
@@ -224,16 +236,27 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-2">
-                    {Object.entries(prebuiltScripts).map(([name, script]) => (
-                        <button
-                            key={name}
-                            type="button"
-                            onClick={() => handleDeployBrain(script)}
-                            className="px-3 py-1 text-xs bg-gray-700/50 border border-gray-500/50 text-gray-300 rounded-md hover:bg-gray-600/50 transition-all"
-                        >
-                            {name}
-                        </button>
-                    ))}
+                    {Object.entries(prebuiltScripts).map(([name, script]) => {
+                        const isActive = activePrebuilt === name;
+                        return (
+                            <button
+                                key={name}
+                                type="button"
+                                onClick={() => {
+                                    setScriptInput(script);
+                                    setActivePrebuilt(name);
+                                    handleDeployBrain(script);
+                                }}
+                                className={`px-3 py-1 text-xs rounded-md transition-all ${isActive
+                                    ? "bg-green-500/20 border border-green-400 text-green-200 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+                                    : "bg-gray-700/50 border border-gray-500/50 text-gray-300 hover:bg-gray-600/50"
+                                    }`}
+                            >
+                                {name}
+                                {isActive && <span className="ml-2 text-[10px] font-bold">ACTIVE</span>}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
             <style jsx global>{`

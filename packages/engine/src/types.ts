@@ -12,6 +12,7 @@ export interface Entity {
 
 export interface Robot extends Entity {
   health: number; // Added to track damage in the arena
+  rotation?: number;
 }
 
 export interface Projectile extends Entity {

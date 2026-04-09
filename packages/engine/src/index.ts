@@ -102,6 +102,11 @@ export class GameLoop {
         robot.position.y = this.ARENA.height - ROBOT_RADIUS;
         robot.velocity.y *= -1;
       }
+
+      const speed = Math.hypot(robot.velocity.x, robot.velocity.y);
+      if (speed > 0.001) {
+        robot.rotation = Math.atan2(robot.velocity.y, robot.velocity.x);
+      }
     });
 
     // 3. Robot vs Robot Collision (Elastic)

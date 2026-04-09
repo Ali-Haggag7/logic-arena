@@ -21,10 +21,13 @@ export class GameService {
   private connectedClients: Map<string, Socket> = new Map();
   private lastFireTime: Map<string, number> = new Map();
   private readonly FIRE_COOLDOWN_MS = 500;
+  private readonly ACTION_COOLDOWN_MS = 500;
   private readonly MOVE_SPEED = 150;
   private readonly MOVE_FAST_MULTIPLIER = 2;
   private robotLogic: Map<string, Program> = new Map();
   private lastExecutedAction: Map<string, string> = new Map(); // Store the last executed action for feedback
+  private lastLogicEmitTime: Map<string, number> = new Map();
+  private actionCooldowns: Map<string, Map<string, number>> = new Map();
   private gameLoop: GameLoop;
   private logicStates: Map<string, Map<string, boolean>> = new Map();
   private robotMemory: Map<string, Map<string, any>> = new Map();
@@ -36,6 +39,7 @@ export class GameService {
       id: "bot-1",
       position: { x: 100, y: 100 },
       velocity: { x: 0, y: 0 },
+      rotation: 0,
       color: "#00FFFF",
       health: 100
     } as Robot);
@@ -44,6 +48,7 @@ export class GameService {
       id: "bot-2",
       position: { x: 600, y: 400 },
       velocity: { x: 0, y: 0 },
+      rotation: 0,
       color: "#FF00FF",
       health: 100
     } as Robot);
@@ -129,6 +134,10 @@ export class GameService {
 
       // Reset last executed action to allow fresh evaluation
       this.lastExecutedAction.delete(robotId);
+      this.lastLogicEmitTime.delete(robotId);
+      this.logicStates.delete(robotId);
+      this.robotMemory.set(robotId, new Map());
+      this.actionCooldowns.set(robotId, new Map());
 
       console.log(`[Brain Deploy] Logic successfully updated for ${robotId}`);
     } catch (error) {
@@ -147,6 +156,9 @@ export class GameService {
     if (!this.robotMemory.has(robotId)) {
       this.robotMemory.set(robotId, new Map());
     }
+    if (!this.actionCooldowns.has(robotId)) {
+      this.actionCooldowns.set(robotId, new Map());
+    }
     const robotStates = this.logicStates.get(robotId)!;
     const robotMemory = this.robotMemory.get(robotId)!;
 
@@ -156,6 +168,22 @@ export class GameService {
     if (!robotMemory.has("rotation")) {
       robotMemory.set("rotation", (robot as any).rotation);
     }
+    if (!robotMemory.has("last_spotted_x")) {
+      robotMemory.set("last_spotted_x", robot.position.x);
+    }
+    if (!robotMemory.has("last_spotted_y")) {
+      robotMemory.set("last_spotted_y", robot.position.y);
+    }
+
+    const target = this.getClosestTarget(robot);
+    const isSpotted = this.isTargetSpotted(robot, target);
+    if (isSpotted && target) {
+      robotMemory.set("last_spotted_x", target.position.x);
+      robotMemory.set("last_spotted_y", target.position.y);
+    }
+
+    const movementCommands = new Set(["MOVE", "MOVE_FAST", "BACKUP", "STOP"]);
+    let pendingMovementAction: { action: ActionExpression; isBare: boolean; command: string } | null = null;
 
     program.body.forEach((statement, index) => {
       if (statement.type === NodeType.AssignmentStatement) {
@@ -171,7 +199,19 @@ export class GameService {
 
       if (statement.type === NodeType.ActionStatement) {
         const actionStatement = statement as ActionStatement;
+        const actionCommand = actionStatement.consequence.command.toUpperCase();
+
+        if (!this.isBareActionOffCooldown(robotId, actionCommand)) {
+          return;
+        }
+
+        if (movementCommands.has(actionCommand)) {
+          pendingMovementAction = { action: actionStatement.consequence, isBare: true, command: actionCommand };
+          return;
+        }
+
         this.executeAction(robotId, actionStatement.consequence);
+        this.markBareActionExecuted(robotId, actionCommand);
         return;
       }
 
@@ -186,13 +226,28 @@ export class GameService {
 
         // 3. ONLY execute if condition just turned from FALSE to TRUE (Edge Trigger)
         if (isConditionMet && !wasConditionMetBefore) {
-          this.executeAction(robotId, ifStatement.consequence);
+          const actionCommand = ifStatement.consequence.command.toUpperCase();
+
+          if (movementCommands.has(actionCommand)) {
+            pendingMovementAction = { action: ifStatement.consequence, isBare: false, command: actionCommand };
+          } else {
+            this.executeAction(robotId, ifStatement.consequence);
+          }
         }
 
         // 4. Update the state for the next frame (60 FPS tick)
         robotStates.set(index.toString(), isConditionMet);
       }
     });
+
+    // Movement actions are resolved per tick; the last active movement command wins to avoid conflicts.
+    if (pendingMovementAction !== null) {
+      const { action, isBare, command } = pendingMovementAction;
+      this.executeAction(robotId, action);
+      if (isBare) {
+        this.markBareActionExecuted(robotId, command);
+      }
+    }
   }
 
   private evaluateCondition(robotId: string, robot: Robot, expression: Expression): boolean {
@@ -241,13 +296,39 @@ export class GameService {
     }
   }
 
+  private isBareActionOffCooldown(robotId: string, actionCommand: string): boolean {
+    const now = Date.now();
+    const robotCooldowns = this.actionCooldowns.get(robotId) ?? new Map();
+
+    if (!this.actionCooldowns.has(robotId)) {
+      this.actionCooldowns.set(robotId, robotCooldowns);
+    }
+
+    const lastExecutionTime = robotCooldowns.get(actionCommand) ?? 0;
+    return now - lastExecutionTime >= this.ACTION_COOLDOWN_MS;
+  }
+
+  private markBareActionExecuted(robotId: string, actionCommand: string): void {
+    const now = Date.now();
+    const robotCooldowns = this.actionCooldowns.get(robotId) ?? new Map();
+
+    if (!this.actionCooldowns.has(robotId)) {
+      this.actionCooldowns.set(robotId, robotCooldowns);
+    }
+
+    robotCooldowns.set(actionCommand, now);
+  }
+
   private executeAction(robotId: string, action: ActionExpression): void {
     // Normalize command to UpperCase to prevent string mismatch
     const actionCommand = action.command.toUpperCase();
     const lastAction = this.lastExecutedAction.get(robotId);
+    const lastEmitTime = this.lastLogicEmitTime.get(robotId) || 0;
+    const now = Date.now();
+    const actionChanged = actionCommand !== lastAction;
 
-    // Event-Driven Optimization: Only emit to clients if action state changes
-    if (actionCommand !== lastAction) {
+    // Event-Driven Optimization: Only emit to clients if action state changes or debounce window passes
+    if (actionChanged || now - lastEmitTime >= this.ACTION_COOLDOWN_MS) {
       this.connectedClients.forEach(client => {
         client.emit("logicExecuted", {
           robotId,
@@ -256,6 +337,10 @@ export class GameService {
         });
       });
 
+      this.lastLogicEmitTime.set(robotId, now);
+    }
+
+    if (actionChanged) {
       this.lastExecutedAction.set(robotId, actionCommand);
       console.log(`[Logic Execution] ${robotId} status changed to: ${actionCommand}`);
     }
@@ -285,6 +370,14 @@ export class GameService {
           const speedMultiplier = actionCommand === "MOVE_FAST" ? this.MOVE_FAST_MULTIPLIER : 1;
           const directionMultiplier = actionCommand === "BACKUP" ? -1 : 1;
           const speed = this.MOVE_SPEED * speedMultiplier * directionMultiplier;
+          const speedMagnitude = Math.hypot(robot.velocity.x, robot.velocity.y);
+
+          if (rotation === 0 && speedMagnitude < 0.001) {
+            robot.velocity.x = speed;
+            robot.velocity.y = 0;
+            break;
+          }
+
           robot.velocity.x = Math.cos(rotation) * speed;
           robot.velocity.y = Math.sin(rotation) * speed;
         }
