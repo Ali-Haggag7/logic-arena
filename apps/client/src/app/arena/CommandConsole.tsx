@@ -13,7 +13,8 @@ const COMMAND_DOCS: Record<string, string[]> = {
         "MOVE",
         "STOP",
         "MOVE_FAST",
-        "BACKUP"
+        "BACKUP",
+        "PATHFIND"
     ],
     Attack: [
         "FIRE",

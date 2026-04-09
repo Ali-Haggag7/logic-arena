@@ -16,9 +16,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     console.log("🚀 Gateway is LIVE. Starting Real-time Broadcast...");
 
     setInterval(() => {
-      const robots = this.gameService.getGameState();
-      const projectiles = this.gameService.getGameLoop().getProjectiles();
-      this.server.emit("gameState", { robots, projectiles });
+      const gameState = this.gameService.getGameState();
+      this.server.emit("gameState", gameState);
     }, 50);
   }
 

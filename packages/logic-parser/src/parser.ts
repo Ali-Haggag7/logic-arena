@@ -108,6 +108,7 @@ class Lexer {
                         case "MOVE_FAST":
                         case "BACKUP":
                         case "BURST_FIRE":
+                        case "PATHFIND":
                         case "SET": // Add SET as a keyword
                         case "NOT":
                         case "TRUE":
@@ -267,7 +268,8 @@ export class Parser {
             this.currentToken.value === "STOP" ||
             this.currentToken.value === "MOVE_FAST" ||
             this.currentToken.value === "BACKUP" ||
-            this.currentToken.value === "BURST_FIRE"
+            this.currentToken.value === "BURST_FIRE" ||
+            this.currentToken.value === "PATHFIND"
         )) {
             const command = this.currentToken.value;
             const args: (Identifier | NumberLiteral | StringLiteral)[] = [];
