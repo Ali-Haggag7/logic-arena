@@ -21,8 +21,8 @@ const DEFAULT_OBSTACLES: Obstacle[] = [
   { id: 'wall-4', type: 'WALL', position: { x: 550, y: 300 }, width: 25, height: 80, rotation: 0 },
 
   // Traps near center
-  { id: 'trap-1', type: 'TRAP', position: { x: 200, y: 150 }, width: 40, height: 40, rotation: 0.3 },
-  { id: 'trap-2', type: 'TRAP', position: { x: 600, y: 450 }, width: 40, height: 40, rotation: -0.3 },
+  { id: 'trap-1', type: 'TRAP', position: { x: 200, y: 150 }, width: 80, height: 80, rotation: 0.3 },
+  { id: 'trap-2', type: 'TRAP', position: { x: 600, y: 450 }, width: 80, height: 80, rotation: -0.3 },
 
   // Slow zones at corridors
   { id: 'slow-1', type: 'SLOW', position: { x: 150, y: 400 }, width: 60, height: 35, rotation: 0.15 },
@@ -103,10 +103,9 @@ export class GameLoop {
       // Handle status effects
       if (robot.trappedUntil && now < robot.trappedUntil) {
         robot.velocity = { x: 0, y: 0 };
-        return; // Skip movement
-      } else if (robot.trappedUntil) {
-        robot.trappedUntil = undefined;
       }
+      // FIX: Completely delete the `else if` block that sets robot.trappedUntil = undefined
+      // We need to keep the timestamp so we can calculate immunity!
 
       let speedMultiplier = 1.0;
       if (robot.slowedUntil && now < robot.slowedUntil) {

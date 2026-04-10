@@ -31,7 +31,7 @@ export class GameService {
   private gameLoop: GameLoop;
   private logicStates: Map<string, Map<string, boolean>> = new Map();
   private robotMemory: Map<string, Map<string, any>> = new Map();
-  
+
   // A* grid state
   private grid: boolean[][] = [];
   private readonly GRID_COLS = 40;
@@ -138,6 +138,7 @@ export class GameService {
   resetGame(): void {
     this.gameLoop.getRobots().forEach(robot => {
       robot.health = 100;
+      robot.isAlive = true;
     });
     this.robotLogic.clear();
   }
@@ -333,15 +334,14 @@ export class GameService {
   }
 
   private executeAction(robotId: string, action: ActionExpression): void {
-    // Normalize command to UpperCase to prevent string mismatch
     const actionCommand = action.command.toUpperCase();
     const lastAction = this.lastExecutedAction.get(robotId);
     const lastEmitTime = this.lastLogicEmitTime.get(robotId) || 0;
     const now = Date.now();
     const actionChanged = actionCommand !== lastAction;
 
-    // Event-Driven Optimization: Only emit to clients if action state changes or debounce window passes
-    if (actionChanged || now - lastEmitTime >= this.ACTION_COOLDOWN_MS) {
+    // FIX: Throttle the spam by adding a 250ms cooldown on UI emits and console logs
+    if (actionChanged && (now - lastEmitTime > 250)) {
       this.connectedClients.forEach(client => {
         client.emit("logicExecuted", {
           robotId,
@@ -349,11 +349,7 @@ export class GameService {
           message: `Logic Triggered: ${actionCommand}`
         });
       });
-
       this.lastLogicEmitTime.set(robotId, now);
-    }
-
-    if (actionChanged) {
       this.lastExecutedAction.set(robotId, actionCommand);
       console.log(`[Logic Execution] ${robotId} status changed to: ${actionCommand}`);
     }
@@ -386,11 +382,24 @@ export class GameService {
       case "MOVE_FAST":
       case "BACKUP": {
         const robot = this.gameLoop.getRobots().find(r => r.id === robotId);
+
         if (robot) {
+          // FIX: Check if the robot is trapped before processing movement
+          if (robot.trappedUntil && Date.now() < robot.trappedUntil) {
+            robot.velocity.x = 0;
+            robot.velocity.y = 0;
+            break;
+          }
+
+          // Check if robot is slowed
+          const slowMult = (robot.slowedUntil && Date.now() < robot.slowedUntil)
+            ? (robot.speedMultiplier ?? 0.4)
+            : 1;
+
           const rotation = robot.rotation;
           const speedMultiplier = actionCommand === "MOVE_FAST" ? this.MOVE_FAST_MULTIPLIER : 1;
           const directionMultiplier = actionCommand === "BACKUP" ? -1 : 1;
-          const speed = this.MOVE_SPEED * speedMultiplier * directionMultiplier;
+          const speed = this.MOVE_SPEED * speedMultiplier * directionMultiplier * slowMult;
           const speedMagnitude = Math.hypot(robot.velocity.x, robot.velocity.y);
 
           if (rotation === 0 && speedMagnitude < 0.001) {
@@ -474,14 +483,14 @@ export class GameService {
     }
   }
 
-  private performAStar(startX: number, startY: number, targetX: number, targetY: number): {x: number, y: number}[] {
+  private performAStar(startX: number, startY: number, targetX: number, targetY: number): { x: number, y: number }[] {
     const startCol = Math.floor(startX / this.CELL_SIZE);
     const startRow = Math.floor(startY / this.CELL_SIZE);
     const targetCol = Math.floor(targetX / this.CELL_SIZE);
     const targetRow = Math.floor(targetY / this.CELL_SIZE);
 
     if (startCol < 0 || startCol >= this.GRID_COLS || startRow < 0 || startRow >= this.GRID_ROWS ||
-        targetCol < 0 || targetCol >= this.GRID_COLS || targetRow < 0 || targetRow >= this.GRID_ROWS) {
+      targetCol < 0 || targetCol >= this.GRID_COLS || targetRow < 0 || targetRow >= this.GRID_ROWS) {
       return [];
     }
 
@@ -503,7 +512,7 @@ export class GameService {
 
       const current = openSet[lowestIndex];
       if (current.c === targetCol && current.r === targetRow) {
-        const path: {x: number, y: number}[] = [];
+        const path: { x: number, y: number }[] = [];
         let curr: Node | null = current;
         while (curr) {
           path.push({ x: curr.c * this.CELL_SIZE + this.CELL_SIZE / 2, y: curr.r * this.CELL_SIZE + this.CELL_SIZE / 2 });
@@ -515,7 +524,7 @@ export class GameService {
       openSet.splice(lowestIndex, 1);
       closedSet[current.r][current.c] = true;
 
-      const dirs = [[0,1], [1,0], [0,-1], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]];
+      const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]];
       for (const [dr, dc] of dirs) {
         const newR = current.r + dr;
         const newC = current.c + dc;
@@ -543,46 +552,46 @@ export class GameService {
 
   private executePathfind(robot: Robot, target: Robot) {
     const memory = this.robotMemory.get(robot.id) || new Map();
-    let currentPath: {x: number, y: number}[] = memory.get('path') || [];
-    const lastCalcTarget = memory.get('lastPathCalcPosition') || {x: 0, y: 0};
-    
+    let currentPath: { x: number, y: number }[] = memory.get('path') || [];
+    const lastCalcTarget = memory.get('lastPathCalcPosition') || { x: 0, y: 0 };
+
     // Only recalculate if target moved > 50px or no path
     const targetMoveDist = Math.hypot(target.position.x - lastCalcTarget.x, target.position.y - lastCalcTarget.y);
     if (currentPath.length === 0 || targetMoveDist > 50) {
-        currentPath = this.performAStar(robot.position.x, robot.position.y, target.position.x, target.position.y);
-        memory.set('lastPathCalcPosition', {x: target.position.x, y: target.position.y});
-        // smooth path here if needed
-        memory.set('path', currentPath);
+      currentPath = this.performAStar(robot.position.x, robot.position.y, target.position.x, target.position.y);
+      memory.set('lastPathCalcPosition', { x: target.position.x, y: target.position.y });
+      // smooth path here if needed
+      memory.set('path', currentPath);
     }
-    
+
     if (currentPath.length > 0) {
-        const nextWaypoint = currentPath[0];
-        const distToWaypoint = Math.hypot(robot.position.x - nextWaypoint.x, robot.position.y - nextWaypoint.y);
-        
-        if (distToWaypoint < 25) {
-            currentPath.shift();
-            memory.set('path', currentPath);
-            if (currentPath.length > 0) {
-                const next = currentPath[0];
-                const angle = Math.atan2(next.y - robot.position.y, next.x - robot.position.x);
-                robot.velocity.x = Math.cos(angle) * this.MOVE_SPEED;
-                robot.velocity.y = Math.sin(angle) * this.MOVE_SPEED;
-                robot.rotation = angle;
-            } else {
-                robot.velocity = {x:0, y:0};
-            }
+      const nextWaypoint = currentPath[0];
+      const distToWaypoint = Math.hypot(robot.position.x - nextWaypoint.x, robot.position.y - nextWaypoint.y);
+
+      if (distToWaypoint < 25) {
+        currentPath.shift();
+        memory.set('path', currentPath);
+        if (currentPath.length > 0) {
+          const next = currentPath[0];
+          const angle = Math.atan2(next.y - robot.position.y, next.x - robot.position.x);
+          robot.velocity.x = Math.cos(angle) * this.MOVE_SPEED;
+          robot.velocity.y = Math.sin(angle) * this.MOVE_SPEED;
+          robot.rotation = angle;
         } else {
-            const angle = Math.atan2(nextWaypoint.y - robot.position.y, nextWaypoint.x - robot.position.x);
-            robot.velocity.x = Math.cos(angle) * this.MOVE_SPEED;
-            robot.velocity.y = Math.sin(angle) * this.MOVE_SPEED;
-            robot.rotation = angle;
+          robot.velocity = { x: 0, y: 0 };
         }
-    } else {
-        // Direct movement fallback
-        const angle = Math.atan2(target.position.y - robot.position.y, target.position.x - robot.position.x);
+      } else {
+        const angle = Math.atan2(nextWaypoint.y - robot.position.y, nextWaypoint.x - robot.position.x);
         robot.velocity.x = Math.cos(angle) * this.MOVE_SPEED;
         robot.velocity.y = Math.sin(angle) * this.MOVE_SPEED;
         robot.rotation = angle;
+      }
+    } else {
+      // Direct movement fallback
+      const angle = Math.atan2(target.position.y - robot.position.y, target.position.x - robot.position.x);
+      robot.velocity.x = Math.cos(angle) * this.MOVE_SPEED;
+      robot.velocity.y = Math.sin(angle) * this.MOVE_SPEED;
+      robot.rotation = angle;
     }
   }
 
