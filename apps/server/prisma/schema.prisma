@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String    @unique
+  username     String    @unique
+  passwordHash String
+  rank         Int       @default(0)
+  createdAt    DateTime  @default(now())
+  RobotScript  RobotScript[]
+  Match        Match[]     @relation("Participants")
+  wonMatches   Match[]     @relation("Winner")
+}
+
+model RobotScript {
+  id        String    @id @default(uuid())
+  title     String
+  content   String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  version   Int       @default(1)
+  createdAt DateTime  @default(now())
+}
+
+model Match {
+  id          String    @id @default(uuid())
+  type        String // Ranked or Friendly
+  winnerId    String?
+  winner      User?     @relation(name: "Winner", fields: [winnerId], references: [id])
+  participants User[]    @relation("Participants")
+  duration    Int // duration in seconds
+  createdAt   DateTime  @default(now())
+}
