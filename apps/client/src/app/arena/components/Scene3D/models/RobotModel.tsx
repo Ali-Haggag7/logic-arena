@@ -62,7 +62,6 @@ export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
     );
 };
 
-// Shared hook logic extracted into a render component
 const RobotModelInner = memo(({ scene, position, color, health, velocity, rotation, hitTimestamp, spotted, scale }: RobotModelProps & { scene: THREE.Group; scale: number }) => {
     const groupRef = useRef<THREE.Group>(null);
     const targetPosition = useRef(new THREE.Vector3(...position));
@@ -72,6 +71,7 @@ const RobotModelInner = memo(({ scene, position, color, health, velocity, rotati
     const tempColorRef = useRef(new THREE.Color());
     const flashWhite = useRef(new THREE.Color("#ffffff"));
 
+    // Clone once — color is stable so no need to re-clone on color change
     const clonedScene = useMemo(() => {
         const clone = scene.clone(true);
         clone.traverse((child) => {
@@ -93,7 +93,18 @@ const RobotModelInner = memo(({ scene, position, color, health, velocity, rotati
             }
         });
         return clone;
-    }, [scene, color]);
+    }, [scene]); // color مش في الـ deps لأنه ثابت
+
+    // Cache mesh list to avoid traverse every frame
+    const meshList = useMemo(() => {
+        const list: THREE.Mesh[] = [];
+        clonedScene.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+                list.push(child as THREE.Mesh);
+            }
+        });
+        return list;
+    }, [clonedScene]);
 
     useEffect(() => { hoverOffset.current = Math.random() * Math.PI * 2; }, []);
     useEffect(() => { targetPosition.current.set(position[0], position[1], position[2]); }, [position]);
@@ -108,9 +119,11 @@ const RobotModelInner = memo(({ scene, position, color, health, velocity, rotati
         const group = groupRef.current;
         if (!group) return;
 
+        // Smooth position interpolation
         const lerpFactor = 1 - Math.pow(0.01, delta * 10);
         basePosition.current.lerp(targetPosition.current, lerpFactor);
 
+        // Rotation lerp
         const targetRotation = resolveRotation(rotation);
         if (targetRotation !== null) {
             const rotLerp = 1 - Math.pow(0.001, delta);
@@ -124,24 +137,26 @@ const RobotModelInner = memo(({ scene, position, color, health, velocity, rotati
             }
         }
 
+        // Position + hover
         const hover = Math.sin(state.clock.elapsedTime * 2 + hoverOffset.current) * 0.05;
         group.position.x = basePosition.current.x;
         group.position.y = basePosition.current.y + hover;
         group.position.z = basePosition.current.z;
 
+        // Hit flash — use cached meshList instead of traverse every frame
         const now = performance.now() / 1000;
         const timeSinceHit = hitTimestamp ? now - hitTimestamp : Infinity;
         const flash = timeSinceHit < HIT_FLASH_DURATION ? 1 - timeSinceHit / HIT_FLASH_DURATION : 0;
 
-        clonedScene.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-                const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial;
+        if (flash > 0) {
+            tempColorRef.current.copy(baseColorRef.current).lerp(flashWhite.current, flash);
+            for (const mesh of meshList) {
+                const mat = mesh.material as THREE.MeshStandardMaterial;
                 if (mat?.emissive) {
-                    tempColorRef.current.copy(baseColorRef.current).lerp(flashWhite.current, flash);
-                    mat.color.copy(tempColorRef.current);
+                    mat.emissive.copy(tempColorRef.current);
                 }
             }
-        });
+        }
     });
 
     return (
@@ -151,7 +166,12 @@ const RobotModelInner = memo(({ scene, position, color, health, velocity, rotati
             <pointLight position={[0, -0.2, 0]} intensity={1.0} distance={4} color={color} />
             {spotted && (
                 <Html distanceFactor={10} position={[0, 1.25, 0]} center>
-                    <div style={{ fontSize: "14px", color: "#FF3B3B", fontWeight: 700, textShadow: "0 0 6px rgba(255, 59, 59, 0.8)" }}>!</div>
+                    <div style={{
+                        fontSize: "14px",
+                        color: "#FF3B3B",
+                        fontWeight: 700,
+                        textShadow: "0 0 6px rgba(255, 59, 59, 0.8)"
+                    }}>!</div>
                 </Html>
             )}
             <group position={[0, 2.0, 0]}>
@@ -162,23 +182,20 @@ const RobotModelInner = memo(({ scene, position, color, health, velocity, rotati
 });
 RobotModelInner.displayName = "RobotModelInner";
 
-// Bot-1: Futuristic flying robot (cyan)
 const Bot1Model = memo((props: RobotModelProps) => {
     const { scene } = useGLTF('/robot.glb');
     return <RobotModelInner {...props} scene={scene as unknown as THREE.Group} scale={2} />;
 });
 Bot1Model.displayName = "Bot1Model";
 
-// Bot-2: Mech warrior robot (magenta)
 const Bot2Model = memo((props: RobotModelProps) => {
     const { scene } = useGLTF('/robot2.glb');
     return <RobotModelInner {...props} scene={scene as unknown as THREE.Group} scale={0.8} />;
 });
 Bot2Model.displayName = "Bot2Model";
 
-// Main export — picks correct model based on color
 export const RobotModel = memo((props: RobotModelProps) => {
-    const isCyan = props.color === '#e5e4e0' || props.color === '#00FFFF' || props.color === 'cyan';
+    const isCyan = props.color === '#e5e4e0';
     return isCyan ? <Bot1Model {...props} /> : <Bot2Model {...props} />;
 });
 RobotModel.displayName = "RobotModel";

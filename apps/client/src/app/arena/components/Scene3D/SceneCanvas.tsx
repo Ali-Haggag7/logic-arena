@@ -12,7 +12,7 @@ export const SceneCanvas = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Canvas dpr={[1, 1.5]} gl={{ powerPreference: "high-performance" }}>
-      <PerspectiveCamera makeDefault position={[0, 18, 18]} />
+      <PerspectiveCamera makeDefault position={[0, 22, 14]} />
       <OrbitControls target={[0, 0, 0]} />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
       {children}
