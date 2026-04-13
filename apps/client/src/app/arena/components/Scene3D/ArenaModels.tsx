@@ -22,19 +22,18 @@ export const ArenaModels = ({
   firedTracer?: FiredTracer | null;
   speechBubble?: SpeechBubbleState | null;
 }) => {
-  const [robots, setRobots] = useState<RobotState[]>([]);
-  const [projectiles, setProjectiles] = useState<ProjectileState[]>([]);
+  const [renderTick, setRenderTick] = useState(0);
   const lastUpdateRef = useRef(0);
 
   useFrame(() => {
     const now = performance.now();
-    if (now - lastUpdateRef.current < 200) return;
+    if (now - lastUpdateRef.current < 50) return;
     lastUpdateRef.current = now;
-
-    const state = gameStateRef.current;
-    setRobots(state?.robots ?? []);
-    setProjectiles(state?.projectiles ?? []);
+    setRenderTick(t => t + 1);
   });
+
+  const robots = gameStateRef.current?.robots ?? [];
+  const projectiles = gameStateRef.current?.projectiles ?? [];
 
   const { hitBursts, setHitBursts, hitFlashMap, isSpotted } = useSceneAnimation(robots, firedTracer);
 

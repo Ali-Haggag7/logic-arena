@@ -105,7 +105,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.broadcastMatchState(matchId, state);
         }
       });
-    }, 100);
+    }, 50);
   }
 
   @SubscribeMessage("resetGame")
