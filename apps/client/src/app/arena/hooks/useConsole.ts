@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Socket } from "socket.io-client";
+import { apiClient } from "../../../lib/api-client";
 
-export const useConsole = (socket: Socket | null, robotId: string) => {
+export const useConsole = (socket: Socket | null, robotId: string, scriptId?: string | null) => {
     const [output, setOutput] = useState<string[]>([]);
     const [commandInput, setCommandInput] = useState<string>("");
     const [scriptInput, setScriptInput] = useState<string>("");
@@ -43,10 +44,21 @@ export const useConsole = (socket: Socket | null, robotId: string) => {
         setCommandInput("");
     };
 
-    const handleDeployBrain = (scriptToDeploy: string = scriptInput) => {
+    const handleDeployBrain = async (scriptToDeploy: string = scriptInput) => {
         if (socket) {
             socket.emit("updateLogic", { robotId, script: scriptToDeploy });
             appendOutputLine(`[UPLINK] Neural payload injected into ${robotId}...`);
+
+            try {
+                if (scriptId) {
+                    await apiClient.put(`/scripts/${scriptId}`, { title: "Arena Script", content: scriptToDeploy });
+                } else {
+                    await apiClient.post("/scripts", { title: "Arena Script", content: scriptToDeploy });
+                }
+                appendOutputLine("[SYS] Script auto-saved to cloud repository.");
+            } catch (error: any) {
+                appendOutputLine(`[ERR] Cloud sync failed: ${error.message}`);
+            }
         } else {
             appendOutputLine("[ERR] Uplink severed. Socket offline.");
         }

@@ -82,22 +82,18 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!match) {
       match = new MatchEngine(data.matchId, [
         { id: client.userId, script: script.content },
-        { id: "bot-2", script: "FIRE\nMOVE_FAST" } // Add default bot-2
+        { id: "bot-2", script: "" }
       ]);
       this.matches.set(data.matchId, match);
       match.start();
-      client.matchId = data.matchId;
-      client.join(data.matchId);
-      this.broadcastMatchState(data.matchId, match.getState());
     } else {
-      const playerExists = match.getState().robots.some((p: any) => p.id === client.userId);
-      if (!playerExists) {
-        match.addPlayer({ id: client.userId, script: script.content });
-        client.matchId = data.matchId;
-        client.join(data.matchId);
-        this.broadcastMatchState(data.matchId, match.getState());
-      }
+      match.removePlayer(client.userId!);
+      match.addPlayer({ id: client.userId!, script: script.content });
     }
+
+    client.matchId = data.matchId;
+    client.join(data.matchId);
+    this.broadcastMatchState(data.matchId, match.getState());
   }
 
   private broadcastMatchState(matchId: string, state: any) {
@@ -109,7 +105,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.matches.forEach((match, matchId) => {
         this.broadcastMatchState(matchId, match.getState());
       });
-    }, 50);
+    }, 100);
   }
 
   @SubscribeMessage("resetGame")

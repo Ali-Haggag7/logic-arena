@@ -4,7 +4,7 @@ import { GameState, RobotState, ProjectileState, ObstacleState, FiredTracer, Spe
 
 export const useGameState = (scriptId: string | null) => {
   const socket: Socket = useMemo(() => {
-    const token = localStorage.getItem("token");
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     return io("http://localhost:3001", {
       autoConnect: false,
       auth: { token }

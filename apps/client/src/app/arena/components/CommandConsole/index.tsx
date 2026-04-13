@@ -11,16 +11,17 @@ import { ReferencePanel } from "./ReferencePanel";
 interface CommandConsoleProps {
     socket: Socket | null;
     robotId: string;
+    scriptId?: string | null;
     availableRobots: string[];
     onRobotChange: (id: string) => void;
 }
 
-const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotId, availableRobots, onRobotChange }) => {
+const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotId, scriptId, availableRobots, onRobotChange }) => {
     const {
         output, commandInput, setCommandInput, scriptInput, setScriptInput,
         isLibraryOpen, setIsLibraryOpen, activePrebuilt, setActivePrebuilt,
         appendScriptLine, handleCommandSubmit, handleDeployBrain
-    } = useConsole(socket, robotId);
+    } = useConsole(socket, robotId, scriptId);
 
     return (
         <div className="flex flex-col w-full h-full bg-black/60 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] relative z-20">

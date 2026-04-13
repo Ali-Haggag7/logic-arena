@@ -146,6 +146,10 @@ export class GameLoop {
     if (!robot) return;
     this.projectiles.push(spawnProjectile(ownerId, robot.team, pos, targetPos));
   }
+
+  removeRobot(id: string): void {
+    this.robots = this.robots.filter(r => r.id !== id);
+  }
 }
 
 export type { Robot, Projectile, Obstacle, GameState, Vector2 };

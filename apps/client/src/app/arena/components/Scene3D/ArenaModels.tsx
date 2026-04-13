@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, MutableRefObject } from "react";
+import React, { useMemo, MutableRefObject, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { GameState, RobotState, ObstacleState, ProjectileState, FiredTracer, SpeechBubbleState } from "../../types";
 import { useSceneAnimation } from "../../hooks/useSceneAnimation";
@@ -22,14 +22,21 @@ export const ArenaModels = ({
   firedTracer?: FiredTracer | null;
   speechBubble?: SpeechBubbleState | null;
 }) => {
-  const robots = gameStateRef.current?.robots ?? [];
-  const projectiles = gameStateRef.current?.projectiles ?? [];
-
-  const { hitBursts, setHitBursts, hitFlashMap, isSpotted } = useSceneAnimation(robots, firedTracer);
+  const [robots, setRobots] = useState<RobotState[]>([]);
+  const [projectiles, setProjectiles] = useState<ProjectileState[]>([]);
+  const lastUpdateRef = useRef(0);
 
   useFrame(() => {
+    const now = performance.now();
+    if (now - lastUpdateRef.current < 100) return; // throttle 10fps للـ state
+    lastUpdateRef.current = now;
+
     const state = gameStateRef.current;
+    setRobots(state?.robots ?? []);
+    setProjectiles(state?.projectiles ?? []);
   });
+
+  const { hitBursts, setHitBursts, hitFlashMap, isSpotted } = useSceneAnimation(robots, firedTracer);
 
   const boundaryPoints = useMemo(
     () => new Float32Array([-10, 0, -7.5, 10, 0, -7.5, 10, 0, 7.5, -10, 0, 7.5]),

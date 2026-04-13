@@ -37,6 +37,12 @@ export class LogicEvaluator {
         this.robotMemory.clear();
     }
 
+    clearLogicForRobot(robotId: string) {
+        this.robotLogic.delete(robotId);
+        this.logicStates.delete(robotId);
+        this.robotMemory.delete(robotId);
+    }
+
     evaluate(robotId: string): void {
         const program = this.robotLogic.get(robotId);
         if (!program) return;

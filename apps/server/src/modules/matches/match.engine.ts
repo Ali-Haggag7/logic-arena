@@ -109,9 +109,9 @@ export class MatchEngine {
   }
 
   removePlayer(userId: string) {
-    this.gameLoop.getRobots().filter(p => p.id !== userId);
+    this.gameLoop.removeRobot(userId);
     // Also clear logic and state for this robot
-    this.logicEvaluator.clearAllLogic(); // This clears all, might need to be specific
+    this.logicEvaluator.clearLogicForRobot(userId);
   }
 
   start(tickRate: number = 100) {
