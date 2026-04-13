@@ -1,7 +1,7 @@
 import { GameLoop, Robot } from "@logic-arena/engine";
 import { Program, NodeType, AssignmentStatement, ActionStatement, IfStatement, ActionExpression } from "../../../../../../packages/logic-parser/src";
 import { CombatMath } from "../combat-math";
-import { ActionExecutor } from "../action-executor";
+import { ActionExecutor } from "../executor/action-executor";
 import { ExpressionEvaluator } from "./expression-evaluator";
 
 export class LogicEvaluator {

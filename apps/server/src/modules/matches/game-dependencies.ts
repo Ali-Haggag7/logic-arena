@@ -1,5 +1,5 @@
 import { GameLoop } from "@logic-arena/engine";
-import { ActionExecutor } from "../../game/core/action-executor";
+import { ActionExecutor } from "../../game/core/executor/action-executor";
 import { Pathfinder } from "../../game/core/pathfinder";
 import { LogicEvaluator } from "../../game/core/evaluator/logic-evaluator";
 
