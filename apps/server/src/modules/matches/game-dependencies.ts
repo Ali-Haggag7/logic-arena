@@ -1,7 +1,7 @@
 import { GameLoop } from "@logic-arena/engine";
 import { ActionExecutor } from "../../game/core/action-executor";
 import { Pathfinder } from "../../game/core/pathfinder";
-import { LogicEvaluator } from "../../game/core/logic-evaluator";
+import { LogicEvaluator } from "../../game/core/evaluator/logic-evaluator";
 
 export interface GameDependencies {
     pathfinder: Pathfinder;
