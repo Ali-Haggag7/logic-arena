@@ -257,3 +257,31 @@ The Arena is now a fully connected, real-time battle environment. The 3D scene, 
 
 ### Current Status:
 - The Arena is now a fully operational real-time battlefield. Players can write AliScript, deploy it to their bot, and watch it execute live in both the 3D scene and the tactical radar simultaneously. The architecture is clean, the pipeline is stable, and the system is ready for: **Pathfinding, FOV-based targeting, and multiplayer session management.**
+
+## [1.5.0-beta] - Security Hardening & Logic Evolution - 2026-04-13
+
+### Major Core & Security Overhaul:
+The project has migrated from a basic state-sync to a secure, physics-driven architecture. Real-time protection is now enforced via JWT handshakes, and the game loop has been decoupled from simple increments to a dedicated physics engine.
+
+### Technical Scars and Resolutions:
+
+- **Issue: The Unauthorized Socket Leak:** WebSocket connections were open to any client, posing a security risk. Resolved by implementing a custom JWT verification layer within the `MatchGateway` handshake. Unauthorized attempts are now terminated before hitting the `MatchEngine`.
+
+- **Issue: Persistent Auth Desync:** Refreshing the Arena page caused a loss of session state. Fixed by implementing `localStorage` token persistence and a global `AuthGuard` on the client to ensure seamless re-authentication and automated redirects to `/login`.
+
+- **Issue: Robot Ghosting & Duplication:** Each page refresh spawned a new robot instance while keeping the old one alive on the server. Resolved by implementing a cleanup routine on socket disconnection and an ID-check during the `joinMatch` event to reuse existing player states.
+
+- **Issue: The Empty Arena Stagnation:** Single-player sessions felt static and broken without an opponent. Fixed by adding a default `bot-2` (Opponent) spawning logic in `MatchEngine`, ensuring the tactical environment is interactive even in solo testing.
+
+- **Issue: Semantic State Mapping (scriptId):** The "Deploy" flow lacked a direct link to the user's specific code. Resolved by wiring the Dashboard to pass `scriptId` via URL query parameters, which the Arena now uses to fetch and inject the correct AliScript into the neural loop.
+
+- **Issue: Backend Conflict Ambiguity:** Duplicate email registrations were throwing generic 500 errors. Fixed by mapping Prisma `P2002` unique constraint violations to a `ConflictException` (409) in `auth.service.ts` for clearer frontend feedback.
+
+### Key Technical Achievement:
+
+- **Real-Time Physics Integration:** Successfully migrated the movement logic to the `@logic-arena/engine` core. Robots now operate via a dedicated `GameLoop` with velocity and collision parameters, moving beyond simple coordinate manipulation.
+
+- **Cyberpunk UI Transition:** Complete visual overhaul of Auth and Dashboard layers. Replaced native browser elements with a unified "Cyberpunk" aesthetic featuring glassmorphism, neon status terminals, and decorative tech grids.
+
+### Current Status:
+- The infrastructure is now enterprise-grade and secure. With JWT protection and the physics loop in place, the system is fully primed for: **Advanced Pathfinding, Fog-of-War implementation, and Multi-user competitive sessions.**
