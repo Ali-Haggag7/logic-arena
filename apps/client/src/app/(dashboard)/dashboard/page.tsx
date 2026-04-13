@@ -63,6 +63,11 @@ const DashboardPage = () => {
         router.push(`/arena?scriptId=${scriptId}`);
     };
 
+    const handleGoToLobby = (scriptId: string) => {
+        localStorage.setItem("selectedScriptId", scriptId);
+        router.push("/lobby");
+    };
+
     return (
         <div className="min-h-screen bg-gray-950 font-mono text-cyan-300 selection:bg-cyan-500/30 relative overflow-hidden pb-12">
 
@@ -132,6 +137,12 @@ const DashboardPage = () => {
                                                 className="w-full sm:w-auto text-center px-4 py-2.5 sm:py-2 bg-purple-600/10 border border-purple-500/40 text-purple-400 text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-purple-600/30 hover:border-purple-400 hover:text-white transition-all rounded shadow-[0_0_10px_rgba(168,85,247,0)] hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] whitespace-nowrap"
                                             >
                                                 Edit Brain
+                                            </button>
+                                            <button
+                                                onClick={() => handleGoToLobby(script.id)}
+                                                className="w-full sm:w-auto text-center px-4 py-2.5 sm:py-2 bg-blue-600/10 border border-blue-500/40 text-blue-400 text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-blue-600/30 hover:border-blue-400 hover:text-white transition-all rounded shadow-[0_0_10px_rgba(59,130,246,0)] hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] whitespace-nowrap"
+                                            >
+                                                Deploy to Lobby
                                             </button>
                                             <button
                                                 onClick={() => handleGoToArena(script.id)}

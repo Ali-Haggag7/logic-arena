@@ -21,6 +21,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private matches: Map<string, MatchEngine> = new Map();
   private lastStateJson: Map<string, string> = new Map();
+  private lobbyMatches: Map<string, { hostId: string; hostName: string; matchId: string; createdAt: number }> = new Map();
 
   constructor(private prisma: PrismaService) { }
 
@@ -81,14 +82,41 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.matches.set(data.matchId, match);
       match.start();
     } else {
-      match.removePlayer(client.userId!);
-      match.addPlayer({ id: client.userId!, script: script.content });
-      match.updateInitialPlayer(client.userId!, script.content);
+      if (this.lobbyMatches.has(data.matchId)) {
+        match.removePlayer("bot-2");
+        match.addPlayer({ id: client.userId!, script: script.content });
+        this.lobbyMatches.delete(data.matchId);
+        this.server.emit("lobbyUpdated", Array.from(this.lobbyMatches.values()));
+      } else {
+        match.removePlayer(client.userId!);
+        match.addPlayer({ id: client.userId!, script: script.content });
+        match.updateInitialPlayer(client.userId!, script.content);
+      }
     }
 
     client.matchId = data.matchId;
     client.join(data.matchId);
     this.broadcastMatchState(data.matchId, match.getState());
+  }
+
+  @SubscribeMessage("createMatch")
+  async handleCreateMatch(@ConnectedSocket() client: AuthenticatedSocket, @MessageBody() data: { scriptId: string }) {
+    if (!client.userId) return;
+    const user = await this.prisma.user.findUnique({ where: { id: client.userId } });
+    const matchId = crypto.randomUUID();
+    this.lobbyMatches.set(matchId, {
+      hostId: client.userId,
+      hostName: user?.username || "Unknown Hacker",
+      matchId,
+      createdAt: Date.now(),
+    });
+    client.emit("matchCreated", { matchId });
+    this.server.emit("lobbyUpdated", Array.from(this.lobbyMatches.values()));
+  }
+
+  @SubscribeMessage("getLobby")
+  handleGetLobby(@ConnectedSocket() client: AuthenticatedSocket) {
+    client.emit("lobbyList", Array.from(this.lobbyMatches.values()));
   }
 
   private broadcastMatchState(matchId: string, state: any) {

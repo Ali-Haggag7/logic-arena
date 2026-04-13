@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { io, Socket } from "socket.io-client";
+import { useSearchParams } from "next/navigation";
 import { GameState, RobotState, ProjectileState, ObstacleState, FiredTracer, SpeechBubbleState } from "../types";
 
 export const useGameState = (scriptId: string | null) => {
+    const searchParams = useSearchParams();
+    const matchIdFromUrl = searchParams.get("matchId");
   const socket: Socket = useMemo(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     return io("http://localhost:3001", {
@@ -25,7 +28,8 @@ export const useGameState = (scriptId: string | null) => {
     const handleConnect = () => {
       console.log("✅ Socket Connected!");
       if (scriptId) {
-        socket.emit("joinMatch", { matchId: "default-match", scriptId });
+        const matchId = matchIdFromUrl || "default-match";
+        socket.emit("joinMatch", { matchId, scriptId });
       }
     };
 
