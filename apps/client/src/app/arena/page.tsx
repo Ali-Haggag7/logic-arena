@@ -6,6 +6,7 @@ import { apiClient } from "../../lib/api-client";
 import { useGameState } from "./hooks/useGameState";
 import { Scene3D } from "./components/Scene3D";
 import { CommandConsole } from "./components/CommandConsole";
+import WinnerScreen from "./components/WinnerScreen";
 
 interface RobotScript {
   id: string;
@@ -22,7 +23,7 @@ const ArenaPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { socket, gameStateRef, uiState, selectedRobotId, setSelectedRobotId, availableRobots } = useGameState(scriptId);
+  const { socket, gameStateRef, uiState, selectedRobotId, setSelectedRobotId, availableRobots, matchResult } = useGameState(scriptId);
   const [projectileTick, setProjectileTick] = useState(0);
   const projectileAnimRef = useRef<number | null>(null);
 
@@ -65,9 +66,19 @@ const ArenaPage = () => {
 
   const robots = uiState?.robots || [];
   const isConnected = !!socket?.connected;
+  const currentUserId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+  const matchId = searchParams.get("matchId") || "default-match";
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden font-mono select-none">
+      {matchResult && (
+        <WinnerScreen
+          matchResult={matchResult}
+          currentUserId={currentUserId}
+          socket={socket}
+          matchId={matchId}
+        />
+      )}
 
       <div className="absolute top-6 left-8 z-30 pointer-events-none">
         <h1 className="text-4xl font-black tracking-tighter text-cyan-400 italic leading-none drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">

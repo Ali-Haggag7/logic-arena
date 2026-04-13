@@ -19,6 +19,16 @@ const LoginPage = () => {
     try {
       const response = await apiClient.post("/auth/login", { username, password });
       const token = response.data.accessToken;
+      
+      // Decode JWT to get userId
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        localStorage.setItem("userId", payload.sub);
+        localStorage.setItem("username", payload.username || username);
+      } catch (e) {
+        console.error("Failed to decode token", e);
+      }
+
       localStorage.setItem("jwtToken", token);
       localStorage.setItem("token", token); // Sync both keys for now as they are used differently in the app
 

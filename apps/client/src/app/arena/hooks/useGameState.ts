@@ -19,6 +19,7 @@ export const useGameState = (scriptId: string | null) => {
   const [firedTracer, setFiredTracer] = useState<FiredTracer | null>(null);
   const [speechBubble, setSpeechBubble] = useState<SpeechBubbleState | null>(null);
   const [selectedRobotId, setSelectedRobotId] = useState<string>("");
+  const [matchResult, setMatchResult] = useState<{ winner: { id: string; color: string } | null; draw: boolean } | null>(null);
 
   const lastUiUpdateRef = useRef(0);
   const tracerTimeoutRef = useRef<number | null>(null);
@@ -115,11 +116,16 @@ export const useGameState = (scriptId: string | null) => {
       speechTimeoutRef.current = window.setTimeout(() => setSpeechBubble(null), 1000);
     };
 
+    const handleMatchOver = (data: { winner: { id: string; color: string } | null; draw: boolean }) => {
+      setMatchResult(data);
+    };
+
     socket.on("connect", handleConnect);
     socket.on("authenticated", handleAuthenticated);
     socket.on("error", handleError);
     socket.on("gameState", handleGameState);
     socket.on("logicExecuted", handleLogicExecuted);
+    socket.on("matchOver", handleMatchOver);
     socket.connect();
 
     return () => {
@@ -128,6 +134,7 @@ export const useGameState = (scriptId: string | null) => {
       socket.off("error", handleError);
       socket.off("gameState", handleGameState);
       socket.off("logicExecuted", handleLogicExecuted);
+      socket.off("matchOver", handleMatchOver);
       socket.disconnect();
       if (tracerTimeoutRef.current !== null) window.clearTimeout(tracerTimeoutRef.current);
       if (speechTimeoutRef.current !== null) window.clearTimeout(speechTimeoutRef.current);
@@ -136,5 +143,5 @@ export const useGameState = (scriptId: string | null) => {
 
   const availableRobots = useMemo(() => uiState.robots.map(r => r.id), [uiState.robots]);
 
-  return { gameStateRef, uiState, firedTracer, speechBubble, selectedRobotId, setSelectedRobotId, availableRobots, socket };
+  return { gameStateRef, uiState, firedTracer, speechBubble, selectedRobotId, setSelectedRobotId, availableRobots, socket, matchResult };
 };

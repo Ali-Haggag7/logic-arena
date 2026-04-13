@@ -127,6 +127,22 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     setInterval(() => {
       this.matches.forEach((match, matchId) => {
         const state = match.getState();
+
+        const alivePlayers = state.robots.filter((r: any) => r.health > 0 && r.id !== "bot-2");
+        const allRobots = state.robots.filter((r: any) => r.health > 0);
+
+        if (state.robots.length > 0 && allRobots.length <= 1) {
+          const winner = state.robots.find((r: any) => r.health > 0) || null;
+          this.server.to(matchId).emit("matchOver", {
+            winner: winner ? { id: winner.id, color: winner.color } : null,
+            draw: allRobots.length === 0
+          });
+          match.stop();
+          this.matches.delete(matchId);
+          this.lastStateJson.delete(matchId);
+          return;
+        }
+
         const json = JSON.stringify(state);
         if (this.lastStateJson.get(matchId) !== json) {
           this.lastStateJson.set(matchId, json);
