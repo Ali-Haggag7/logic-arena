@@ -13,6 +13,7 @@ export class MatchEngine {
   private actionExecutor: ActionExecutor;
   private pathfinder: Pathfinder;
   private logicEvaluator: LogicEvaluator;
+  private initialPlayers: { id: string; script: string }[] = [];
   private tickInterval: NodeJS.Timeout | null = null;
   private matchId: string;
 
@@ -47,13 +48,38 @@ export class MatchEngine {
         console.error(`Error parsing script for robot ${p.id}:`, error);
       }
     });
+    this.initialPlayers = initialPlayers;
   }
 
   reset() {
-    this.gameLoop = new GameLoop(); // Re-initialize GameLoop for a full reset
+    this.stop();
+    this.gameLoop = new GameLoop();
+    this.pathfinder = new Pathfinder(this.gameLoop);
+    this.actionExecutor = new ActionExecutor(this.gameLoop, new Map(), this.pathfinder);
+    this.logicEvaluator = new LogicEvaluator(this.gameLoop, this.actionExecutor);
     this.logicEvaluator.clearAllLogic();
-    // Re-add initial players (if needed, or handle this based on match logic)
-    // For now, assuming match creation handles initial players
+    this.initialPlayers.forEach((p, index) => {
+      const robot: Robot = {
+        id: p.id,
+        position: { x: Math.random() * 800, y: Math.random() * 600 },
+        health: 100,
+        color: ROBOT_COLORS[index % ROBOT_COLORS.length],
+        velocity: { x: 0, y: 0 },
+        rotation: 0,
+        isAlive: true,
+        team: index % 2 === 0 ? "A" : "B",
+        lastActionTime: 0,
+        code: p.script,
+        memory: {},
+      };
+      this.gameLoop.addRobot(robot);
+      try {
+        const parser = new Parser(p.script);
+        const ast = parser.parse();
+        this.logicEvaluator.setLogic(p.id, ast);
+      } catch (e) {}
+    });
+    this.start();
   }
 
   updateRobotScript(robotId: string, scriptContent: string) {
@@ -140,5 +166,12 @@ export class MatchEngine {
 
   getState() {
     return this.gameLoop.getGameState();
+  }
+
+  updateInitialPlayer(userId: string, script: string) {
+    const index = this.initialPlayers.findIndex(p => p.id === userId);
+    if (index !== -1) {
+      this.initialPlayers[index].script = script;
+    }
   }
 }

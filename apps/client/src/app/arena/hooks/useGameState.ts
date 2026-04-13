@@ -15,7 +15,7 @@ export const useGameState = (scriptId: string | null) => {
   const [uiState, setUiState] = useState<GameState>({ robots: [], projectiles: [], obstacles: [] });
   const [firedTracer, setFiredTracer] = useState<FiredTracer | null>(null);
   const [speechBubble, setSpeechBubble] = useState<SpeechBubbleState | null>(null);
-  const [selectedRobotId, setSelectedRobotId] = useState<string>("bot-1");
+  const [selectedRobotId, setSelectedRobotId] = useState<string>("");
 
   const lastUiUpdateRef = useRef(0);
   const tracerTimeoutRef = useRef<number | null>(null);
@@ -83,9 +83,15 @@ export const useGameState = (scriptId: string | null) => {
 
       // Update UI state throttled — only 10x/sec
       const now = performance.now();
-      if (now - lastUiUpdateRef.current > 100) {
+      if (now - lastUiUpdateRef.current > 200) {
         lastUiUpdateRef.current = now;
         setUiState(parsedData);
+        setSelectedRobotId(prev => {
+          if (!prev && parsedData.robots.length > 0) {
+            return parsedData.robots[0].id;
+          }
+          return prev;
+        });
       }
     };
 

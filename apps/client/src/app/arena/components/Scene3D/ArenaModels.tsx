@@ -28,7 +28,7 @@ export const ArenaModels = ({
 
   useFrame(() => {
     const now = performance.now();
-    if (now - lastUpdateRef.current < 100) return; // throttle 10fps للـ state
+    if (now - lastUpdateRef.current < 200) return;
     lastUpdateRef.current = now;
 
     const state = gameStateRef.current;

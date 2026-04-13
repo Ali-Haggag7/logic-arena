@@ -46,7 +46,7 @@ export const useConsole = (socket: Socket | null, robotId: string, scriptId?: st
 
     const handleDeployBrain = async (scriptToDeploy: string = scriptInput) => {
         if (socket) {
-            socket.emit("updateLogic", { robotId, script: scriptToDeploy });
+            socket.emit("updateLogic", { robotId, scriptContent: scriptToDeploy });
             appendOutputLine(`[UPLINK] Neural payload injected into ${robotId}...`);
 
             try {

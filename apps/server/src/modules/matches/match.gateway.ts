@@ -20,6 +20,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server;
 
   private matches: Map<string, MatchEngine> = new Map();
+  private lastStateJson: Map<string, string> = new Map();
 
   constructor(private prisma: PrismaService) { }
 
@@ -45,15 +46,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(@ConnectedSocket() client: AuthenticatedSocket) {
-    if (client.userId) {
-      this.matches.forEach((match, matchId) => {
-        match.removePlayer(client.userId!);
-        if (match.getState().robots.length === 0) {
-          match.stop();
-          this.matches.delete(matchId);
-        }
-      });
-    }
+    // Do nothing on disconnect - player will rejoin on reconnect
+    // This prevents the robot from being removed on page refresh
   }
 
   @SubscribeMessage("joinMatch")
@@ -89,6 +83,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } else {
       match.removePlayer(client.userId!);
       match.addPlayer({ id: client.userId!, script: script.content });
+      match.updateInitialPlayer(client.userId!, script.content);
     }
 
     client.matchId = data.matchId;
@@ -103,7 +98,12 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   onModuleInit() {
     setInterval(() => {
       this.matches.forEach((match, matchId) => {
-        this.broadcastMatchState(matchId, match.getState());
+        const state = match.getState();
+        const json = JSON.stringify(state);
+        if (this.lastStateJson.get(matchId) !== json) {
+          this.lastStateJson.set(matchId, json);
+          this.broadcastMatchState(matchId, state);
+        }
       });
     }, 100);
   }
@@ -122,6 +122,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.matchId && this.matches.has(client.matchId)) {
       const match = this.matches.get(client.matchId);
       match?.updateRobotScript(data.robotId, data.scriptContent);
+      client.emit("logicExecuted", { robotId: data.robotId, action: "SCRIPT_DEPLOYED", message: "Neural payload active." });
     }
   }
 
@@ -130,6 +131,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.matchId && this.matches.has(client.matchId)) {
       const match = this.matches.get(client.matchId);
       match?.receiveManualCommand(client.userId!, data.command);
+      client.emit("logicExecuted", { robotId: client.userId, action: data.command, message: "Manual command executed." });
     }
   }
 }

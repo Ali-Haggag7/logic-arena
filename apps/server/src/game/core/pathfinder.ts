@@ -30,10 +30,10 @@ export class Pathfinder {
     }
 
     performAStar(startX: number, startY: number, targetX: number, targetY: number): { x: number, y: number }[] {
-        const startCol = Math.floor(startX / this.CELL_SIZE);
-        const startRow = Math.floor(startY / this.CELL_SIZE);
-        const targetCol = Math.floor(targetX / this.CELL_SIZE);
-        const targetRow = Math.floor(targetY / this.CELL_SIZE);
+        const startCol = Math.min(this.GRID_COLS - 1, Math.max(0, Math.floor(startX / this.CELL_SIZE)));
+        const startRow = Math.min(this.GRID_ROWS - 1, Math.max(0, Math.floor(startY / this.CELL_SIZE)));
+        const targetCol = Math.min(this.GRID_COLS - 1, Math.max(0, Math.floor(targetX / this.CELL_SIZE)));
+        const targetRow = Math.min(this.GRID_ROWS - 1, Math.max(0, Math.floor(targetY / this.CELL_SIZE)));
 
         if (startCol < 0 || startCol >= this.GRID_COLS || startRow < 0 || startRow >= this.GRID_ROWS ||
             targetCol < 0 || targetCol >= this.GRID_COLS || targetRow < 0 || targetRow >= this.GRID_ROWS) {
@@ -97,6 +97,7 @@ export class Pathfinder {
     }
 
     executePathfind(robot: Robot, memory: Map<string, any>) {
+        this.rebuildGrid();
         const target = CombatMath.getClosestTarget(robot, this.gameLoop.getRobots());
         if (!target) return;
 
