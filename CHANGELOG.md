@@ -285,3 +285,39 @@ The project has migrated from a basic state-sync to a secure, physics-driven arc
 
 ### Current Status:
 - The infrastructure is now enterprise-grade and secure. With JWT protection and the physics loop in place, the system is fully primed for: **Advanced Pathfinding, Fog-of-War implementation, and Multi-user competitive sessions.**
+
+## [1.6.0-beta] - The Competitive Arena Update - 2026-04-14
+
+### Major Feature Release:
+Transformed Logic Arena from a single-player sandbox into a fully competitive multiplayer platform with real-time lobbies, match persistence, and a global ranking system.
+
+### Technical Scars and Resolutions:
+
+- **Issue: The Dual Gateway Conflict:** Two WebSocket gateways (`game.gateway.ts` and `match.gateway.ts`) were running simultaneously on the same port, causing event conflicts and state desync. Resolved by deleting the legacy gateway entirely and consolidating all real-time logic into a single JWT-authenticated `MatchGateway`.
+
+- **Issue: The Empty Arena After Refresh:** The arena rendered an empty grid after page refresh due to wrong import path (`lib/useGameState` vs `arena/hooks/useGameState`). Fixed by correcting the import and adding localStorage token check with automatic redirect to `/login`.
+
+- **Issue: The Phantom Bot Spam:** The default `bot-2` opponent was executing `FIRE + MOVE_FAST` in an infinite loop, overloading the CPU and causing terminal spam. Resolved by setting bot-2's default script to empty and increasing the `logicExecuted` emit throttle.
+
+- **Issue: The Reset Dependency Leak:** After pressing "INITIALIZE RESPAWN", robots stopped responding to commands. Root cause: `reset()` created a new `GameLoop` instance but `ActionExecutor`, `Pathfinder`, and `LogicEvaluator` still held references to the old one. Fixed by rewiring all dependencies inside `reset()`.
+
+- **Issue: Pathfinder Out-of-Bounds Crash:** The A* pathfinder crashed with `Cannot read properties of undefined` when robots moved beyond grid boundaries. Fixed by clamping all position-to-grid conversions with `Math.min/max` and calling `rebuildGrid()` before every pathfind operation.
+
+- **Issue: Script Save Desync:** The `api-client.ts` was reading `jwtToken` from localStorage while login was saving to `token` key. Fixed by unifying both keys and wiring `handleDeployBrain` to auto-save scripts via `PUT /scripts/:id`.
+
+### Key Technical Achievements:
+
+- **Real Multiplayer Lobby System:** Players can now create and join matches in real-time via a dedicated `/lobby` page. The server manages `lobbyMatches` state and broadcasts updates to all connected clients instantly.
+
+- **Match Persistence & Ranking:** Match results are now saved to the database on game end. Winners receive +10 rank points, tracked in a global leaderboard accessible at `/leaderboard`.
+
+- **Premium Winner Screen:** Full-screen cyberpunk victory/defeat overlay with animated grid background, glitch effects, pulsing orb, and tactical buttons (`REINIT_SESSION` / `ABORT_TO_LOBBY`).
+
+- **Neural Combat Rankings:** Global leaderboard page (`/leaderboard`) displaying top operators by rank with gold/silver/bronze styling and win count tracking.
+
+- **Server Modularization:** Decomposed monolithic `match.engine.ts` into clean domain modules: `robot-factory.ts`, `game-dependencies.ts`, `evaluator/expression-evaluator.ts`, and `executor/cooldown-manager.ts`.
+
+- **AliScript Documentation:** Complete language reference added to `docs/aliscript-language.md` covering all commands, conditionals, variables, and example scripts.
+
+### Current Status:
+- Logic Arena is now a fully operational competitive platform. Players can register, write AliScript, deploy to the lobby, battle in real-time, and climb the global leaderboard. Ready for: **Fog of War, Match Replay System, and Tournament Mode.**
