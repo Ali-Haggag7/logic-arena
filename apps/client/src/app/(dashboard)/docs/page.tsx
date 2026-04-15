@@ -12,153 +12,127 @@ interface CommandDoc {
 }
 
 const COMMAND_TABLE: CommandDoc[] = [
+  // Control Flow
+  {
+    command: "IF...THEN...ELSE...END",
+    category: "Control Flow",
+    parameters: "condition",
+    description: "Branching logic with optional else clause. Must be closed with END.",
+    example: "IF health < 50 THEN BACKUP ELSE FIRE END",
+  },
+  {
+    command: "WHILE...DO...END",
+    category: "Control Flow",
+    parameters: "condition",
+    description: "Looping logic. Executes block while condition is true. Auto-capped at 10 iter/tick.",
+    example: "WHILE spotted DO FIRE WAIT 1 END",
+  },
+  {
+    command: "FUNCTION / CALL",
+    category: "Control Flow",
+    parameters: "name",
+    description: "Define reusable neural pathways (functions) and invoke them.",
+    example: "FUNCTION retreat BACKUP END CALL retreat",
+  },
   // Movement
   {
-    command: "MOVE",
+    command: "MOVE / MOVE_FAST",
     category: "Movement",
     parameters: "—",
-    description: "Move the bot forward at default speed",
-    example: "MOVE",
-  },
-  {
-    command: "MOVE_FAST",
-    category: "Movement",
-    parameters: "—",
-    description: "Move the bot at maximum speed",
+    description: "Standard and high-speed forward propulsion.",
     example: "MOVE_FAST",
-  },
-  {
-    command: "BACKUP",
-    category: "Movement",
-    parameters: "—",
-    description: "Retreat backwards to create distance",
-    example: "BACKUP",
-  },
-  {
-    command: "STOP",
-    category: "Movement",
-    parameters: "—",
-    description: "Halt all movement immediately",
-    example: "STOP",
   },
   {
     command: "PATHFIND",
     category: "Movement",
     parameters: "—",
-    description: "Autonomously navigate around obstacles",
+    description: "A* pathfinding towards nearest target while avoiding obstacles.",
     example: "PATHFIND",
+  },
+  // Sensors
+  {
+    command: "SCAN",
+    category: "Sensors",
+    parameters: "—",
+    description: "Instant sensor ping. Populates scanned_distance, scanned_angle, scanned_spotted.",
+    example: "SCAN",
+  },
+  {
+    command: "WAIT",
+    category: "Sensors",
+    parameters: "N: ticks",
+    description: "Suspends code execution for N ticks. 60 ticks = 1 second.",
+    example: "WAIT 30",
   },
   // Attack
   {
-    command: "FIRE",
+    command: "FIRE / BURST_FIRE",
     category: "Attack",
     parameters: "—",
-    description: "Fire weapon at current target",
-    example: "FIRE",
-  },
-  {
-    command: "BURST_FIRE",
-    category: "Attack",
-    parameters: "—",
-    description: "Unleash a rapid burst of projectiles",
+    description: "Discharge weapons. Burst fire consumes significantly more energy.",
     example: "BURST_FIRE",
-  },
-  // Tactics
-  {
-    command: "IF spotted THEN FIRE",
-    category: "Tactics",
-    parameters: "condition",
-    description: "Fire only when an enemy is detected in sensor range",
-    example: "IF spotted THEN FIRE",
-  },
-  {
-    command: "IF distance < N THEN FIRE",
-    category: "Tactics",
-    parameters: "N: number",
-    description: "Fire when enemy is within N units",
-    example: "IF distance < 500 THEN FIRE",
-  },
-  {
-    command: "IF spotted THEN MOVE",
-    category: "Tactics",
-    parameters: "condition",
-    description: "Advance toward the enemy when spotted",
-    example: "IF spotted THEN MOVE",
-  },
-  // Advanced Combat
-  {
-    command: "IF health < N THEN STOP",
-    category: "Advanced Combat",
-    parameters: "N: number",
-    description: "Halt movement when HP drops below threshold",
-    example: "IF health < 20 THEN STOP",
-  },
-  // Evasion
-  {
-    command: "IF health < N THEN MOVE",
-    category: "Evasion",
-    parameters: "N: number",
-    description: "Retreat when HP falls below threshold",
-    example: "IF health < 30 THEN MOVE",
-  },
-  {
-    command: "IF distance < N THEN MOVE",
-    category: "Evasion",
-    parameters: "N: number",
-    description: "Evade when enemy closes within N units",
-    example: "IF distance < 200 THEN MOVE",
   },
   // Intelligence
   {
-    command: "SET rotation = rotation + N",
+    command: "SET var = expr",
     category: "Intelligence",
-    parameters: "N: float",
-    description: "Rotate the bot's sensor by N radians per tick",
-    example: "SET rotation = rotation + 0.1",
+    parameters: "expression",
+    description: "Assign values using math operators (+, -, *, /, %).",
+    example: "SET rotation = rotation + (0.1 * precision)",
   },
   {
-    command: "IF NOT spotted THEN SET rotation",
+    command: "NOT / TRUE / FALSE",
     category: "Intelligence",
-    parameters: "condition",
-    description: "Continuously scan when no enemy is detected",
-    example: "IF NOT spotted THEN SET rotation = rotation + 0.1",
+    parameters: "booleans",
+    description: "Logical operators and boolean constants for advanced conditions.",
+    example: "IF NOT spotted THEN SCAN",
   },
 ];
 
 const QUICK_REF = [
   {
-    title: "MOVEMENT",
+    title: "CONTROL FLOW",
     icon: "⬡",
-    color: "#22d3ee",
-    commands: ["MOVE", "MOVE_FAST", "BACKUP", "STOP", "PATHFIND"],
+    color: "#f59e0b",
+    commands: ["IF...ELSE", "WHILE...DO", "FUNCTION", "CALL", "END"],
   },
   {
-    title: "ATTACK",
+    title: "SENSORS",
     icon: "◈",
-    color: "#f97316",
-    commands: ["FIRE", "BURST_FIRE", "IF spotted THEN FIRE", "IF distance < N THEN FIRE"],
+    color: "#22d3ee",
+    commands: ["SCAN", "WAIT", "health", "distance", "spotted"],
   },
   {
     title: "INTELLIGENCE",
     icon: "◉",
     color: "#a855f7",
     commands: [
-      "IF health < N THEN STOP",
-      "IF health < N THEN MOVE",
-      "IF distance < N THEN MOVE",
-      "SET rotation = rotation + N",
+      "SET var = val",
+      "Math (+, -, *, /, %)",
+      "Logic (NOT, TRUE, FALSE)",
+      "rotation",
     ],
   },
 ];
 
-const SAMPLE_SCRIPT = `IF spotted THEN FIRE
-IF distance < 300 THEN MOVE_FAST
-IF health < 25 THEN BACKUP
-IF NOT spotted THEN SET rotation = rotation + 0.1
-PATHFIND`;
+const SAMPLE_SCRIPT = `// The Stalker v2.0
+SCAN
+WHILE NOT scanned_spotted DO
+  SET rotation = rotation + 0.1
+  WAIT 2
+  SCAN
+END
+
+IF scanned_distance < 250 THEN
+  BURST_FIRE
+ELSE
+  PATHFIND
+END`;
 
 const CATEGORY_COLORS: Record<string, string> = {
+  "Control Flow": "#f59e0b",
   Movement: "#22d3ee",
+  Sensors: "#06b6d4",
   Attack: "#f97316",
   Tactics: "#facc15",
   "Advanced Combat": "#ef4444",
@@ -296,6 +270,30 @@ export default function DocsPage() {
                 lineHeight: 1,
               }}
             >
+              <p
+                style={{
+                  fontSize: "9px",
+                  letterSpacing: "0.4em",
+                  color: "rgba(34,211,238,0.3)",
+                  marginBottom: "12px",
+                  textTransform: "uppercase",
+                }}
+              >
+              // LANGUAGE_REFERENCE_v2.0_SENTIENT_UPDATE
+              </p>
+            </h1>
+            <h1
+              style={{
+                fontSize: "clamp(32px, 6vw, 56px)",
+                fontWeight: 900,
+                letterSpacing: "0.22em",
+                color: "#22d3ee",
+                textShadow:
+                  "0 0 12px rgba(34,211,238,0.9), 0 0 40px rgba(34,211,238,0.5), 0 0 80px rgba(34,211,238,0.2)",
+                margin: "0 0 16px",
+                lineHeight: 1,
+              }}
+            >
               ALISCRIPT
               <span
                 style={{
@@ -306,7 +304,7 @@ export default function DocsPage() {
                   verticalAlign: "super",
                 }}
               >
-                v1.0
+                v2.0
               </span>
             </h1>
             <p
@@ -343,9 +341,9 @@ export default function DocsPage() {
               }}
             >
               {[
-                { label: "COMMANDS", value: "15" },
-                { label: "CATEGORIES", value: "6" },
-                { label: "STATUS", value: "STABLE" },
+                { label: "MODULES", value: "10" },
+                { label: "PARADIGMS", value: "6" },
+                { label: "CORE", value: "v2.0 READY" },
               ].map(({ label, value }) => (
                 <div
                   key={label}
@@ -494,7 +492,7 @@ export default function DocsPage() {
                   </span>
                 </div>
                 <textarea
-                  className="docs-textarea"
+                  className="docs-textarea docs-scrollbar"
                   value={script}
                   onChange={(e) => setScript(e.target.value)}
                   spellCheck={false}
@@ -645,7 +643,91 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── D) COMMAND REFERENCE TABLE ── */}
+          {/* ── D) BATTLE TACTICS MASTERCLASS ── */}
+          <section style={{ marginBottom: "60px" }}>
+            <SectionLabel text="BATTLE_TACTICS_MASTERCLASS" />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "20px",
+                marginTop: "20px",
+              }}
+            >
+              {[
+                {
+                  title: "THE STALKER",
+                  desc: "Sensor-loop logic for hyper-accurate target acquisition.",
+                  code: "// Adaptive Scan Loop\nSCAN\nWHILE NOT scanned_spotted DO\n  SET rotation = rotation + 0.1\n  WAIT 2\n  SCAN\nEND\nPATHFIND",
+                  color: "#22d3ee"
+                },
+                {
+                  title: "THE TURRET",
+                  desc: "Energy-efficient static defense with manual rotation.",
+                  code: "FUNCTION defend\n  SCAN\n  IF scanned_distance < 150 THEN\n    BURST_FIRE\n    WAIT 10\n  ELSE\n    SET rotation = rotation + 0.05\n  END\nEND\nSTOP\nWHILE TRUE DO CALL defend END",
+                  color: "#f97316"
+                },
+                {
+                  title: "THE JITTERBUG",
+                  desc: "Chaotic movement offsets to bypass enemy trajectory prediction.",
+                  code: "SET offset = 1\nWHILE TRUE DO\n  MOVE_FAST\n  SET rotation = rotation + (offset * 0.5)\n  SET offset = offset * -1\n  IF spotted THEN FIRE\n  WAIT 3\nEND",
+                  color: "#a855f7"
+                }
+              ].map((tactic) => (
+                <div
+                  key={tactic.title}
+                  style={{
+                    backgroundColor: "rgba(10,12,20,0.8)",
+                    border: `1px solid ${tactic.color}33`,
+                    borderRadius: "12px",
+                    padding: "24px",
+                    position: "relative",
+                    overflow: "hidden"
+                  }}
+                >
+                  <div style={{ fontSize: "11px", fontWeight: 900, color: tactic.color, letterSpacing: "0.2em", marginBottom: "8px" }}>{tactic.title}</div>
+                  <div style={{ fontSize: "10px", color: "rgba(34,211,238,0.5)", marginBottom: "16px", lineHeight: "1.5" }}>{tactic.desc}</div>
+                  <div
+                    style={{
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      padding: "16px",
+                      borderRadius: "8px",
+                      fontFamily: "var(--font-geist-mono), monospace",
+                      fontSize: "10px",
+                      color: "#22d3ee",
+                      lineHeight: "1.6",
+                      whiteSpace: "pre-wrap",
+                      border: "1px solid rgba(34,211,238,0.1)"
+                    }}
+                  >
+                    {tactic.code}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setScript(tactic.code);
+                      window.scrollTo({ top: document.getElementById('aliscript-editor')?.offsetTop ? document.getElementById('aliscript-editor')!.offsetTop - 100 : 0, behavior: 'smooth' });
+                    }}
+                    style={{
+                      marginTop: "16px",
+                      width: "100%",
+                      padding: "8px",
+                      backgroundColor: "transparent",
+                      border: `1px solid ${tactic.color}44`,
+                      color: tactic.color,
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      borderRadius: "4px"
+                    }}
+                  >
+                    LOAD INTO PLAYGROUND
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── E) COMMAND REFERENCE TABLE ── */}
           <section>
             <SectionLabel text="COMMAND_REFERENCE" />
 

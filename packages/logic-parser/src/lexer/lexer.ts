@@ -1,7 +1,5 @@
-import {
-    Token,
-    TokenType,
-} from "./types";
+import { Token, TokenType } from "../types";
+import { isKeyword } from "./keywords";
 
 export class Lexer {
     private input: string;
@@ -60,11 +58,20 @@ export class Lexer {
 
         let token: Token;
 
+        if (this.char === null) {
+            token = { type: TokenType.EOF, value: "" };
+            this.readChar();
+            return token;
+        }
+
         switch (this.char) {
             case '<':
-                token = { type: TokenType.OPERATOR, value: this.char };
-                break;
             case '>':
+            case '*':
+            case '/':
+            case '%':
+            case '+':
+            case '-':
                 token = { type: TokenType.OPERATOR, value: this.char };
                 break;
             case '=':
@@ -77,52 +84,27 @@ export class Lexer {
                 break;
             case '"':
                 token = { type: TokenType.STRING, value: this.readString() };
-                return token; // Return early after reading string
-            case null:
-                token = { type: TokenType.EOF, value: "" };
+                return token; 
+            case ',':
+                token = { type: TokenType.COMMA, value: "," };
+                break;
+            case ':':
+                token = { type: TokenType.COLON, value: ":" };
                 break;
             default:
                 if (/[a-zA-Z_]/.test(this.char)) {
                     const value = this.readIdentifier();
-                    switch (value.toUpperCase()) {
-                        case "IF":
-                        case "THEN":
-                        case "FIRE":
-                        case "MOVE":
-                        case "STOP":
-                        case "MOVE_FAST":
-                        case "BACKUP":
-                        case "BURST_FIRE":
-                        case "PATHFIND":
-                        case "SET": // Add SET as a keyword
-                        case "NOT":
-                        case "TRUE":
-                        case "FALSE":
-                            token = { type: TokenType.KEYWORD, value: value.toUpperCase() };
-                            break;
-                        default:
-                            token = { type: TokenType.IDENTIFIER, value: value };
-                            break;
+                    if (isKeyword(value)) {
+                        return { type: TokenType.KEYWORD, value: value.toUpperCase() };
                     }
-                    return token; // Return early after reading identifier/keyword
+                    return { type: TokenType.IDENTIFIER, value };
                 } else if (/[0-9]/.test(this.char)) {
-                    token = { type: TokenType.NUMBER, value: this.readNumber() };
-                    return token; // Return early after reading number
-                } else {
-                    token = { type: TokenType.EOF, value: "" }; // Fallback for unexpected characters
+                    return { type: TokenType.NUMBER, value: this.readNumber() };
                 }
-                break;
-            case ",": // Handle comma for potential future use
-                token = { type: TokenType.COMMA, value: "," };
-                break;
-            case ":": // Handle colon for potential future use
-                token = { type: TokenType.COLON, value: ":" };
-                break;
-            case "+":
-            case "-":
-                token = { type: TokenType.OPERATOR, value: this.char };
+                token = { type: TokenType.EOF, value: "" }; 
                 break;
         }
+        
         this.readChar();
         return token;
     }

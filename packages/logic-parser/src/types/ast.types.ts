@@ -1,42 +1,75 @@
-export enum TokenType {
-  IDENTIFIER = "IDENTIFIER",
-  NUMBER = "NUMBER",
-  OPERATOR = "OPERATOR",
-  KEYWORD = "KEYWORD",
-  STRING = "STRING",
-  EOF = "EOF", // End Of File
-  ASSIGN = "ASSIGN", // For "SET" keyword
-  COMMA = "COMMA", // For separating arguments
-  COLON = "COLON", // For separating arguments
-}
-
-export interface Token {
-  type: TokenType;
-  value: string;
-}
-
 export enum NodeType {
   Program = "Program",
   IfStatement = "IfStatement",
+  WhileStatement = "WhileStatement",
+  FunctionDeclaration = "FunctionDeclaration",
+  CallStatement = "CallStatement",
+  WaitStatement = "WaitStatement",
+  ScanStatement = "ScanStatement",
+  AssignmentStatement = "AssignmentStatement",
+  ActionStatement = "ActionStatement",
   ComparisonExpression = "ComparisonExpression",
   ActionExpression = "ActionExpression",
   Identifier = "Identifier",
   NumberLiteral = "NumberLiteral",
   StringLiteral = "StringLiteral",
   BooleanLiteral = "BooleanLiteral",
-  AssignmentStatement = "AssignmentStatement",
-  ActionStatement = "ActionStatement",
   BinaryExpression = "BinaryExpression",
   UnaryExpression = "UnaryExpression",
 }
-
-export type Expression = Identifier | NumberLiteral | StringLiteral | BooleanLiteral | BinaryExpression | UnaryExpression | ComparisonExpression | ActionExpression;
 
 export interface BaseNode {
   type: NodeType;
 }
 
-export interface Statement extends BaseNode {
+export interface Statement extends BaseNode {}
+
+export type Expression = 
+  | Identifier 
+  | NumberLiteral 
+  | StringLiteral 
+  | BooleanLiteral 
+  | BinaryExpression 
+  | UnaryExpression 
+  | ComparisonExpression 
+  | ActionExpression;
+
+export interface Program extends Statement {
+  type: NodeType.Program;
+  body: Statement[];
+}
+
+export interface IfStatement extends Statement {
+  type: NodeType.IfStatement;
+  condition: Expression;
+  consequence: Statement[];
+  alternate?: Statement[];
+}
+
+export interface WhileStatement extends Statement {
+  type: NodeType.WhileStatement;
+  condition: Expression;
+  body: Statement[];
+}
+
+export interface FunctionDeclaration extends Statement {
+  type: NodeType.FunctionDeclaration;
+  name: Identifier;
+  body: Statement[];
+}
+
+export interface CallStatement extends Statement {
+  type: NodeType.CallStatement;
+  functionName: Identifier;
+}
+
+export interface WaitStatement extends Statement {
+  type: NodeType.WaitStatement;
+  ticks: NumberLiteral;
+}
+
+export interface ScanStatement extends Statement {
+  type: NodeType.ScanStatement;
 }
 
 export interface AssignmentStatement extends Statement {
@@ -47,17 +80,6 @@ export interface AssignmentStatement extends Statement {
 
 export interface ActionStatement extends Statement {
   type: NodeType.ActionStatement;
-  consequence: ActionExpression;
-}
-
-export interface Program extends Statement {
-  type: NodeType.Program;
-  body: Statement[];
-}
-
-export interface IfStatement extends Statement {
-  type: NodeType.IfStatement;
-  condition: Expression;
   consequence: ActionExpression;
 }
 

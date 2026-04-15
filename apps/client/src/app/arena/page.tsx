@@ -116,8 +116,7 @@ const ArenaPage = () => {
         />
       </div>
 
-      <div className="absolute left-8 top-40 bottom-8 w-[400px] z-20">
-        <div className="h-full bg-black/40 backdrop-blur-md border border-cyan-900/30 rounded-sm shadow-2xl overflow-hidden flex flex-col">
+      <div className="absolute left-8 top-40 bottom-8 z-20 flex" style={{ minWidth: "400px" }}>
           <CommandConsole
             socket={socket}
             robotId={selectedRobotId}
@@ -125,7 +124,6 @@ const ArenaPage = () => {
             availableRobots={availableRobots}
             onRobotChange={setSelectedRobotId}
           />
-        </div>
       </div>
 
       <div className="absolute top-8 right-8 z-20 w-72 h-56 group">

@@ -96,20 +96,20 @@ export class Pathfinder {
         return [];
     }
 
-    executePathfind(robot: Robot, memory: Map<string, any>) {
+    executePathfind(robot: Robot, memory: Record<string, any>): void {
         this.rebuildGrid();
         const target = CombatMath.getClosestTarget(robot, this.gameLoop.getRobots());
         if (!target) return;
 
-        let currentPath: { x: number, y: number }[] = memory.get('path') || [];
-        const lastCalcTarget = memory.get('lastPathCalcPosition') || { x: 0, y: 0 };
+        let currentPath: { x: number, y: number }[] = memory["path"] || [];
+        const lastCalcTarget = memory["lastPathCalcPosition"] || { x: 0, y: 0 };
 
         // Only recalculate if target moved > 50px or no path
         const targetMoveDist = Math.hypot(target.position.x - lastCalcTarget.x, target.position.y - lastCalcTarget.y);
         if (currentPath.length === 0 || targetMoveDist > 50) {
             currentPath = this.performAStar(robot.position.x, robot.position.y, target.position.x, target.position.y);
-            memory.set('lastPathCalcPosition', { x: target.position.x, y: target.position.y });
-            memory.set('path', currentPath);
+            memory["lastPathCalcPosition"] = { x: target.position.x, y: target.position.y };
+            memory["path"] = currentPath;
         }
 
         if (currentPath.length > 0) {
@@ -118,7 +118,7 @@ export class Pathfinder {
 
             if (distToWaypoint < 25) {
                 currentPath.shift();
-                memory.set('path', currentPath);
+                memory["path"] = currentPath;
                 if (currentPath.length > 0) {
                     const next = currentPath[0];
                     const angle = Math.atan2(next.y - robot.position.y, next.x - robot.position.x);

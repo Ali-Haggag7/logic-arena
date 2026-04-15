@@ -1,0 +1,48 @@
+import { GameLoop, Robot } from "@logic-arena/engine";
+import { ActionExpression } from "../../../../../../packages/logic-parser/src";
+import { Pathfinder } from "../pathfinder";
+
+export class MovementExecutor {
+    private readonly MOVE_SPEED = 150;
+    private readonly MOVE_FAST_MULTIPLIER = 2;
+
+    constructor(private gameLoop: GameLoop, private pathfinder: Pathfinder) {}
+
+    execute(robotId: string, actionCommand: string, memory: Record<string, any>): void {
+        const robot = this.gameLoop.getRobots().find(r => r.id === robotId);
+        if (!robot) return;
+
+        if (actionCommand === "PATHFIND") {
+            this.pathfinder.executePathfind(robot, memory);
+            return;
+        }
+
+        if (actionCommand === "STOP") {
+            robot.velocity.x = 0;
+            robot.velocity.y = 0;
+            return;
+        }
+
+        if (robot.trappedUntil && Date.now() < robot.trappedUntil) {
+            robot.velocity.x = 0;
+            robot.velocity.y = 0;
+            return;
+        }
+
+        const slowMult = (robot.slowedUntil && Date.now() < robot.slowedUntil)
+            ? (robot.speedMultiplier ?? 0.4) : 1;
+        const speedMultiplier = actionCommand === "MOVE_FAST" ? this.MOVE_FAST_MULTIPLIER : 1;
+        const directionMultiplier = actionCommand === "BACKUP" ? -1 : 1;
+        const speed = this.MOVE_SPEED * speedMultiplier * directionMultiplier * slowMult;
+        const speedMagnitude = Math.hypot(robot.velocity.x, robot.velocity.y);
+
+        if (robot.rotation === 0 && speedMagnitude < 0.001) {
+            robot.velocity.x = speed;
+            robot.velocity.y = 0;
+            return;
+        }
+
+        robot.velocity.x = Math.cos(robot.rotation) * speed;
+        robot.velocity.y = Math.sin(robot.rotation) * speed;
+    }
+}

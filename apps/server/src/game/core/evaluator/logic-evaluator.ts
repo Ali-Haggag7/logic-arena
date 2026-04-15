@@ -1,105 +1,135 @@
 import { GameLoop, Robot } from "@logic-arena/engine";
-import { Program, NodeType, AssignmentStatement, ActionStatement, IfStatement, ActionExpression } from "../../../../../../packages/logic-parser/src";
-import { CombatMath } from "../combat-math";
-import { ActionExecutor } from "../executor/action-executor";
+import { Program, Statement, NodeType, IfStatement, WhileStatement, AssignmentStatement, ActionStatement, CallStatement, FunctionDeclaration, WaitStatement, ScanStatement } from "../../../../../../packages/logic-parser/src";
+import { ActionExecutor } from "../executor";
 import { ExpressionEvaluator } from "./expression-evaluator";
+import { MemoryManager } from "./memory-manager";
+import { CombatMath } from "../combat-math";
 
 export class LogicEvaluator {
     private robotLogic: Map<string, Program> = new Map();
-    private logicStates: Map<string, Map<string, boolean>> = new Map();
-    private robotMemory: Map<string, Map<string, any>> = new Map();
+    private memories = new MemoryManager();
     private expressionEvaluator = new ExpressionEvaluator();
+    private functions: Map<string, Map<string, FunctionDeclaration>> = new Map();
+    private readonly MAX_WHILE_ITERS = 10;
 
-    constructor(private gameLoop: GameLoop, private actionExecutor: ActionExecutor) { }
+    constructor(private gameLoop: GameLoop, private actionExecutor: ActionExecutor) {}
 
     setLogic(robotId: string, ast: Program) {
         this.robotLogic.set(robotId, ast);
-        this.logicStates.delete(robotId);
-        this.robotMemory.set(robotId, new Map());
+        this.memories.initialize(robotId);
         this.actionExecutor.clearState(robotId);
+        
+        const funcs = new Map<string, FunctionDeclaration>();
+        ast.body.forEach(stmt => {
+            if (stmt.type === NodeType.FunctionDeclaration) {
+                const fd = stmt as FunctionDeclaration;
+                funcs.set(fd.name.value, fd);
+            }
+        });
+        this.functions.set(robotId, funcs);
     }
 
     clearAllLogic() {
         this.robotLogic.clear();
-        this.logicStates.clear();
-        this.robotMemory.clear();
+        this.memories.clearAll();
+        this.functions.clear();
     }
 
     clearLogicForRobot(robotId: string) {
         this.robotLogic.delete(robotId);
-        this.logicStates.delete(robotId);
-        this.robotMemory.delete(robotId);
+        this.memories.clearForRobot(robotId);
+        this.functions.delete(robotId);
     }
 
     evaluate(robotId: string): void {
         const program = this.robotLogic.get(robotId);
-        if (!program) return;
-
         const robot = this.gameLoop.getRobots().find(r => r.id === robotId);
-        if (!robot || robot.health <= 0) return;
+        if (!program || !robot || robot.health <= 0) return;
 
-        if (!this.logicStates.has(robotId)) this.logicStates.set(robotId, new Map());
-        if (!this.robotMemory.has(robotId)) this.robotMemory.set(robotId, new Map());
+        const memory = this.memories.getMemory(robotId);
 
-        const robotStates = this.logicStates.get(robotId)!;
-        const robotMemory = this.robotMemory.get(robotId)!;
-
-        if (!robotMemory.has("rotation")) robotMemory.set("rotation", robot.rotation);
-        if (!robotMemory.has("last_spotted_x")) robotMemory.set("last_spotted_x", robot.position.x);
-        if (!robotMemory.has("last_spotted_y")) robotMemory.set("last_spotted_y", robot.position.y);
-
-        const target = CombatMath.getClosestTarget(robot, this.gameLoop.getRobots());
-        const isSpotted = CombatMath.isTargetSpotted(robot, target);
-        if (isSpotted && target) {
-            robotMemory.set("last_spotted_x", target.position.x);
-            robotMemory.set("last_spotted_y", target.position.y);
+        let waitTicks = memory["___waitTicks"] ?? 0;
+        if (waitTicks > 0) {
+            memory["___waitTicks"] = waitTicks - 1;
+            return;
         }
 
-        const movementCommands = new Set(["MOVE", "MOVE_FAST", "BACKUP", "STOP"]);
-        let pendingMovementAction: { action: ActionExpression; isBare: boolean; command: string } | null = null;
+        if (!('rotation' in memory)) memory["rotation"] = robot.rotation;
+        
+        const target = CombatMath.getClosestTarget(robot, this.gameLoop.getRobots());
+        if (CombatMath.isTargetSpotted(robot, target) && target) {
+            memory["last_spotted_x"] = target.position.x;
+            memory["last_spotted_y"] = target.position.y;
+        }
 
-        program.body.forEach((statement, index) => {
-            if (statement.type === NodeType.AssignmentStatement) {
-                const assignment = statement as AssignmentStatement;
-                const value = this.expressionEvaluator.evaluateExpression(robotId, robot, assignment.value, this.robotMemory, () => this.gameLoop.getRobots());
-                robotMemory.set(assignment.name.value, value);
-                if (assignment.name.value === "rotation" && typeof value === "number") robot.rotation = value;
-                return;
-            }
+        this.executeBlock(robotId, robot, program.body, memory);
+    }
 
-            if (statement.type === NodeType.ActionStatement) {
-                const actionStatement = statement as ActionStatement;
-                const actionCommand = actionStatement.consequence.command.toUpperCase();
-                if (!this.actionExecutor.isBareActionOffCooldown(robotId, actionCommand)) return;
-                if (movementCommands.has(actionCommand)) {
-                    pendingMovementAction = { action: actionStatement.consequence, isBare: true, command: actionCommand };
-                    return;
+    private executeBlock(robotId: string, robot: Robot, statements: Statement[], memory: Record<string, any>): void {
+        for (const stmt of statements) {
+            if (robot.health <= 0) return;
+
+            switch (stmt.type) {
+                case NodeType.AssignmentStatement: {
+                    const assign = stmt as AssignmentStatement;
+                    const val = this.expressionEvaluator.evaluateExpression(robot, assign.value, memory, () => this.gameLoop.getRobots());
+                    memory[assign.name.value] = val;
+                    if (assign.name.value === "rotation" && typeof val === "number") robot.rotation = val;
+                    break;
                 }
-                this.actionExecutor.executeAction(robotId, actionStatement.consequence, robotMemory);
-                this.actionExecutor.markBareActionExecuted(robotId, actionCommand);
-                return;
-            }
-
-            if (statement.type === NodeType.IfStatement) {
-                const ifStatement = statement as IfStatement;
-                const isConditionMet = this.expressionEvaluator.evaluateCondition(robotId, robot, ifStatement.condition, this.robotMemory, () => this.gameLoop.getRobots());
-                const wasConditionMetBefore = robotStates.get(index.toString()) || false;
-                if (isConditionMet && !wasConditionMetBefore) {
-                    const actionCommand = ifStatement.consequence.command.toUpperCase();
-                    if (movementCommands.has(actionCommand)) {
-                        pendingMovementAction = { action: ifStatement.consequence, isBare: false, command: actionCommand };
-                    } else {
-                        this.actionExecutor.executeAction(robotId, ifStatement.consequence, robotMemory);
+                case NodeType.ActionStatement: {
+                    const action = (stmt as ActionStatement).consequence;
+                    this.executeActionIfOffCooldown(robotId, action, memory);
+                    break;
+                }
+                case NodeType.IfStatement: {
+                    const ifStmt = stmt as IfStatement;
+                    const cond = this.expressionEvaluator.evaluateCondition(robot, ifStmt.condition, memory, () => this.gameLoop.getRobots());
+                    if (cond) {
+                        this.executeBlock(robotId, robot, ifStmt.consequence, memory);
+                    } else if (ifStmt.alternate) {
+                        this.executeBlock(robotId, robot, ifStmt.alternate, memory);
                     }
+                    break;
                 }
-                robotStates.set(index.toString(), isConditionMet);
+                case NodeType.WhileStatement: {
+                    const whileStmt = stmt as WhileStatement;
+                    let iters = 0;
+                    while (iters < this.MAX_WHILE_ITERS) {
+                        const cond = this.expressionEvaluator.evaluateCondition(robot, whileStmt.condition, memory, () => this.gameLoop.getRobots());
+                        if (!cond) break;
+                        this.executeBlock(robotId, robot, whileStmt.body, memory);
+                        iters++;
+                    }
+                    break;
+                }
+                case NodeType.CallStatement: {
+                    const funcName = (stmt as CallStatement).functionName.value;
+                    const func = this.functions.get(robotId)?.get(funcName);
+                    if (func) this.executeBlock(robotId, robot, func.body, memory);
+                    break;
+                }
+                case NodeType.WaitStatement: {
+                    const ticks = (stmt as WaitStatement).ticks.value;
+                    memory["___waitTicks"] = ticks;
+                    return; // Stop current block execution
+                }
+                case NodeType.ScanStatement: {
+                    this.actionExecutor.executeAction(robotId, stmt as ScanStatement, memory);
+                    break;
+                }
             }
-        });
+        }
+    }
 
-        if (pendingMovementAction !== null) {
-            const { action, isBare, command } = pendingMovementAction;
-            this.actionExecutor.executeAction(robotId, action, robotMemory);
-            if (isBare) this.actionExecutor.markBareActionExecuted(robotId, command);
+    private executeActionIfOffCooldown(robotId: string, action: any, memory: Record<string, any>) {
+        const cmd = action.command.toUpperCase();
+        if (["MOVE", "MOVE_FAST", "BACKUP", "STOP"].includes(cmd)) {
+            this.actionExecutor.executeAction(robotId, action, memory);
+            this.actionExecutor.markBareActionExecuted(robotId, cmd);
+        } else if (this.actionExecutor.isBareActionOffCooldown(robotId, cmd)) {
+            this.actionExecutor.executeAction(robotId, action, memory);
+            this.actionExecutor.markBareActionExecuted(robotId, cmd);
         }
     }
 }

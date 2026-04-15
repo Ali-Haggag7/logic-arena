@@ -1,74 +1,92 @@
-# AliScript Language Reference
+# AliScript Language Reference (v2.0 Fox Mind Update)
 
 ## Overview
-AliScript is a simple, line-based scripting language specifically designed for programming combat robots within the Logic Arena environment. It allows operators to define autonomous behaviors for their neural cores using a high-level, human-readable syntax.
+AliScript is a simple, line-based scripting language specifically designed for programming combat robots within the Logic Arena environment. The v2.0 update introduces block-based execution, variables, neural pathways (functions), and mathematical operators.
 
 ## Syntax Rules
-- **Case Insensitive**: Commands and conditions can be written in uppercase or lowercase.
-- **One Statement Per Line**: Each instruction must reside on its own line.
-- **Comments**: Use `//` to add comments. Anything following `//` on a line is ignored by the compiler.
+- **Block Formatting**: Conditionals and loops require explicit block keywords (`THEN`, `DO`) and must be terminated with `END`.
+- **Case Insensitive**: Keywords can be written in uppercase or lowercase.
+- **Comments**: Use `//` to add comments.
 
 ## Commands Reference
 
-### Movement Commands
-- `MOVE`: Moves the robot forward in its current rotation direction.
-- `MOVE_FAST`: Moves the robot forward at 2x the standard speed.
-- `BACKUP`: Moves the robot backward relative to its current rotation.
-- `STOP`: Immediately halts all movement and velocity.
-- `PATHFIND`: Activates the A* pathfinding algorithm to navigate toward the nearest enemy while avoiding obstacles.
+### Structural Flow
+- `IF [condition] THEN ... ELSE ... END`: Branching conditionals.
+- `WHILE [condition] DO ... END`: Loops over a block of code (Max 10 iterations/tick limit applied automatically).
+- `FUNCTION [name] ... END` and `CALL [name]`: Define and invoke modular routines.
 
-### Combat Commands  
-- `FIRE`: Fires a standard projectile at the nearest enemy. Has a 500ms cooldown.
-- `BURST_FIRE`: A rapid-fire variant that discharges multiple rounds in quick succession.
+### Movement & Haptic Constraints
+- `MOVE`: Moves the robot forward.
+- `MOVE_FAST`: 2x standard speed, drains extra energy.
+- `BACKUP`: Retreats from the facing angle.
+- `STOP`: Halts all movement.
+- `PATHFIND`: Computes A* navigation to the nearest enemy.
+- `WAIT [ticks]`: Suspends code execution for the defined cycles (60 ticks = 1 second).
 
-### Conditional Logic
-`IF [condition] THEN [command]`
+### Sensors & Combat
+- `SCAN`: Populates `scanned_distance`, `scanned_angle`, and `scanned_spotted` immediately without moving the bot.
+- `FIRE`: Standard projectile (500ms cooldown).
+- `BURST_FIRE`: Rapid multi-fire variant.
 
-### Available Conditions
-- `spotted`: Evaluates to true when an enemy robot is within the sensor range.
-- `health < [number]`: True if the robot's current health is below the specified threshold.
-- `distance < [number]`: True if the nearest enemy is closer than the specified distance.
-- `distance > [number]`: True if the nearest enemy is further than the specified distance.
+### Math & Logic
+Operators `+`, `-`, `*`, `/`, `%` are supported in calculations.
+- `SET [var] = expression`: Defines memory allocation. Example: `SET limit = 10 % 3`
+- `NOT`: Inverts a boolean condition. Example: `IF NOT spotted THEN SCAN`
 
-### Variables (SET)
-- `SET [varname] = [value]`: Assigns a value to a user-defined variable.
-- Example: `SET rotation = 1.57`
+### Memory Interface
+ReadOnly Core Variables:
+- `health`: Core Integrity (0-100).
+- `distance`: Immediate distance to nearest enemy (if visible).
+- `spotted`: TRUE if an enemy is in the standard FOV.
+- `rotation`: Facing angle in radians.
 
-### Memory Variables (read-only)
-- `health`: Current robot health (0-100).
-- `distance`: Distance to the nearest detected enemy.
-- `spotted`: Boolean state indicating if an enemy is in sensor range.
-- `rotation`: Current robot rotation in radians.
-- `target_vx`, `target_vy`: The velocity vectors of the current target.
-- `last_spotted_x`, `last_spotted_y`: The last known global coordinates of the enemy.
+## Battle Tactics (High-Level Examples)
 
-## Example Scripts
-
-### Aggressive Sniper
-```
-IF spotted THEN FIRE
-IF distance < 200 THEN BACKUP
-IF distance > 400 THEN PATHFIND
-```
-
-### Safe Mode (Defensive)
-```
-IF health < 30 THEN BACKUP
-IF spotted THEN FIRE
+### 1. The Stalker
+Uses a continuous scan loop to acquire targets out of normal range, calculating offsets.
+```aliscript
+SCAN
+WHILE NOT scanned_spotted DO
+  SET rotation = rotation + 0.1
+  WAIT 2
+  SCAN
+END
 PATHFIND
+IF scanned_distance < 200 THEN FIRE
 ```
 
-### Brawler
+### 2. The Turret
+Remains stationary, waiting for optimal burst engagements to conserve energy.
+```aliscript
+FUNCTION defend
+  SCAN
+  IF scanned_distance < 150 THEN
+    BURST_FIRE
+    WAIT 10
+  ELSE
+    SET rotation = rotation + 0.05
+  END
+END
+
+STOP
+WHILE TRUE DO
+  CALL defend
+END
 ```
-MOVE_FAST
-IF spotted THEN BURST_FIRE
-IF health < 50 THEN BACKUP
+
+### 3. The Jitterbug
+Utilizes math offsets to move erratically, dodging projectiles while maintaining a general forward sweep.
+```aliscript
+SET offset = 1
+
+WHILE TRUE DO
+  MOVE_FAST
+  SET rotation = rotation + (offset * 0.5)
+  SET offset = offset * -1
+  IF spotted THEN FIRE
+  WAIT 3
+END
 ```
 
 ## Energy System
 Each action (movement and firing) consumes energy. Robots regenerate energy passively over time. Complex commands like `BURST_FIRE` and `MOVE_FAST` consume energy at a significantly higher rate.
-
-## Tips & Tricks
-- **Hybrid Tactics**: Combine `PATHFIND` with `FIRE` to create aggressive bots that hunt down their targets.
-- **Evasive Maneuvers**: Use `BACKUP` when health is low or the enemy is too close to maintain a tactical advantage.
-- **Energy Management**: `BURST_FIRE` is powerful for securing kills but can leave you drained and vulnerable if used recklessly.

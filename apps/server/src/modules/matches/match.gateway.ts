@@ -20,7 +20,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server;
 
   private matches: Map<string, MatchEngine> = new Map();
-  private lastStateJson: Map<string, string> = new Map();
+  private lastStateMap: Map<string, any> = new Map();
   private lobbyMatches: Map<string, { hostId: string; hostName: string; matchId: string; createdAt: number }> = new Map();
   private matchStartTime: Map<string, number> = new Map();
   private replaySnapshots: Map<string, any[]> = new Map();
@@ -199,7 +199,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
           match.stop();
           this.matches.delete(matchId);
-          this.lastStateJson.delete(matchId);
+          this.lastStateMap.delete(matchId);
           this.matchStartTime.delete(matchId);
           this.replaySnapshots.delete(matchId);
           this.tickCount.delete(matchId);
@@ -207,10 +207,39 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
           continue;
         }
 
-        const json = JSON.stringify(state);
-        if (this.lastStateJson.get(matchId) !== json) {
-          this.lastStateJson.set(matchId, json);
-          this.broadcastMatchState(matchId, state);
+        const prevState = this.lastStateMap.get(matchId);
+        let delta: any = { type: 'full', state };
+
+        if (prevState) {
+          const robotsDiff = state.robots.map((r: any) => {
+             const prevR = prevState.robots.find((pr: any) => pr.id === r.id);
+             if (!prevR) return r;
+             let rd: any = { id: r.id };
+             let changed = false;
+             ['position', 'velocity', 'health', 'rotation', 'isAlive', 'color', 'maxHealth', 'slowedUntil', 'speedMultiplier', 'trappedUntil', 'shields'].forEach(prop => {
+                 if (JSON.stringify(r[prop]) !== JSON.stringify(prevR[prop])) {
+                     rd[prop] = r[prop];
+                     changed = true;
+                 }
+             });
+             return changed ? rd : null;
+          }).filter(Boolean);
+
+          delta = { 
+            type: 'delta', 
+            diff: { 
+               robots: robotsDiff, 
+               projectiles: state.projectiles
+            } 
+          };
+        }
+
+        const deltaChanged = delta.type === 'full' || 
+          (delta.diff && (delta.diff.robots.length > 0 || delta.diff.projectiles.length > 0));
+
+        if (deltaChanged) {
+          this.lastStateMap.set(matchId, JSON.parse(JSON.stringify(state)));
+          this.broadcastMatchState(matchId, delta);
         }
       }
     }, 50);

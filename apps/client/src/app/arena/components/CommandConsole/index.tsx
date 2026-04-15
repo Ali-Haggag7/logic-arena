@@ -1,10 +1,10 @@
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import { Socket } from "socket.io-client";
 import { useConsole } from "../../hooks/useConsole";
 import { BotSelector } from "./BotSelector";
 import { TerminalOutput } from "./TerminalOutput";
 import { ScriptEditor } from "./ScriptEditor";
-import { CommandsDatabase } from "./CommandsDatabase";
+import { NeuralHandbook } from "./NeuralHandbook";
 import { PrebuiltScripts } from "./PrebuiltScripts";
 import { ReferencePanel } from "./ReferencePanel";
 
@@ -23,37 +23,54 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
         appendScriptLine, handleCommandSubmit, handleDeployBrain
     } = useConsole(socket, robotId, scriptId);
 
+    const [isZenMode, setIsZenMode] = useState(false);
+
     return (
-        <div className="flex flex-col w-full h-full bg-black/60 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] relative z-20">
-            <BotSelector availableRobots={availableRobots} robotId={robotId} onRobotChange={onRobotChange} />
-            <TerminalOutput output={output} />
+        <div className={`transition-all duration-500 ease-out flex flex-col bg-black/70 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 ${isZenMode ? "fixed top-24 bottom-8 left-8 w-[800px] border-cyan-500/50 shadow-[0_0_80px_rgba(34,211,238,0.2)]" : "h-full min-w-[420px] w-auto"}`}>
             
-            {/* Live Command Line inline for brevity */}
-            <form onSubmit={handleCommandSubmit} className="flex items-center gap-2 mb-4 bg-black/40 border border-cyan-900/50 rounded p-2 focus-within:border-cyan-500/50 transition-colors">
+            {/* SENTIENT UPDATE Header */}
+            <div className="flex justify-between items-center mb-4 border-b border-cyan-900/50 pb-2 shrink-0">
+                <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]"></span>
+                    <span className="text-cyan-400 text-[10px] font-black tracking-[0.2em] uppercase">Sentient Update // ALISCRIPT V2.0</span>
+                </div>
+                <button 
+                  onClick={() => setIsZenMode(!isZenMode)}
+                  className="px-4 py-1.5 bg-black/50 border border-purple-500/50 text-purple-300 text-[10px] font-bold rounded uppercase tracking-widest hover:bg-purple-900/40 hover:text-white transition-all shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                >
+                  {isZenMode ? "Exit Zen Core" : "Enter Zen Mode"}
+                </button>
+            </div>
+
+            {/* Override Console */}
+            <form onSubmit={handleCommandSubmit} className="flex items-center gap-2 mb-3 bg-black/40 border border-cyan-900/50 rounded p-2 focus-within:border-cyan-500/50 transition-colors shrink-0">
                 <span className="text-cyan-500 font-bold ml-1">{'>'}</span>
-                <input placeholder="Execute override (e.g. FIRE)" type="text" className="flex-grow bg-transparent outline-none text-cyan-300 text-xs placeholder-cyan-900" value={commandInput} onChange={(e) => setCommandInput(e.target.value)} />
+                <input placeholder="Execute override (e.g. FIRE)" type="text" className="flex-grow bg-transparent outline-none text-cyan-300 text-xs font-mono placeholder-cyan-900" value={commandInput} onChange={(e) => setCommandInput(e.target.value)} />
             </form>
 
-            <ScriptEditor 
-                scriptInput={scriptInput} 
-                setScriptInput={setScriptInput} 
-                handleDeployBrain={() => handleDeployBrain()} 
-                toggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)} 
-                clearPrebuilt={() => setActivePrebuilt(null)} 
-            />
-            
-            {/* UPDATED: Appends the script AND closes the dropdown immediately */}
-            <CommandsDatabase 
-                isOpen={isLibraryOpen} 
-                onSelect={(cmd) => {
-                    appendScriptLine(cmd);
-                    setIsLibraryOpen(false); 
-                }} 
-            />
-
-            <div className="mt-4 flex flex-col gap-2">
-                <PrebuiltScripts activePrebuilt={activePrebuilt} onSelect={(name, script) => { setScriptInput(script); setActivePrebuilt(name); handleDeployBrain(script); }} />
-                <ReferencePanel />
+            <div className="flex flex-row flex-grow overflow-hidden relative">
+                {/* Left Side: Editor & Terminal */}
+                <div className="flex flex-col flex-grow h-full gap-3 overflow-hidden relative">
+                    {!isZenMode && <BotSelector availableRobots={availableRobots} robotId={robotId} onRobotChange={onRobotChange} />}
+                    {!isZenMode && <div className="max-h-24 overflow-y-auto custom-scrollbar shrink-0 border border-cyan-900/30 rounded"><TerminalOutput output={output} /></div>}
+                    
+                    <ScriptEditor 
+                        scriptInput={scriptInput} 
+                        setScriptInput={setScriptInput} 
+                        handleDeployBrain={() => handleDeployBrain(scriptInput)} 
+                        toggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)} 
+                        clearPrebuilt={() => setActivePrebuilt(null)} 
+                    />
+                </div>
+                
+                {/* Right Side: Neural Handbook */}
+                <NeuralHandbook 
+                    isOpen={isLibraryOpen} 
+                    onSelect={(cmd) => {
+                        appendScriptLine(cmd);
+                        setIsLibraryOpen(false); 
+                    }} 
+                />
             </div>
 
             <style jsx global>{`

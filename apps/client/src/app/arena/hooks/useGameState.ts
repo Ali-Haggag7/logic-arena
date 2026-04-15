@@ -46,42 +46,49 @@ export const useGameState = (scriptId: string | null) => {
       if (!data || typeof data !== "object") return;
       const payload = data as Record<string, unknown>;
 
-      const parsedData: GameState = { robots: [], projectiles: [], obstacles: [] };
+      let parsedData: GameState = { robots: [], projectiles: [], obstacles: [] };
 
-      const robotsContainer = payload["robots"];
-      const nestedRobotsContainer = robotsContainer && typeof robotsContainer === "object"
-        ? (robotsContainer as Record<string, unknown>)["robots"]
-        : undefined;
-      const robotsPayload = Array.isArray(robotsContainer)
-        ? robotsContainer
-        : Array.isArray(nestedRobotsContainer) ? nestedRobotsContainer : [];
+      if (payload.type === 'delta') {
+          const diff: any = payload.diff;
+          parsedData = { ...gameStateRef.current };
+          if (diff.robots) {
+              parsedData.robots = parsedData.robots.map(r => {
+                  const rd = diff.robots.find((d: any) => d.id === r.id);
+                  if (rd) return { ...r, ...rd };
+                  return r;
+              });
+          }
+          if (diff.projectiles) parsedData.projectiles = diff.projectiles;
+          if (diff.obstacles) parsedData.obstacles = diff.obstacles;
+      } else if (payload.type === 'full') {
+          parsedData = payload.state as GameState;
+      } else {
+          // Fallback legacy
+          const robotsContainer = payload["robots"];
+          const nestedRobotsContainer = robotsContainer && typeof robotsContainer === "object"
+            ? (robotsContainer as Record<string, unknown>)["robots"]
+            : undefined;
+          const robotsPayload = Array.isArray(robotsContainer)
+            ? robotsContainer
+            : Array.isArray(nestedRobotsContainer) ? nestedRobotsContainer : [];
 
-      parsedData.robots = robotsPayload.map(item => {
-        const robot = item as RobotState;
-        return {
-          ...robot,
-          rotation: typeof robot.rotation === "number" ? robot.rotation : 0,
-          spotted: typeof robot.spotted === "boolean" ? robot.spotted : undefined
-        };
-      });
+          parsedData.robots = robotsPayload.map(item => {
+            const robot = item as RobotState;
+            return {
+              ...robot,
+              rotation: typeof robot.rotation === "number" ? robot.rotation : 0,
+              spotted: typeof robot.spotted === "boolean" ? robot.spotted : undefined
+            };
+          });
 
-      const projectilesContainer = payload["projectiles"];
-      const nestedProjectilesContainer = robotsContainer && typeof robotsContainer === "object"
-        ? (robotsContainer as Record<string, unknown>)["projectiles"]
-        : undefined;
-      const projectilesPayload = Array.isArray(projectilesContainer)
-        ? projectilesContainer
-        : Array.isArray(nestedProjectilesContainer) ? nestedProjectilesContainer : [];
-      parsedData.projectiles = projectilesPayload as ProjectileState[];
+          const projectilesContainer = payload["projectiles"];
+          const projectilesPayload = Array.isArray(projectilesContainer) ? projectilesContainer : [];
+          parsedData.projectiles = projectilesPayload as ProjectileState[];
 
-      const obstaclesContainer = payload["obstacles"];
-      const nestedObstaclesContainer = robotsContainer && typeof robotsContainer === "object"
-        ? (robotsContainer as Record<string, unknown>)["obstacles"]
-        : undefined;
-      const obstaclesPayload = Array.isArray(obstaclesContainer)
-        ? obstaclesContainer
-        : Array.isArray(nestedObstaclesContainer) ? nestedObstaclesContainer : [];
-      parsedData.obstacles = obstaclesPayload as ObstacleState[];
+          const obstaclesContainer = payload["obstacles"];
+          const obstaclesPayload = Array.isArray(obstaclesContainer) ? obstaclesContainer : [];
+          parsedData.obstacles = obstaclesPayload as ObstacleState[];
+      }
 
       // Update ref instantly — zero re-render
       gameStateRef.current = parsedData;
