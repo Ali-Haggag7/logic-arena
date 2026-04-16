@@ -16,72 +16,20 @@ export default function NavLink({ href, label, icon }: NavLinkProps) {
   return (
     <Link
       href={href}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "10px 14px",
-        borderRadius: "6px",
-        borderLeft: isActive
-          ? "2px solid #22d3ee"
-          : "2px solid transparent",
-        backgroundColor: isActive
-          ? "rgba(34, 211, 238, 0.08)"
-          : "transparent",
-        color: isActive ? "#22d3ee" : "rgba(34, 211, 238, 0.4)",
-        textDecoration: "none",
-        fontSize: "10px",
-        fontWeight: "700",
-        letterSpacing: "0.18em",
-        fontFamily: "var(--font-geist-mono), monospace",
-        transition: "all 0.2s ease",
-        position: "relative",
-        ...(isActive && {
-          boxShadow: "-4px 0 12px rgba(34, 211, 238, 0.3), inset 0 0 20px rgba(34, 211, 238, 0.04)",
-          textShadow: "0 0 10px rgba(34, 211, 238, 0.7)",
-        }),
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          (e.currentTarget as HTMLAnchorElement).style.color = "rgba(34, 211, 238, 0.85)";
-          (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(34, 211, 238, 0.05)";
-          (e.currentTarget as HTMLAnchorElement).style.borderLeftColor = "rgba(34, 211, 238, 0.4)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          (e.currentTarget as HTMLAnchorElement).style.color = "rgba(34, 211, 238, 0.4)";
-          (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
-          (e.currentTarget as HTMLAnchorElement).style.borderLeftColor = "transparent";
-        }
-      }}
+      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-md font-mono text-[10px] font-bold tracking-[0.18em] transition-all duration-200 relative group overflow-hidden ${
+        isActive
+          ? "text-[#22d3ee] bg-[#22d3ee]/[0.08] border-l-2 border-[#22d3ee] shadow-[-4px_0_12px_rgba(34,211,238,0.3),inset_0_0_20px_rgba(34,211,238,0.04)] [text-shadow:0_0_10px_rgba(34,211,238,0.7)]"
+          : "text-[#22d3ee]/40 border-l-2 border-transparent hover:text-[#22d3ee]/85 hover:bg-[#22d3ee]/[0.05] hover:border-[#22d3ee]/40 hover:[text-shadow:0_0_5px_rgba(34,211,238,0.5)]"
+      }`}
     >
       {icon && (
-        <span
-          style={{
-            fontSize: "13px",
-            width: "16px",
-            textAlign: "center",
-            flexShrink: 0,
-            opacity: isActive ? 1 : 0.6,
-          }}
-        >
+        <span className={`text-[13px] w-4 text-center shrink-0 transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-60 group-hover:opacity-80'}`}>
           {icon}
         </span>
       )}
       <span>{label}</span>
       {isActive && (
-        <span
-          style={{
-            marginLeft: "auto",
-            width: "5px",
-            height: "5px",
-            borderRadius: "50%",
-            backgroundColor: "#22d3ee",
-            boxShadow: "0 0 8px #22d3ee",
-            flexShrink: 0,
-          }}
-        />
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#22d3ee] shadow-[0_0_8px_#22d3ee] shrink-0 animate-pulse" />
       )}
     </Link>
   );

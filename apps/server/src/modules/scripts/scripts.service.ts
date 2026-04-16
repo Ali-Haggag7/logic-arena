@@ -41,9 +41,14 @@ export class ScriptsService {
             throw new NotFoundException("Script not found or unauthorized.");
         }
 
+        const updateData: any = { content, version: script.version + 1 };
+        if (title) {
+            updateData.title = title;
+        }
+
         return this.prisma.robotScript.update({
             where: { id: scriptId },
-            data: { title, content, version: script.version + 1 },
+            data: updateData,
         });
     }
 

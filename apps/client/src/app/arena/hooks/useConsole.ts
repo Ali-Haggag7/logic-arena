@@ -51,7 +51,7 @@ export const useConsole = (socket: Socket | null, robotId: string, scriptId?: st
 
             try {
                 if (scriptId) {
-                    await apiClient.put(`/scripts/${scriptId}`, { title: "Arena Script", content: scriptToDeploy });
+                    await apiClient.put(`/scripts/${scriptId}`, { content: scriptToDeploy });
                 } else {
                     await apiClient.post("/scripts", { title: "Arena Script", content: scriptToDeploy });
                 }
