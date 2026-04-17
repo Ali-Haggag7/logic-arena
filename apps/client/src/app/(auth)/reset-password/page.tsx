@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "../../../lib/api-client";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [status, setStatus] = useState("");
@@ -32,5 +32,13 @@ export default function ResetPasswordPage() {
         <button type="submit" className="w-full mt-4 p-3 border border-[#a855f7]/40 text-[#a855f7] hover:bg-[#a855f7]/10 tracking-[0.2em] transition-all">CONFIRM</button>
       </form>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

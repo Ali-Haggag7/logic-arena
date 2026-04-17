@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "../../../lib/api-client";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("");
   const router = useRouter();
@@ -30,5 +30,13 @@ export default function VerifyEmailPage() {
         <button type="submit" className="w-full mt-4 p-3 border border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/10 tracking-[0.2em] transition-all">VERIFY</button>
       </form>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
