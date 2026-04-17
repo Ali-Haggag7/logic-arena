@@ -5,6 +5,7 @@ export interface LeaderboardUser {
   id:       string;
   username: string;
   rank:     number;
+  isOnline: boolean;
   _count: {
     wonMatches: number;
   };
@@ -60,9 +61,13 @@ const EfficiencyBadge = ({ score }: { score: number }) => {
 export const LeaderboardTable = ({
   users,
   isLoading,
+  currentUserId,
+  onChallenge,
 }: {
-  users:     LeaderboardUser[];
-  isLoading: boolean;
+  users:         LeaderboardUser[];
+  isLoading:     boolean;
+  currentUserId: string;
+  onChallenge:   (userId: string, username: string) => void;
 }) => (
   <div className="bg-black/60 backdrop-blur-xl border border-cyan-900/60 rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
     <div className="overflow-x-auto">
@@ -99,9 +104,16 @@ export const LeaderboardTable = ({
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="text-cyan-100 font-bold tracking-wider group-hover:text-white transition-colors">
-                    {user.username}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${
+                      user.isOnline
+                        ? 'bg-[#22c55e] shadow-[0_0_6px_#22c55e]'
+                        : 'bg-[#22d3ee]/15'
+                    }`} />
+                    <span className="text-cyan-100 font-bold tracking-wider group-hover:text-white transition-colors">
+                      {user.username}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
@@ -120,7 +132,19 @@ export const LeaderboardTable = ({
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <EfficiencyBadge score={deriveEfficiency(user)} />
+                  <div className="flex items-center justify-end gap-4">
+                    <EfficiencyBadge score={deriveEfficiency(user)} />
+                    <div className="w-[100px] flex justify-end shrink-0">
+                      {user.isOnline && user.id !== currentUserId && (
+                        <button
+                          onClick={() => onChallenge(user.id, user.username)}
+                          className="text-[9px] tracking-[0.15em] px-3 py-1 rounded border border-[#22d3ee]/30 bg-[#22d3ee]/5 hover:bg-[#22d3ee]/15 text-[#22d3ee]/70 hover:text-[#22d3ee] transition-all whitespace-nowrap"
+                        >
+                          ⚔ CHALLENGE
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </td>
               </tr>
             ))

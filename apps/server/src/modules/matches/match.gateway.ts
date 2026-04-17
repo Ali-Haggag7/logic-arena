@@ -6,6 +6,7 @@ import { Server, Socket } from 'socket.io';
 import { MatchEngine } from './match.engine';
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../../common/prisma.service';
+import { RedisService } from '../../common/redis.service';
 
 type AuthenticatedSocket = Socket & {
   userId?: string;
@@ -36,7 +37,10 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private savingMatches = new Set<string>();
   private matchModes = new Map<string, string>();
 
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {}
 
   // ---------------------------------------------------------------------------
   // Connection / Auth
@@ -57,6 +61,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const cleanToken = token.replace('Bearer ', '');
       const decoded: any = jwt.verify(cleanToken, process.env.JWT_SECRET as string);
       client.userId = decoded.sub;
+      await this.redisService.set(`user:online:${client.userId}`, '1', 300);
       client.emit('authenticated', { userId: client.userId });
     } catch {
       client.emit('error', { message: 'Unauthorized: Invalid token' });
@@ -64,8 +69,10 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  handleDisconnect(@ConnectedSocket() _client: AuthenticatedSocket) {
-    // Intentional no-op: robot persists across reconnect / page-refresh
+  async handleDisconnect(@ConnectedSocket() client: AuthenticatedSocket) {
+    if (client.userId) {
+      await this.redisService.del(`user:online:${client.userId}`);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -197,6 +204,69 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('getLobby')
   handleGetLobby(@ConnectedSocket() client: AuthenticatedSocket) {
     client.emit('lobbyList', Array.from(this.lobbyMatches.values()));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Online presence & instant challenge
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage('ping')
+  async handlePing(@ConnectedSocket() client: AuthenticatedSocket) {
+    if (client.userId) {
+      await this.redisService.set(`user:online:${client.userId}`, '1', 300);
+      client.emit('pong');
+    }
+  }
+
+  @SubscribeMessage('send-challenge')
+  async handleSendChallenge(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { targetUserId: string },
+  ) {
+    if (!client.userId) return;
+
+    const isOnline = await this.redisService.get(`user:online:${data.targetUserId}`);
+    if (!isOnline) {
+      client.emit('challenge-failed', { reason: 'TARGET_OFFLINE' });
+      return;
+    }
+
+    const sockets = await this.server.fetchSockets();
+    const targetSocket = sockets.find((s: any) => s.userId === data.targetUserId);
+    if (!targetSocket) {
+      client.emit('challenge-failed', { reason: 'TARGET_OFFLINE' });
+      return;
+    }
+
+    const challenger = await this.prisma.user.findUnique({
+      where:  { id: client.userId },
+      select: { username: true },
+    });
+
+    targetSocket.emit('challenge-received', {
+      challengerId:   client.userId,
+      challengerName: challenger?.username ?? 'UNKNOWN',
+    });
+
+    client.emit('challenge-sent', { targetUserId: data.targetUserId });
+  }
+
+  @SubscribeMessage('accept-challenge')
+  async handleAcceptChallenge(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { challengerId: string },
+  ) {
+    if (!client.userId) return;
+
+    const matchId = crypto.randomUUID();
+
+    client.emit('challenge-accepted', { matchId });
+
+    const sockets = await this.server.fetchSockets();
+    const challengerSocket = sockets.find((s: any) => s.userId === data.challengerId);
+    if (challengerSocket) {
+      challengerSocket.emit('challenge-accepted', { matchId });
+    }
   }
 
   @SubscribeMessage('resetGame')

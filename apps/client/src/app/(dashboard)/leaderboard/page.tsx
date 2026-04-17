@@ -4,15 +4,19 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient } from "../../../lib/api-client";
 import { LeaderboardTable, LeaderboardUser } from "./components/LeaderboardTable";
+import { useSocket } from "../../../context/SocketContext";
 
 const LeaderboardPage = () => {
     const [users, setUsers] = useState<LeaderboardUser[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState<string>("");
+    const { sendChallenge } = useSocket();
 
     useEffect(() => {
+        setCurrentUserId(localStorage.getItem('userId') ?? '');
+
         const fetchLeaderboard = async () => {
             try {
-                // Fixed axios call to use apiClient for auth and environment-safe routing
                 const response = await apiClient.get("/users/leaderboard");
                 setUsers(response.data);
             } catch (error) {
@@ -21,7 +25,14 @@ const LeaderboardPage = () => {
                 setIsLoading(false);
             }
         };
+
         fetchLeaderboard();
+        
+        const interval = setInterval(() => {
+            fetchLeaderboard();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -48,7 +59,12 @@ const LeaderboardPage = () => {
                 </div>
 
                 {/* Table Container Abstracted */}
-                <LeaderboardTable users={users} isLoading={isLoading} />
+                <LeaderboardTable 
+                    users={users} 
+                    isLoading={isLoading} 
+                    currentUserId={currentUserId}
+                    onChallenge={sendChallenge}
+                />
 
                 {/* Footer Decor */}
                 <div className="mt-8 flex justify-center opacity-30">

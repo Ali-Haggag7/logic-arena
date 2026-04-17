@@ -15,8 +15,7 @@ import { RedisService }  from '../../common/redis.service';
 import { AuthGuard }     from '../../common/auth.guard';
 import { UsersService }  from './users.service';
 
-const LEADERBOARD_KEY = 'leaderboard:top10';
-const LEADERBOARD_TTL = 30; // seconds
+
 
 @SkipThrottle({ auth: true })
 @Controller('users')
@@ -27,13 +26,10 @@ export class UsersController {
     private readonly redis:        RedisService,
   ) {}
 
-  // ── Leaderboard (public, cached 30 s) ────────────────────────────────────
+  // ── Leaderboard (public, live online status — no cache) ──────────────────
   @Get('leaderboard')
   async getLeaderboard() {
-    const cached = await this.redis.get<unknown>(LEADERBOARD_KEY);
-    if (cached) return cached;
-
-    const data = await this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       orderBy: { rank: 'desc' },
       take:    10,
       select:  {
@@ -44,8 +40,14 @@ export class UsersController {
       },
     });
 
-    await this.redis.set(LEADERBOARD_KEY, data, LEADERBOARD_TTL);
-    return data;
+    const usersWithStatus = await Promise.all(
+      users.map(async (user) => {
+        const online = await this.redis.get(`user:online:${user.id}`);
+        return { ...user, isOnline: !!online };
+      }),
+    );
+
+    return usersWithStatus;
   }
 
   // ── My Profile (auth-gated, Redis-first via service) ─────────────────────
