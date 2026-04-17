@@ -340,7 +340,7 @@ Introduced the Tournament Bracket System, 2D Canvas Match Replay System, an inte
 ### Current Status:
 - The platform is now a comprehensive competitive tactical suite, fully capable of autonomous replay recordings and structured e-sport tournament brackets. Fully modularized dashboard and documentation architecture further grounds the Logic Arena experience.
 
-## [1.8.0-beta] - AliScript v2.0, Environment Stability & Dynamic Orchestration - 2026-04-15
+## [1.8.0-beta] - AliScript v2.0, Environment Stability & Dynamic Orchestration - 2026-04-16
 
 ### Major Feature Release:
 Launched AliScript v2.0 with Fox-Mind optimization and a new Zen-IDE, stabilized the arena environment with an advanced physics/pathfinding system, and implemented dynamic mode orchestration for Combat, Racing, and Training modes.
@@ -368,3 +368,30 @@ Launched AliScript v2.0 with Fox-Mind optimization and a new Zen-IDE, stabilized
 
 ### Current Status:
 - The ecosystem has reached a major milestone with a Turing-complete-ish v2.0 scripting language and a highly optimized O(1) physics engine capable of scaling dynamically across combat, racing, and solo training modes.
+
+## [1.9.0-beta] - Secure Identity & Physics Decoupling - 2026-04-17
+
+### Major Feature Release:
+Implemented a full-scale **Cyberpunk Identity System** featuring Email OTP verification, Zod-hardened security, and a dynamic Player Garage. Overhauled the physics engine to resolve high-velocity collision "stickiness" and server-client state desync.
+
+### Technical Scars and Resolutions:
+
+- **Issue: The "Ghost In The Machine" Desync:** Robots appeared frozen on the client while firing from empty air. This was a critical failure where the server's movement executor updated coordinates, but the Delta-State diffing logic failed to broadcast `position` and `rotation` updates to the frontend.
+- **Resolution:** Refactored `match.gateway.ts` to enforce a strict synchronization heartbeat. Optimized the `safeSnapshot` deep-cloning logic to ensure that every frame's translation vector is captured and pushed to the client, effectively "re-embodying" the ghost robots.
+
+- **Issue: The "Sticky Geometry" Logic Conflict:** Robots would "glue" to walls when a user manually changed the `rotation` during a collision. The user's `SET rotation` command was fighting the engine's reflection vector, pinning the chassis against the obstacle bounds.
+- **Resolution:** Instituted a **30-tick Hardware Collision Lockout**. During this window, the engine ignores all manual AliScript steering overrides, granting the physics solver total authority to "eject" the robot using a boosted `REPEL_FORCE` (5.0).
+
+- **Issue: The "Race-Condition Loop" Crash:** The automation system entered an infinite reboot cycle (`MODULE_NOT_FOUND`) because `nodemon` was attempting to execute the server before the TypeScript compiler finished writing the `dist/` files.
+- **Resolution:** Migrated to a synchronized **Monorepo Orchestrator** using `concurrently`. Injected a `--delay 2.5` fallback to the watcher, ensuring the physics engine and logic-parser builds are fully "baked" before the server attempts to ingest them.
+
+### Key Technical Achievements:
+- **Authentication Hardening (Zod & Helmet):** Integrated `zod` for strict schema enforcement (8+ chars, complex regex) and `helmet` for secure HTTP headers. Bumped password hashing to **Bcrypt Round 12**.
+- **Player Garage & Custom Loadouts:** Launched a 3D Garage UI with `OrbitControls` allowing users to persist custom chassis and hex-color tints directly to the Supabase/Prisma layer.
+- **Email Lifecycle (Nodemailer OTP):** Deployed a robust verification system using Gmail SMTP. New users are now intercepted by a `/verify-email` gate, requiring a 6-digit OTP stored with a secure TTL in the DB.
+- **Advanced UX Error Handling:** Replaced generic "400" errors with a granular, human-readable error chip system and a real-time **Password Strength Indicator** with a 5-stage visual feedback loop.
+- **Global & Route-Specific Throttling:** Implemented a dual-layer defense: a global 60 req/min limit and a high-security 5 req / 15 min limit for auth endpoints to thwart brute-force attempts.
+- **The "Return to Hangar" 404:** Designed and deployed a stylized `notFoundPage.tsx` that maintains the game's aesthetic even during navigation failures.
+
+### Current Status:
+- The platform is now **Security-Hardened** and **UX-Optimized**. The bridge between server physics and client rendering is fully synchronized, and the development environment is 100% automated via `watch:all`.
