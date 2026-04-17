@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService }  from '../../common/redis.service';
 import { AuthGuard }     from '../../common/auth.guard';
@@ -17,6 +18,7 @@ import { UsersService }  from './users.service';
 const LEADERBOARD_KEY = 'leaderboard:top10';
 const LEADERBOARD_TTL = 30; // seconds
 
+@SkipThrottle({ auth: true })
 @Controller('users')
 export class UsersController {
   constructor(

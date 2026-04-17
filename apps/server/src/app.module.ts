@@ -12,6 +12,7 @@ import { ScriptsModule }       from './modules/scripts/scripts.module';
 import { UsersModule }         from './modules/users/users.module';
 import { MatchGateway }        from './modules/matches/match.gateway';
 import { TournamentsModule }   from './modules/tournaments/tournaments.module';
+import { CampaignModule }      from './modules/campaign/campaign.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TournamentsModule }   from './modules/tournaments/tournaments.module';
     ScriptsModule,
     UsersModule,
     TournamentsModule,
+    CampaignModule,
   ],
   controllers: [AppController],
   providers: [

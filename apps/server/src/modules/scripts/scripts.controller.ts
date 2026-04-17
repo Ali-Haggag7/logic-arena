@@ -1,7 +1,9 @@
 import { Controller, Post, Get, Put, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ScriptsService } from './scripts.service';
 import { AuthGuard } from '../../common/auth.guard';
 
+@SkipThrottle({ auth: true })
 @UseGuards(AuthGuard)
 @Controller('scripts')
 export class ScriptsController {

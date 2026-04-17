@@ -10,9 +10,11 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../../common/prisma.service';
 import { AuthGuard } from '../../common/auth.guard';
 
+@SkipThrottle({ auth: true })
 @Controller('tournaments')
 export class TournamentsController {
   constructor(private prisma: PrismaService) { }

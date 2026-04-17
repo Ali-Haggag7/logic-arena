@@ -7,13 +7,14 @@ import NavLink from "../../components/ui/NavLink";
 const SIDEBAR_WIDTH = 220;
 
 const navItems = [
-  { href: "/dashboard", label: "COMMAND_CENTER", icon: "⬡" },
-  { href: "/leaderboard", label: "NEURAL_RANKINGS", icon: "◈" },
-  { href: "/lobby", label: "BATTLE_LOBBY", icon: "▶" },
-  { href: "/profile", label: "OPERATOR_PROFILE", icon: "◉" },
-  { href: "/garage", label: "ROBOT_GARAGE", icon: "⚙" },
-  { href: "/docs", label: "ALISCRIPT_DOCS", icon: "◈" },
-  { href: "/tournaments", label: "TOURNAMENT_HUB", icon: "⚔" },
+  { href: "/dashboard",   label: "COMMAND_CENTER",   icon: "⬡" },
+  { href: "/leaderboard", label: "NEURAL_RANKINGS",  icon: "◈" },
+  { href: "/lobby",       label: "BATTLE_LOBBY",     icon: "▶" },
+  { href: "/campaign",    label: "CAMPAIGN_MODE",    icon: "⚡" },
+  { href: "/profile",     label: "OPERATOR_PROFILE", icon: "◉" },
+  { href: "/garage",      label: "ROBOT_GARAGE",     icon: "⚙" },
+  { href: "/docs",        label: "ALISCRIPT_DOCS",   icon: "◈" },
+  { href: "/tournaments", label: "TOURNAMENT_HUB",   icon: "⚔" },
 ];
 
 export default function DashboardLayout({

@@ -19,6 +19,7 @@ model User {
   resetCode           String?
   resetExpiry         DateTime?
   rank                Int                @default(0)
+  currentLevel        Int                @default(1)
   selectedRobotId     String             @default("unit-01")
   selectedColor       String             @default("#22d3ee")
   createdAt           DateTime           @default(now())
