@@ -39,7 +39,14 @@ export class AuthService {
         data: { email, username, passwordHash, isVerified: false, verifyCode, verifyExpiry },
       });
 
-      await this.emailService.sendVerificationCode(email, verifyCode);
+      try {
+        await this.emailService.sendVerificationCode(email, verifyCode);
+      } catch (emailErr: any) {
+        // Account created but email delivery failed — surface clearly
+        throw new InternalServerErrorException(
+          `Account created but verification email failed: ${emailErr.message}`,
+        );
+      }
       return this.stripPassword(user);
     } catch (error) {
       if (
@@ -111,7 +118,13 @@ export class AuthService {
       where: { id: user.id },
       data: { resetCode, resetExpiry },
     });
-    await this.emailService.sendResetCode(email, resetCode);
+    try {
+      await this.emailService.sendResetCode(email, resetCode);
+    } catch (emailErr: any) {
+      throw new InternalServerErrorException(
+        `Reset code saved but email delivery failed: ${emailErr.message}`,
+      );
+    }
     return { success: true };
   }
 
