@@ -1,18 +1,19 @@
 import axios from "axios";
 
+const isDev = process.env.NODE_ENV === "development";
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+    || (isDev ? "http://localhost:3001/api" : "https://logicarena.dev/api");
+
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://logicarena.dev/api",
+    baseURL: API_BASE_URL,
 });
 
 apiClient.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+        if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
+import { API_BASE_URL } from '../lib/api-client';
 
 type Handlers = {
   onChallengeReceived: (data: { challengerId: string; challengerName: string }) => void;
@@ -23,7 +24,7 @@ export function useGlobalSocket(handlers: Handlers) {
       localStorage.getItem('token');
     if (!token) return;
 
-    const wsUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001')
+    const wsUrl = API_BASE_URL
       .replace('https://', 'wss://')
       .replace('http://', 'ws://');
 

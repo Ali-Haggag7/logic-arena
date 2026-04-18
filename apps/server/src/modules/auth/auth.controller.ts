@@ -1,11 +1,17 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  Res,
+  UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 
 import { ZodValidationPipe } from '../../common/zod-validation.pipe';
@@ -65,5 +71,35 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(ResetPasswordSchema))
   async resetPassword(@Body() body: ResetPasswordDto) {
     return this.authService.resetPassword(body.email, body.code, body.newPassword);
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleCallback(@Req() req: any, @Res() res: Response) {
+    const { access_token, userId, username } = req.user;
+    const isDev = process.env.NODE_ENV === 'development';
+    const clientUrl = isDev ? 'http://localhost:3000' : (process.env.CLIENT_URL || 'https://logicarena.dev');
+    res.redirect(
+      `${clientUrl}/auth/callback?token=${access_token}&userId=${userId}&username=${username}`
+    );
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  githubAuth() {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  githubCallback(@Req() req: any, @Res() res: Response) {
+    const { access_token, userId, username } = req.user;
+    const isDev = process.env.NODE_ENV === 'development';
+    const clientUrl = isDev ? 'http://localhost:3000' : (process.env.CLIENT_URL || 'https://logicarena.dev');
+    res.redirect(
+      `${clientUrl}/auth/callback?token=${access_token}&userId=${userId}&username=${username}`
+    );
   }
 }

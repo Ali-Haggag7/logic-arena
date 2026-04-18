@@ -7,7 +7,7 @@ import { LobbyMatch, LobbyMatchCard } from "./components/LobbyMatchCard";
 import { LobbySkeleton } from "./components/LobbySkeleton";
 import { NoScriptModal } from "./components/NoScriptModal";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { API_BASE_URL } from "../../../lib/api-client";
 
 export default function LobbyPage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function LobbyPage() {
 
   const socket: Socket = useMemo(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return io(API_URL, {
+    return io(API_BASE_URL, {
       autoConnect: false,
       auth: { token },
     });

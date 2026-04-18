@@ -7,27 +7,31 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const isDev = process.env.NODE_ENV === 'development';
+
   // ── Security headers ──────────────────────────────────────────────────────
-  // Helmet sets X-Frame-Options, X-Content-Type-Options, HSTS, XSS filter,
-  // Referrer-Policy, and more in a single call.
   app.use(
     helmet({
-      crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow CDN assets
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'blob:'],
-          connectSrc: ["'self'", 'ws:', 'wss:'],
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: isDev
+        ? false
+        : {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+            connectSrc: ["'self'", 'ws:', 'wss:'],
+          },
         },
-      },
     }),
   );
 
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({
-    origin: process.env.CLIENT_URL ?? 'http://localhost:3000',
+    origin: isDev
+      ? ['http://localhost:3000', 'http://127.0.0.1:3000']
+      : [process.env.CLIENT_URL, 'https://logicarena.dev'].filter(Boolean),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -42,4 +46,4 @@ async function bootstrap() {
   await app.listen(port);
 }
 
-bootstrap();
+bootstrap();
