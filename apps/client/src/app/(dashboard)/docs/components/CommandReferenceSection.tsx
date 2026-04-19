@@ -27,8 +27,8 @@ function FilterChip({
           ? `1px solid ${color}55`
           : hovered
             ? `1px solid ${color}35`
-            : `1px solid rgba(34,211,238,0.12)`,
-        color: active ? color : hovered ? `${color}bb` : "rgba(34,211,238,0.35)",
+            : `1px solid rgba(var(--accent-rgb),0.12)`,
+        color: active ? color : hovered ? `${color}bb` : "rgba(var(--accent-rgb),0.35)",
         textShadow: active ? `0 0 8px ${color}66` : "none",
       }}
       className="text-[8px] font-bold tracking-[0.2em] cursor-pointer transition-all duration-150 font-mono"
@@ -56,7 +56,7 @@ export function CommandReferenceSection() {
         <FilterChip
           label="ALL"
           active={activeCategory === null}
-          color="#22d3ee"
+          color="var(--accent)"
           onClick={() => setActiveCategory(null)}
         />
         {categories.map((cat) => (
@@ -64,22 +64,22 @@ export function CommandReferenceSection() {
             key={cat}
             label={cat.toUpperCase()}
             active={activeCategory === cat}
-            color={CATEGORY_COLORS[cat] ?? "#22d3ee"}
+            color={CATEGORY_COLORS[cat] ?? "var(--accent)"}
             onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
           />
         ))}
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-[#22d3ee]/10 overflow-hidden bg-black/50 backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+      <div className="rounded-xl border border-accent/10 overflow-hidden bg-card/60 backdrop-blur-md" style={{ boxShadow: 'var(--card-shadow)' }}>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[10px] tracking-[0.08em]">
             <thead>
-              <tr className="border-b border-[#22d3ee]/10 bg-[#22d3ee]/5">
+              <tr className="border-b border-accent/10 bg-accent/5">
                 {["Command", "Category", "Parameters", "Description", "Example"].map((h) => (
                   <th
                     key={h}
-                    className="px-[18px] py-[14px] text-left text-[8px] font-bold tracking-[0.25em] text-[#22d3ee]/35 uppercase whitespace-nowrap"
+                    className="px-[18px] py-[14px] text-left text-[8px] font-bold tracking-[0.25em] text-accent/35 uppercase whitespace-nowrap"
                   >
                     {h}
                   </th>
@@ -88,18 +88,18 @@ export function CommandReferenceSection() {
             </thead>
             <tbody>
               {filteredCommands.map((cmd, idx) => {
-                const catColor = CATEGORY_COLORS[cmd.category] ?? "#22d3ee";
+                const catColor = CATEGORY_COLORS[cmd.category] ?? "var(--accent)";
                 return (
                   <tr
                     key={`${cmd.command}-${idx}`}
-                    className="cmd-row hover:bg-[#22d3ee]/5 transition-colors duration-150"
+                    className="cmd-row hover:bg-accent/5 transition-colors duration-150"
                     style={{
-                      borderBottom: idx < filteredCommands.length - 1 ? "1px solid rgba(34,211,238,0.05)" : "none",
+                      borderBottom: idx < filteredCommands.length - 1 ? "1px solid rgba(var(--accent-rgb),0.05)" : "none",
                     }}
                   >
                     {/* Command */}
                     <td className="px-[18px] py-[14px]">
-                      <code className="text-[#22d3ee] font-bold bg-[#22d3ee]/5 border border-[#22d3ee]/15 px-2 py-1 rounded text-[10px] whitespace-nowrap">
+                      <code className="text-accent font-bold bg-accent/5 border border-accent/15 px-2 py-1 rounded text-[10px] whitespace-nowrap">
                         {cmd.command}
                       </code>
                     </td>
@@ -119,18 +119,18 @@ export function CommandReferenceSection() {
                     </td>
 
                     {/* Parameters */}
-                    <td className="px-[18px] py-[14px] text-[#22d3ee]/35 text-[10px] whitespace-nowrap">
+                    <td className="px-[18px] py-[14px] text-accent/35 text-[10px] whitespace-nowrap">
                       {cmd.parameters}
                     </td>
 
                     {/* Description */}
-                    <td className="px-[18px] py-[14px] text-[#22d3ee]/60 leading-relaxed min-w-[250px]">
+                    <td className="px-[18px] py-[14px] text-accent/60 leading-relaxed min-w-[250px]">
                       {cmd.description}
                     </td>
 
                     {/* Example */}
                     <td className="px-[18px] py-[14px]">
-                      <code className="text-[#22d3ee]/50 text-[10px] whitespace-nowrap">
+                      <code className="text-accent/50 text-[10px] whitespace-nowrap">
                         {cmd.example}
                       </code>
                     </td>
@@ -142,7 +142,7 @@ export function CommandReferenceSection() {
         </div>
       </div>
 
-      <div className="mt-3 text-[8px] text-[#22d3ee]/20 tracking-[0.18em] text-right">
+      <div className="mt-3 text-[8px] text-accent/20 tracking-[0.18em] text-right">
         {filteredCommands.length} / {COMMAND_TABLE.length} COMMANDS DISPLAYED
       </div>
     </section>

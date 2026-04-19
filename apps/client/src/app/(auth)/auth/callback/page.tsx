@@ -23,8 +23,8 @@ function CallbackContent() {
   }, [params, router]);
 
   return (
-    <div className="min-h-screen bg-[#030712] flex items-center justify-center font-mono">
-      <div className="text-[#22d3ee] text-[12px] tracking-[0.3em] animate-pulse">
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center font-mono">
+      <div className="text-accent text-[12px] tracking-[0.3em] animate-pulse">
         AUTHENTICATING...
       </div>
     </div>

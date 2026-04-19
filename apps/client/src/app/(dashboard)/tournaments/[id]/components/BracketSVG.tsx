@@ -74,10 +74,10 @@ export function BracketSVG({ tournament, userId }: Props) {
 
   if (tournament.status === "WAITING") {
     return (
-      <div className="text-center p-[80px_24px] text-[#22d3ee]/20 text-[11px] tracking-[0.2em]">
+      <div className="text-center p-[80px_24px] text-accent/20 text-[11px] tracking-[0.2em]">
         WAITING FOR TOURNAMENT TO START...
         <br />
-        <span className="text-[9px] text-[#22d3ee]/10">
+        <span className="text-[9px] text-accent/10">
           {tournament.participants.length >= 4
             ? "CREATOR CAN START THE TOURNAMENT"
             : `NEED ${4 - tournament.participants.length} MORE COMBATANTS`}
@@ -93,7 +93,7 @@ export function BracketSVG({ tournament, userId }: Props) {
           <div
             key={ri}
             style={{ width: `${MATCH_W}px` }}
-            className="text-center text-[8px] font-extrabold tracking-[0.3em] text-[#22d3ee]/30 uppercase"
+            className="text-center text-[8px] font-extrabold tracking-[0.3em] text-accent/30 uppercase"
           >
             {roundLabels[ri + 1] || `ROUND ${ri + 1}`}
           </div>
@@ -106,12 +106,12 @@ export function BracketSVG({ tournament, userId }: Props) {
             <path
               d={`M ${l.x1} ${l.y1} C ${l.x1 + 50} ${l.y1}, ${l.x2 - 50} ${l.y2}, ${l.x2} ${l.y2}`}
               fill="none"
-              stroke="rgba(34,211,238,0.12)"
+              stroke="rgba(var(--accent-rgb),0.12)"
               strokeWidth="2"
               strokeDasharray="6,4"
             />
-            <circle cx={l.x1} cy={l.y1} r="3" fill="rgba(34,211,238,0.2)" />
-            <circle cx={l.x2} cy={l.y2} r="3" fill="rgba(34,211,238,0.2)" />
+            <circle cx={l.x1} cy={l.y1} r="3" fill="rgba(var(--accent-rgb),0.2)" />
+            <circle cx={l.x2} cy={l.y2} r="3" fill="rgba(var(--accent-rgb),0.2)" />
           </g>
         ))}
 
@@ -123,12 +123,12 @@ export function BracketSVG({ tournament, userId }: Props) {
           const isMyMatch = userId && (m.player1Id === userId || m.player2Id === userId);
           const isHovered = hoveredMatch === m.id;
           const borderColor = isComplete
-            ? "rgba(34,197,94,0.35)"
+            ? "rgba(var(--color-emerald-500),0.35)"
             : isMyMatch
-            ? "rgba(250,204,21,0.35)"
+            ? "rgba(var(--color-yellow-500),0.35)"
             : isHovered
-            ? "rgba(34,211,238,0.35)"
-            : "rgba(34,211,238,0.12)";
+            ? "rgba(var(--accent-rgb),0.35)"
+            : "rgba(var(--accent-rgb),0.12)";
 
           return (
             <g
@@ -142,7 +142,7 @@ export function BracketSVG({ tournament, userId }: Props) {
                 width={MATCH_W}
                 height={MATCH_H}
                 rx={8}
-                fill={isComplete ? "rgba(34,197,94,0.04)" : "rgba(0,0,0,0.6)"}
+                fill={isComplete ? "rgba(var(--color-emerald-500),0.04)" : "rgba(0,0,0,0.6)"}
                 stroke={borderColor}
                 strokeWidth={isHovered || isMyMatch ? 1.5 : 1}
                 className="transition-all duration-200"
@@ -154,10 +154,10 @@ export function BracketSVG({ tournament, userId }: Props) {
                 y2={pos.y}
                 stroke={
                   isComplete
-                    ? "rgba(34,197,94,0.4)"
+                    ? "rgba(var(--color-emerald-500),0.4)"
                     : isMyMatch
-                    ? "rgba(250,204,21,0.3)"
-                    : "rgba(34,211,238,0.15)"
+                    ? "rgba(var(--color-yellow-500),0.3)"
+                    : "rgba(var(--accent-rgb),0.15)"
                 }
                 strokeWidth="2"
               />
@@ -165,7 +165,7 @@ export function BracketSVG({ tournament, userId }: Props) {
               <text
                 x={pos.x + 14}
                 y={pos.y + 26}
-                fill={m.winnerId && m.winnerId === m.player1Id ? "#22c55e" : m.winnerId && m.winnerId !== m.player1Id ? "rgba(34,211,238,0.2)" : "rgba(34,211,238,0.7)"}
+                fill={m.winnerId && m.winnerId === m.player1Id ? "var(--color-emerald-500)" : m.winnerId && m.winnerId !== m.player1Id ? "rgba(var(--accent-rgb),0.2)" : "rgba(var(--accent-rgb),0.7)"}
                 fontSize="11"
                 fontFamily="var(--font-geist-mono), monospace"
                 fontWeight={m.winnerId === m.player1Id ? "900" : "600"}
@@ -178,13 +178,13 @@ export function BracketSVG({ tournament, userId }: Props) {
                 y1={pos.y + MATCH_H / 2}
                 x2={pos.x + MATCH_W - 10}
                 y2={pos.y + MATCH_H / 2}
-                stroke="rgba(34,211,238,0.06)"
+                stroke="rgba(var(--accent-rgb),0.06)"
                 strokeWidth="1"
               />
               <text
                 x={pos.x + MATCH_W - 30}
                 y={pos.y + MATCH_H / 2 + 4}
-                fill="rgba(34,211,238,0.15)"
+                fill="rgba(var(--accent-rgb),0.15)"
                 fontSize="8"
                 fontFamily="var(--font-geist-mono), monospace"
                 fontWeight="700"
@@ -196,7 +196,7 @@ export function BracketSVG({ tournament, userId }: Props) {
               <text
                 x={pos.x + 14}
                 y={pos.y + MATCH_H - 14}
-                fill={m.winnerId && m.winnerId === m.player2Id ? "#22c55e" : m.winnerId && m.winnerId !== m.player2Id ? "rgba(34,211,238,0.2)" : "rgba(34,211,238,0.7)"}
+                fill={m.winnerId && m.winnerId === m.player2Id ? "var(--color-emerald-500)" : m.winnerId && m.winnerId !== m.player2Id ? "rgba(var(--accent-rgb),0.2)" : "rgba(var(--accent-rgb),0.7)"}
                 fontSize="11"
                 fontFamily="var(--font-geist-mono), monospace"
                 fontWeight={m.winnerId === m.player2Id ? "900" : "600"}
@@ -205,7 +205,7 @@ export function BracketSVG({ tournament, userId }: Props) {
                 {m.player2 ? m.player2.username.toUpperCase() : "TBD"}
               </text>
               {isComplete && m.winner && (
-                <text x={pos.x + MATCH_W - 14} y={pos.y + 16} fill="#22c55e" fontSize="12" textAnchor="end">
+                <text x={pos.x + MATCH_W - 14} y={pos.y + 16} fill="var(--color-emerald-500)" fontSize="12" textAnchor="end">
                   ✓
                 </text>
               )}
@@ -227,14 +227,14 @@ export function BracketSVG({ tournament, userId }: Props) {
                 width={140}
                 height={MATCH_H - 10}
                 rx={8}
-                fill="rgba(34,197,94,0.08)"
-                stroke="rgba(34,197,94,0.4)"
+                fill="rgba(var(--color-emerald-500),0.08)"
+                stroke="rgba(var(--color-emerald-500),0.4)"
                 strokeWidth="1.5"
               />
               <text
                 x={pos.x + MATCH_W + 100}
                 y={pos.y + 28}
-                fill="rgba(34,197,94,0.5)"
+                fill="rgba(var(--color-emerald-500),0.5)"
                 fontSize="7"
                 fontFamily="var(--font-geist-mono), monospace"
                 fontWeight="700"
@@ -246,7 +246,7 @@ export function BracketSVG({ tournament, userId }: Props) {
               <text
                 x={pos.x + MATCH_W + 100}
                 y={pos.y + 50}
-                fill="#22c55e"
+                fill="var(--color-emerald-500)"
                 fontSize="13"
                 fontFamily="var(--font-geist-mono), monospace"
                 fontWeight="900"

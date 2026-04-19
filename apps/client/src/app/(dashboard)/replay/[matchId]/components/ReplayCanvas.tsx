@@ -10,7 +10,7 @@ function scaleX(x: number) { return (x / ARENA_W) * CANVAS_W; }
 function scaleY(y: number) { return (y / ARENA_H) * CANVAS_H; }
 
 const ROBOT_COLORS = [
-  "#00ffff", "#ff00ff", "#f97316", "#22c55e",
+  "#00ffff", "#ff00ff", "var(--color-orange-500)", "var(--color-emerald-500)",
   "#f43f5e", "#eab308", "#38bdf8", "#c084fc",
 ];
 
@@ -35,13 +35,13 @@ export function drawFrame(ctx: CanvasRenderingContext2D, snap: Snapshot | undefi
   }
 
   // Arena border
-  ctx.strokeStyle = "rgba(34,211,238,0.18)";
+  ctx.strokeStyle = "rgba(var(--accent-rgb),0.18)";
   ctx.lineWidth = 2;
   ctx.strokeRect(2, 2, W - 4, H - 4);
 
   // Fallback
   if (!snap) {
-    ctx.fillStyle = "rgba(34,211,238,0.15)";
+    ctx.fillStyle = "rgba(var(--accent-rgb),0.15)";
     ctx.beginPath();
     ctx.arc(W / 2, H / 2, 16, 0, Math.PI * 2);
     ctx.fill();
@@ -55,8 +55,8 @@ export function drawFrame(ctx: CanvasRenderingContext2D, snap: Snapshot | undefi
     const py = scaleY(p.position.y);
     ctx.beginPath();
     ctx.arc(px, py, 3, 0, Math.PI * 2);
-    ctx.fillStyle = "#22d3ee";
-    ctx.shadowColor = "#22d3ee";
+    ctx.fillStyle = "var(--accent)";
+    ctx.shadowColor = "var(--accent)";
     ctx.shadowBlur = 8;
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -127,7 +127,7 @@ export function ReplayCanvas({ snapshot }: Props) {
   }, [snapshot]);
 
   return (
-    <div className="relative rounded-[10px] overflow-hidden border border-[#22d3ee]/20 shadow-[0_0_40px_rgba(34,211,238,0.06),0_0_0_1px_rgba(34,211,238,0.05)]">
+    <div className="relative rounded-[10px] overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(var(--accent-rgb),0.06),0_0_0_1px_rgba(var(--accent-rgb),0.05)]">
       <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} />
       {/* Corner accents */}
       {[
@@ -141,10 +141,10 @@ export function ReplayCanvas({ snapshot }: Props) {
           bottom: pos.bottom !== undefined ? 0 : undefined,
           left: pos.left !== undefined ? 0 : undefined,
           right: pos.right !== undefined ? 0 : undefined,
-          borderTop: pos.borderTop ? "2px solid rgba(34,211,238,0.5)" : "none",
-          borderBottom: pos.borderBottom ? "2px solid rgba(34,211,238,0.5)" : "none",
-          borderLeft: pos.borderLeft ? "2px solid rgba(34,211,238,0.5)" : "none",
-          borderRight: pos.borderRight ? "2px solid rgba(34,211,238,0.5)" : "none",
+          borderTop: pos.borderTop ? "2px solid rgba(var(--accent-rgb),0.5)" : "none",
+          borderBottom: pos.borderBottom ? "2px solid rgba(var(--accent-rgb),0.5)" : "none",
+          borderLeft: pos.borderLeft ? "2px solid rgba(var(--accent-rgb),0.5)" : "none",
+          borderRight: pos.borderRight ? "2px solid rgba(var(--accent-rgb),0.5)" : "none",
         }} />
       ))}
     </div>

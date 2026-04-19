@@ -10,37 +10,36 @@ import { CommandReferenceSection } from './components/CommandReferenceSection';
 import { AlgorithmChallenges } from './components/AlgorithmChallenges';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Self:      '#22d3ee',
-  Combat:    '#f97316',
+  Self:      'var(--accent)',
+  Combat:    'var(--color-orange-500)',
   Energy:    '#818cf8',
-  FOV:       '#06b6d4',
-  Scan:      '#67e8f9',
+  FOV:       'var(--accent)',
+  Scan:      'var(--accent)',
 };
 
-/** Inline identifier reference table — added directly in page so it can
- *  share the existing section style without a separate component file. */
+/** Inline identifier reference table */
 const IdentifierReferenceSection = () => {
   const categories = Array.from(new Set(IDENTIFIER_TABLE.map(id => id.category)));
 
   return (
     <section className="mb-16">
       <div className="flex items-center gap-4 mb-6">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-500/30" />
-        <h2 className="text-xl font-black tracking-[0.15em] text-white/90 uppercase text-center">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-accent/30" />
+        <h2 className="text-xl font-black tracking-[0.15em] text-text-primary uppercase text-center">
           Built-in Identifiers
-          <span className="ml-2 text-[9px] tracking-[0.4em] text-cyan-600 align-middle">v2.0</span>
+          <span className="ml-2 text-[9px] tracking-[0.4em] text-accent/80 align-middle">v2.0</span>
         </h2>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-500/30" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-accent/30" />
       </div>
 
       <div className="flex flex-col gap-8">
         {categories.map(cat => (
           <div key={cat}>
             <div
-              className="text-[9px] tracking-[0.5em] font-black uppercase mb-3 pb-2 border-b"
+              className="text-[9px] tracking-[0.5em] font-black uppercase mb-3 pb-2 border-b border-accent/20 text-accent"
               style={{
-                color:       CATEGORY_COLORS[cat] ?? '#22d3ee',
-                borderColor: `${CATEGORY_COLORS[cat] ?? '#22d3ee'}33`,
+                color:       String(CATEGORY_COLORS[cat] || 'var(--accent)'),
+                borderColor: `rgba(var(--accent-rgb), 0.2)`,
               }}
             >
               {cat}
@@ -49,16 +48,16 @@ const IdentifierReferenceSection = () => {
               {IDENTIFIER_TABLE.filter(id => id.category === cat).map(id => (
                 <div
                   key={id.name}
-                  className="grid grid-cols-[140px_60px_1fr] gap-4 items-start px-4 py-2.5 rounded-sm border border-transparent transition-colors hover:border-cyan-900/40 hover:bg-white/[0.02]"
+                  className="grid grid-cols-[140px_60px_1fr] gap-4 items-start px-4 py-2.5 rounded-sm border border-transparent transition-colors hover:border-accent/40 hover:bg-accent/[0.02]"
                 >
                   <code
                     className="text-xs font-black tracking-wider"
-                    style={{ color: CATEGORY_COLORS[cat] ?? '#22d3ee' }}
+                    style={{ color: String(CATEGORY_COLORS[cat] || 'var(--accent)') }}
                   >
                     {id.name}
                   </code>
-                  <span className="text-[10px] text-white/25 font-mono">{id.type}</span>
-                  <span className="text-[11px] text-white/50 leading-relaxed">{id.description}</span>
+                  <span className="text-[10px] text-text-secondary/50 font-mono">{id.type}</span>
+                  <span className="text-[11px] text-text-secondary leading-relaxed">{id.description}</span>
                 </div>
               ))}
             </div>
@@ -94,43 +93,38 @@ export default function DocsPage() {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 8px rgba(34,211,238,0.3), 0 0 24px rgba(34,211,238,0.1); }
-          50%      { box-shadow: 0 0 16px rgba(34,211,238,0.6), 0 0 48px rgba(34,211,238,0.2); }
+          0%, 100% { box-shadow: 0 0 8px rgba(var(--accent-rgb),0.3), 0 0 24px rgba(var(--accent-rgb),0.1); }
+          50%      { box-shadow: 0 0 16px rgba(var(--accent-rgb),0.6), 0 0 48px rgba(var(--accent-rgb),0.2); }
         }
         .docs-textarea {
           resize: vertical;
-          background: rgba(0,0,0,0.7);
-          border: 1px solid rgba(34,211,238,0.2);
-          border-radius: 8px;
-          color: #22d3ee;
           font-family: var(--font-geist-mono), monospace;
           font-size: 12px;
           line-height: 1.7;
           padding: 16px;
           width: 100%;
           min-height: 200px;
-          outline: none;
           transition: border-color 0.2s;
           letter-spacing: 0.05em;
         }
         .docs-textarea:focus {
-          border-color: rgba(34,211,238,0.5);
-          box-shadow: 0 0 0 2px rgba(34,211,238,0.08), 0 0 20px rgba(34,211,238,0.1);
+          border-color: rgba(var(--accent-rgb),0.5);
+          box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.08), 0 0 20px rgba(var(--accent-rgb),0.1);
         }
         .docs-scrollbar::-webkit-scrollbar { width: 4px; }
         .docs-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .docs-scrollbar::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.2); border-radius: 2px; }
-        .cmd-row:hover { background-color: rgba(34,211,238,0.03); }
+        .docs-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 2px; }
+        .cmd-row:hover { background-color: rgba(var(--accent-rgb),0.03); }
         .quick-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .quick-card:hover { transform: translateY(-3px); }
       `}</style>
 
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Grid background */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
-            backgroundImage: 'linear-gradient(rgba(8,145,178,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.06) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(rgba(var(--accent-rgb),0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.06) 1px, transparent 1px)',
             backgroundSize:  '40px 40px',
           }}
         />
@@ -147,14 +141,14 @@ export default function DocsPage() {
             onParse={handleParse}
           />
 
-          {/* Algorithm Challenges — new section */}
+          {/* Algorithm Challenges */}
           <AlgorithmChallenges onLoadScript={loadCodeToPlayground} />
 
           <BattleTacticsSection onLoadScript={loadCodeToPlayground} />
 
           <CommandReferenceSection />
 
-          {/* Built-in Identifiers reference — new section */}
+          {/* Built-in Identifiers reference */}
           <IdentifierReferenceSection />
         </div>
       </div>

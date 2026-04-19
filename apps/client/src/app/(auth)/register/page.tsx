@@ -43,7 +43,7 @@ export default function RegisterPage() {
 
   const score = Object.values(checks).filter(Boolean).length;
   const strengthLabel = score <= 1 ? "WEAK" : score <= 3 ? "FAIR" : score === 4 ? "STRONG" : "MAX_SEC";
-  const strengthColor = score <= 1 ? "#ef4444" : score <= 3 ? "#f59e0b" : score === 4 ? "#22c55e" : "#22d3ee";
+  const strengthColor = score <= 1 ? "var(--color-red-500)" : score <= 3 ? "#f59e0b" : score === 4 ? "var(--accent)" : "var(--accent)";
 
   // ── Handler ──────────────────────────────────────────────────────────────
   const handleRegister = async (e: React.FormEvent) => {
@@ -77,7 +77,7 @@ export default function RegisterPage() {
         }
       `}</style>
 
-      <div className="min-h-screen flex items-center justify-center bg-[#030712] font-mono selection:bg-[#22d3ee]/30 relative overflow-hidden p-6">
+      <div className="min-h-screen flex items-center justify-center bg-bg-primary font-mono selection:bg-accent/30 relative overflow-hidden p-6">
         
         {/* Background Grid Illusion */}
         <div 
@@ -90,25 +90,25 @@ export default function RegisterPage() {
 
         {/* Moving Scanline */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden mix-blend-overlay opacity-20">
-          <div className="w-full h-1 bg-gradient-to-r from-transparent via-[#a855f7] to-transparent animate-[scanline_8s_linear_infinite]" />
+          <div className="w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent animate-[scanline_8s_linear_infinite]" />
         </div>
 
-        <div className="w-full max-w-[420px] bg-black/60 backdrop-blur-xl border border-[#a855f7]/20 rounded-xl p-8 relative z-20 shadow-[0_0_50px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(168,85,247,0.05)] animate-[fadeInScale_0.4s_ease-out]">
+        <div className="w-full max-w-[420px] bg-card/60 backdrop-blur-xl border border-accent/20 rounded-xl p-8 relative z-20 shadow-[0_0_50px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(var(--accent-rgb),0.05)] animate-[fadeInScale_0.4s_ease-out]">
           
           {/* Decorative Corner Accents */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#a855f7]/60 rounded-tl-xl" />
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#a855f7]/60 rounded-br-xl" />
+          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-accent/60 rounded-tl-xl" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-accent/60 rounded-br-xl" />
           
-          <div className="absolute top-3 right-4 text-[8px] text-[#a855f7]/30 tracking-[0.2em] pointer-events-none">SECURE_NODE_V1</div>
+          <div className="absolute top-3 right-4 text-[8px] text-accent/30 tracking-[0.2em] pointer-events-none">SECURE_NODE_V1</div>
 
           <div className="mb-8 text-center flex flex-col items-center">
-            <div className="w-10 h-10 mb-4 border border-[#a855f7]/30 rounded-full flex items-center justify-center bg-[#a855f7]/5 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-              <span className="text-[#a855f7] shadow-[#a855f7]">◈</span>
+            <div className="w-10 h-10 mb-4 border border-accent/30 rounded-full flex items-center justify-center bg-accent/5 shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]">
+              <span className="text-accent shadow-accent">◈</span>
             </div>
-            <h1 className="text-[#22d3ee] font-black text-3xl tracking-[0.2em] drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] mb-2">
+            <h1 className="text-accent font-black text-3xl tracking-[0.2em] drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.6)] mb-2">
               LOGIC ARENA
             </h1>
-            <h2 className="text-[#a855f7]/70 text-[10px] tracking-[0.3em] uppercase">
+            <h2 className="text-accent/70 text-[10px] tracking-[0.3em] uppercase">
               [ Initialize Operator ID ]
             </h2>
           </div>
@@ -116,7 +116,7 @@ export default function RegisterPage() {
           <div className="flex flex-col gap-3 mb-6">
             <a
               href={`${API_BASE_URL}/auth/google`}
-              className="flex items-center justify-center gap-3 w-full py-3 border border-[#22d3ee]/20 bg-[#22d3ee]/5 hover:bg-[#22d3ee]/10 text-[#22d3ee]/70 hover:text-[#22d3ee] text-[11px] tracking-[0.2em] font-mono transition-all rounded-lg"
+              className="flex items-center justify-center gap-3 w-full py-3 border border-accent/20 bg-accent/5 hover:bg-accent/10 text-accent/70 hover:text-accent text-[11px] tracking-[0.2em] font-mono transition-all rounded-lg"
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
             <a
               href={`${API_BASE_URL}/auth/github`}
-              className="flex items-center justify-center gap-3 w-full py-3 border border-[#22d3ee]/20 bg-[#22d3ee]/5 hover:bg-[#22d3ee]/10 text-[#22d3ee]/70 hover:text-[#22d3ee] text-[11px] tracking-[0.2em] font-mono transition-all rounded-lg"
+              className="flex items-center justify-center gap-3 w-full py-3 border border-accent/20 bg-accent/5 hover:bg-accent/10 text-accent/70 hover:text-accent text-[11px] tracking-[0.2em] font-mono transition-all rounded-lg"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
@@ -139,20 +139,20 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-[#22d3ee]/10" />
-            <span className="text-[9px] tracking-[0.2em] text-[#22d3ee]/30">OR</span>
-            <div className="flex-1 h-px bg-[#22d3ee]/10" />
+            <div className="flex-1 h-px bg-accent/10" />
+            <span className="text-[9px] tracking-[0.2em] text-accent/30">OR</span>
+            <div className="flex-1 h-px bg-accent/10" />
           </div>
 
           <form onSubmit={handleRegister} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5 relative">
-              <label className="text-[9px] text-[#22d3ee]/60 uppercase tracking-[0.2em] font-bold ml-1" htmlFor="username">
+              <label className="text-[9px] text-accent/60 uppercase tracking-[0.2em] font-bold ml-1" htmlFor="username">
                 Operator Name
               </label>
               <input
                 type="text"
                 id="username"
-                className="w-full bg-[#030712]/80 border border-[#a855f7]/20 rounded-lg p-3.5 text-[#22d3ee] outline-none focus:border-[#a855f7]/60 focus:bg-[#a855f7]/5 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-xs placeholder-[#22d3ee]/20 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                className="w-full bg-bg-primary/80 border border-accent/20 rounded-lg p-3.5 text-accent outline-none focus:border-accent/60 focus:bg-accent/5 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-xs placeholder-accent/20 focus:shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]"
                 placeholder="Enter designated alias"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -162,13 +162,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5 relative">
-              <label className="text-[9px] text-[#22d3ee]/60 uppercase tracking-[0.2em] font-bold ml-1" htmlFor="email">
+              <label className="text-[9px] text-accent/60 uppercase tracking-[0.2em] font-bold ml-1" htmlFor="email">
                 Comms Link (Email)
               </label>
               <input
                 type="email"
                 id="email"
-                className="w-full bg-[#030712]/80 border border-[#a855f7]/20 rounded-lg p-3.5 text-[#22d3ee] outline-none focus:border-[#a855f7]/60 focus:bg-[#a855f7]/5 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-xs placeholder-[#22d3ee]/20 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                className="w-full bg-bg-primary/80 border border-accent/20 rounded-lg p-3.5 text-accent outline-none focus:border-accent/60 focus:bg-accent/5 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-xs placeholder-accent/20 focus:shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]"
                 placeholder="operator@network.local"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -178,13 +178,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5 relative">
-              <label className="text-[9px] text-[#22d3ee]/60 uppercase tracking-[0.2em] font-bold ml-1" htmlFor="password">
+              <label className="text-[9px] text-accent/60 uppercase tracking-[0.2em] font-bold ml-1" htmlFor="password">
                 Security Key
               </label>
               <input
                 type="password"
                 id="password"
-                className="w-full bg-[#030712]/80 border border-[#a855f7]/20 rounded-lg p-3.5 text-[#22d3ee] outline-none focus:border-[#a855f7]/60 focus:bg-[#a855f7]/5 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-xs placeholder-[#22d3ee]/20 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                className="w-full bg-bg-primary/80 border border-accent/20 rounded-lg p-3.5 text-accent outline-none focus:border-accent/60 focus:bg-accent/5 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] text-xs placeholder-accent/20 focus:shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]"
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -197,13 +197,13 @@ export default function RegisterPage() {
                 <div className="mt-2 space-y-2 px-0.5">
                   {/* Strength bars + label */}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[7px] text-[#a855f7]/40 tracking-widest uppercase shrink-0">Strength</span>
+                    <span className="text-[7px] text-accent/40 tracking-widest uppercase shrink-0">Strength</span>
                     {[1, 2, 3, 4, 5].map((i) => (
                       <div
                         key={i}
                         className="flex-1 h-[2px] rounded-full transition-all duration-300"
                         style={{
-                          background: i <= score ? strengthColor : "rgba(168,85,247,0.12)",
+                          background: i <= score ? strengthColor : "rgba(var(--accent-rgb),0.12)",
                           boxShadow:  i <= score ? `0 0 5px ${strengthColor}80` : "none",
                         }}
                       />
@@ -228,7 +228,7 @@ export default function RegisterPage() {
                       <span
                         key={label}
                         className="text-[7px] tracking-wider transition-colors duration-200"
-                        style={{ color: ok ? "#22c55e" : "rgba(168,85,247,0.3)" }}
+                        style={{ color: ok ? "var(--accent)" : "rgba(var(--accent-rgb),0.3)" }}
                       >
                         {ok ? "✓" : "✗"} {label}
                       </span>
@@ -244,8 +244,8 @@ export default function RegisterPage() {
               {status.message && (
                 <div className={`w-full p-2.5 rounded-md border text-[9px] tracking-[0.1em] text-center font-bold break-words transition-all ${
                   status.type === "success"
-                    ? "bg-[#22c55e]/10 border-[#22c55e]/40 text-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.2)]"
-                    : "bg-[#a855f7]/10 border-[#a855f7]/40 text-[#a855f7] animate-pulse"
+                    ? "bg-accent/10 border-accent/40 text-accent shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]"
+                    : "bg-accent/10 border-accent/40 text-accent animate-pulse"
                 }`}>
                   {status.message}
                 </div>
@@ -253,9 +253,9 @@ export default function RegisterPage() {
 
               {/* Validation error list (one chip per error) */}
               {status.errors.length > 0 && (
-                <div className="w-full p-2.5 rounded-md border bg-[#ef4444]/10 border-[#ef4444]/40 shadow-[0_0_10px_rgba(239,68,68,0.15)] space-y-1">
+                <div className="w-full p-2.5 rounded-md border bg-red-500/10 border-red-500/40 shadow-[0_0_10px_rgba(var(--color-red-500),0.15)] space-y-1">
                   {status.errors.map((err, i) => (
-                    <div key={i} className="flex items-start gap-1.5 text-[9px] tracking-[0.08em] font-bold text-[#ef4444] break-words">
+                    <div key={i} className="flex items-start gap-1.5 text-[9px] tracking-[0.08em] font-bold text-red-500 break-words">
                       <span className="shrink-0 mt-px opacity-70">›</span>
                       <span>{err}</span>
                     </div>
@@ -268,7 +268,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 bg-[#a855f7]/10 border border-[#a855f7]/40 text-[#a855f7] font-black text-[11px] hover:bg-[#a855f7]/20 hover:border-[#a855f7]/80 transition-all duration-300 rounded-lg uppercase tracking-[0.25em] shadow-[0_0_15px_rgba(168,85,247,0.1)] hover:shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:cursor-not-allowed group"
+                className="w-full py-4 bg-accent/10 border border-accent/40 text-accent font-black text-[11px] hover:bg-accent/20 hover:border-accent/80 transition-all duration-300 rounded-lg uppercase tracking-[0.25em] shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] hover:shadow-[0_0_25px_rgba(var(--accent-rgb),0.3)] hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:cursor-not-allowed group"
               >
                 {isLoading ? "PROCESSING..." : "REGISTER PROTOCOL"}
               </button>
@@ -277,14 +277,14 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/login")}
-                  className="text-[#22d3ee]/40 hover:text-[#22d3ee] text-[9px] uppercase tracking-[0.2em] transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                  className="text-accent/40 hover:text-accent text-[9px] uppercase tracking-[0.2em] transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
                 >
                   Already registered? Establish Link
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push("/verify-email")}
-                  className="text-[#a855f7]/40 hover:text-[#a855f7] text-[9px] uppercase tracking-[0.2em] transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]"
+                  className="text-accent/40 hover:text-accent text-[9px] uppercase tracking-[0.2em] transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
                 >
                   Pending Verification? Enter Code
                 </button>

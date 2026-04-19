@@ -60,7 +60,7 @@ export default function TournamentBracketPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#030712] flex items-center justify-center font-mono text-[#22d3ee]/30 text-[11px] tracking-[0.2em] animate-pulse">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center font-mono text-accent/30 text-[11px] tracking-[0.2em] animate-pulse">
         LOADING BRACKET DATA...
       </div>
     );
@@ -68,7 +68,7 @@ export default function TournamentBracketPage() {
 
   if (!tournament) {
     return (
-      <div className="min-h-screen bg-[#030712] flex items-center justify-center font-mono text-[#ef4444]/50 text-[11px] tracking-[0.2em]">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center font-mono text-red-500/50 text-[11px] tracking-[0.2em]">
         TOURNAMENT NOT FOUND
       </div>
     );
@@ -100,11 +100,11 @@ export default function TournamentBracketPage() {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes pulse-border {
-          0%, 100% { border-color: rgba(250,204,21,0.3); }
-          50% { border-color: rgba(250,204,21,0.7); }
+          0%, 100% { border-color: rgba(var(--color-yellow-500),0.3); }
+          50% { border-color: rgba(var(--color-yellow-500),0.7); }
         }
       `}</style>
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Grid bg */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
@@ -125,7 +125,7 @@ export default function TournamentBracketPage() {
           {/* MAIN CONTENT: Bracket + Sidebar */}
           <div className="flex gap-6 flex-wrap lg:flex-nowrap">
             {/* BRACKET AREA */}
-            <div className="flex-1 min-w-0 lg:min-w-[600px] rounded-2xl bg-black/40 border border-[#22d3ee]/10 p-6 overflow-x-auto">
+            <div className="flex-1 min-w-0 lg:min-w-[600px] rounded-2xl bg-card/60 border border-accent/10 p-6 overflow-x-auto">
               <BracketSVG tournament={tournament} userId={userId} />
             </div>
 

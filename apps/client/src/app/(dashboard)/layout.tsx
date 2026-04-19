@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import NavLink from "../../components/ui/NavLink";
+import { ThemeSwitcher } from "../../components/ui/ThemeSwitcher";
 import { useGlobalSocket } from "../../hooks/useGlobalSocket";
 import { SocketContext } from "../../context/SocketContext";
 
@@ -62,10 +63,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       `}</style>
 
-      <div className="flex min-h-screen bg-[#030712] font-mono selection:bg-[#22d3ee]/30 overflow-hidden">
+      <div className="flex min-h-screen bg-bg-primary font-mono selection:bg-accent/30 overflow-hidden">
         {/* ── SIDEBAR ── */}
         <aside
-          className="flex flex-col bg-[#030712]/95 border-r border-[#22d3ee]/[0.12] shadow-[4px_0_30px_rgba(34,211,238,0.04)] sticky top-0 h-screen overflow-y-auto z-50 shrink-0 scrollbar-thin scrollbar-thumb-[#22d3ee]/20 scrollbar-track-transparent"
+          className="flex flex-col bg-bg-primary/95 border-r border-accent/[0.12] shadow-[4px_0_30px_rgba(var(--accent-rgb),0.04)] sticky top-0 h-screen overflow-y-auto z-50 shrink-0 scrollbar-thin scrollbar-thumb-accent/20 scrollbar-track-transparent"
           style={{ width: SIDEBAR_WIDTH }}
         >
           {/* Scanline overlay */}
@@ -73,27 +74,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="absolute inset-0 pointer-events-none z-0"
             style={{
               backgroundImage:
-                "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(34,211,238,0.015) 3px, rgba(34,211,238,0.015) 4px)",
+                "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(var(--accent-rgb),0.015) 3px, rgba(var(--accent-rgb),0.015) 4px)",
             }}
           />
 
           {/* Top accent line */}
-          <div className="h-[2px] bg-gradient-to-r from-transparent via-[#22d3ee] to-transparent opacity-60 shrink-0" />
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-60 shrink-0" />
 
           {/* ── LOGO ── */}
-          <div className="p-[24px_18px_20px] border-b border-[#22d3ee]/[0.08] relative z-10">
-            <div className="text-[8px] tracking-[0.25em] text-[#22d3ee]/40 font-bold mb-1.5 uppercase">
+          <div className="p-[24px_18px_20px] border-b border-accent/[0.08] relative z-10">
+            <div className="text-[8px] tracking-[0.25em] text-accent/40 font-bold mb-1.5 uppercase">
               // SYS_v1.8.0
             </div>
-            <h1 className="m-0 text-[17px] font-black tracking-[0.2em] text-[#22d3ee] leading-[1.2] [text-shadow:0_0_8px_rgba(34,211,238,0.8),0_0_25px_rgba(34,211,238,0.4),0_0_50px_rgba(34,211,238,0.15)]">
+            <h1 className="m-0 text-[17px] font-black tracking-[0.2em] text-accent leading-[1.2] [text-shadow:0_0_8px_rgba(var(--accent-rgb),0.8),0_0_25px_rgba(var(--accent-rgb),0.4),0_0_50px_rgba(var(--accent-rgb),0.15)]">
               LOGIC ARENA
             </h1>
-            <div className="mt-2 h-[1px] bg-gradient-to-r from-[#22d3ee] to-transparent opacity-30" />
+            <div className="mt-2 h-[1px] bg-gradient-to-r from-accent to-transparent opacity-30" />
           </div>
 
           {/* ── NAV LINKS ── */}
           <nav className="flex-1 p-[16px_10px] flex flex-col gap-1 relative z-10">
-            <div className="text-[8px] tracking-[0.22em] text-[#22d3ee]/25 font-bold px-1 pb-2 uppercase">
+            <div className="text-[8px] tracking-[0.22em] text-accent/25 font-bold px-1 pb-2 uppercase">
               navigation
             </div>
             {navItems.map((item) => (
@@ -101,15 +102,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ))}
           </nav>
 
+          {/* ── THEME SWITCHER ── */}
+          <ThemeSwitcher />
+
           {/* ── USER + LOGOUT ── */}
-          <div className="p-[14px_12px] border-t border-[#22d3ee]/[0.08] relative z-10">
-            <div className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-[#22d3ee]/[0.04] rounded-md border border-[#22d3ee]/10 hover:border-[#22d3ee]/30 transition-colors group cursor-default">
-              <span className="w-6 h-6 rounded-full bg-[#22d3ee]/15 border border-[#22d3ee]/40 flex items-center justify-center text-[10px] text-[#22d3ee] shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.2)] group-hover:shadow-[0_0_12px_rgba(34,211,238,0.4)] transition-all duration-300">
+          <div className="p-[14px_12px] border-t border-accent/[0.08] relative z-10">
+            <div className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-accent/[0.04] rounded-md border border-accent/10 hover:border-accent/30 transition-colors group cursor-default">
+              <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)] transition-all duration-300">
                 ◉
               </span>
               <div className="overflow-hidden">
-                <div className="text-[8px] text-[#22d3ee]/35 tracking-[0.18em] mb-[2px]">OPERATOR</div>
-                <div className="text-[10px] text-[#22d3ee]/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
+                <div className="text-[8px] text-accent/35 tracking-[0.18em] mb-[2px]">OPERATOR</div>
+                <div className="text-[10px] text-accent/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
                   {username ?? "UNKNOWN"}
                 </div>
               </div>
@@ -117,20 +121,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-1.5 py-[9px] px-[14px] bg-[#ef4444]/[0.05] hover:bg-[#ef4444]/[0.15] border border-[#ef4444]/20 hover:border-[#ef4444]/60 rounded-md text-[#ef4444]/50 hover:text-[#fca5a5] text-[9px] font-bold tracking-[0.2em] font-mono cursor-pointer transition-all duration-200 hover:shadow-[0_0_14px_rgba(239,68,68,0.2)] group"
+              className="w-full flex items-center justify-center gap-1.5 py-[9px] px-[14px] bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/60 rounded-md text-red-500/50 hover:text-red-300 text-[9px] font-bold tracking-[0.2em] font-mono cursor-pointer transition-all duration-200 group"
             >
-              <span className="text-[11px] group-hover:[text-shadow:0_0_8px_rgba(239,68,68,0.5)]">⏻</span>
-              <span className="group-hover:[text-shadow:0_0_8px_rgba(239,68,68,0.5)]">DISCONNECT</span>
+              <span className="text-[11px] transition-all group-hover:drop-shadow-[0_0_8px_rgba(var(--color-red-500),0.5)]">⏻</span>
+              <span className="transition-all group-hover:drop-shadow-[0_0_8px_rgba(var(--color-red-500),0.5)]">DISCONNECT</span>
             </button>
 
-            <div className="mt-3 text-[7px] text-[#22d3ee]/15 tracking-[0.15em] text-center uppercase">
+            <div className="mt-3 text-[7px] text-accent/15 tracking-[0.15em] text-center uppercase">
               LOGIC-ARENA © 2026
             </div>
           </div>
         </aside>
 
         {/* ── MAIN CONTENT ── */}
-        <main className="flex-1 overflow-auto bg-[#030712] relative scroll-smooth scrollbar-thin scrollbar-thumb-[#22d3ee]/10 scrollbar-track-transparent">
+        <main className="flex-1 overflow-auto bg-bg-primary relative scroll-smooth scrollbar-thin scrollbar-thumb-accent/10 scrollbar-track-transparent">
           {children}
         </main>
 
@@ -143,14 +147,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animation: "fadeInUp 0.25s ease",
               background:
                 toast.type === "info"
-                  ? "rgba(34,211,238,0.08)"
-                  : "rgba(239,68,68,0.10)",
+                  ? "rgba(var(--accent-rgb),0.08)"
+                  : "rgba(var(--color-red-500),0.10)",
               border: `1px solid ${
                 toast.type === "info"
-                  ? "rgba(34,211,238,0.35)"
-                  : "rgba(239,68,68,0.35)"
+                  ? "rgba(var(--accent-rgb),0.35)"
+                  : "rgba(var(--color-red-500),0.35)"
               }`,
-              color: toast.type === "info" ? "#22d3ee" : "#fca5a5",
+              color: toast.type === "info" ? "var(--accent)" : "#fca5a5",
             }}
           >
             {toast.message}
@@ -159,22 +163,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* ── CHALLENGE MODAL ── */}
         {incomingChallenge && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-card/60 backdrop-blur-sm">
             <div
-              className="border border-[#22d3ee]/30 bg-[#030712] rounded-xl p-8 max-w-sm w-full mx-4 font-mono"
+              className="border border-accent/30 bg-bg-primary rounded-xl p-8 max-w-sm w-full mx-4 font-mono"
               style={{
-                boxShadow: "0 0 40px rgba(34,211,238,0.15)",
+                boxShadow: "0 0 40px rgba(var(--accent-rgb),0.15)",
                 animation: "modalIn 0.2s ease",
               }}
             >
-              <p className="text-[8px] tracking-[0.28em] text-[#22d3ee]/35 mb-2">
+              <p className="text-[8px] tracking-[0.28em] text-accent/35 mb-2">
                 // INCOMING_TRANSMISSION
               </p>
-              <h2 className="text-[#22d3ee] font-black tracking-[0.18em] text-xl mb-2">
+              <h2 className="text-accent font-black tracking-[0.18em] text-xl mb-2">
                 COMBAT REQUEST
               </h2>
-              <p className="text-[#22d3ee]/60 text-[11px] tracking-[0.12em] mb-6">
-                <span className="text-[#22d3ee]">{incomingChallenge.challengerName}</span>
+              <p className="text-accent/60 text-[11px] tracking-[0.12em] mb-6">
+                <span className="text-accent">{incomingChallenge.challengerName}</span>
                 {" "}challenges you to combat.
               </p>
               <div className="flex gap-3">
@@ -183,13 +187,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     acceptChallenge(incomingChallenge.challengerId);
                     setIncoming(null);
                   }}
-                  className="flex-1 py-2 text-[11px] tracking-[0.18em] font-bold border border-[#22c55e]/40 bg-[#22c55e]/10 text-[#22c55e] hover:bg-[#22c55e]/20 rounded-lg transition-all"
+                  className="flex-1 py-2 text-[11px] tracking-[0.18em] font-bold border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 rounded-lg transition-all"
                 >
                   ACCEPT
                 </button>
                 <button
                   onClick={() => setIncoming(null)}
-                  className="flex-1 py-2 text-[11px] tracking-[0.18em] font-bold border border-[#ef4444]/30 bg-[#ef4444]/5 text-[#ef4444]/70 hover:bg-[#ef4444]/15 rounded-lg transition-all"
+                  className="flex-1 py-2 text-[11px] tracking-[0.18em] font-bold border border-red-500/30 bg-red-500/5 text-red-500/70 hover:bg-red-500/15 rounded-lg transition-all"
                 >
                   DECLINE
                 </button>

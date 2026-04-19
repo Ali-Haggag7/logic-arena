@@ -22,22 +22,22 @@ export interface Tournament {
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; border: string; glow: string }> = {
   WAITING: {
-    color: "#facc15",
-    bg: "rgba(250,204,21,0.08)",
-    border: "rgba(250,204,21,0.35)",
-    glow: "0 0 10px rgba(250,204,21,0.25)",
+    color: "var(--color-yellow-500)",
+    bg: "rgba(var(--color-yellow-500),0.08)",
+    border: "rgba(var(--color-yellow-500),0.35)",
+    glow: "0 0 10px rgba(var(--color-yellow-500),0.25)",
   },
   IN_PROGRESS: {
-    color: "#22d3ee",
-    bg: "rgba(34,211,238,0.08)",
-    border: "rgba(34,211,238,0.35)",
-    glow: "0 0 10px rgba(34,211,238,0.25)",
+    color: "var(--accent)",
+    bg: "rgba(var(--accent-rgb),0.08)",
+    border: "rgba(var(--accent-rgb),0.35)",
+    glow: "0 0 10px rgba(var(--accent-rgb),0.25)",
   },
   COMPLETED: {
-    color: "#22c55e",
-    bg: "rgba(34,197,94,0.08)",
-    border: "rgba(34,197,94,0.35)",
-    glow: "0 0 10px rgba(34,197,94,0.25)",
+    color: "var(--color-emerald-500)",
+    bg: "rgba(var(--color-emerald-500),0.08)",
+    border: "rgba(var(--color-emerald-500),0.35)",
+    glow: "0 0 10px rgba(var(--color-emerald-500),0.25)",
   },
 };
 
@@ -59,16 +59,16 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin }
 
   return (
     <div
-      className="bg-black/55 rounded-xl p-6 border border-[#22d3ee]/10 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.5)] flex flex-col gap-4 group transition-all duration-300 hover:-translate-y-[3px] hover:border-[#22d3ee]/40 animate-[fadeIn_0.3s_ease_both]"
-      style={{ animationDelay: `${index * 0.05}s` }}
+      className="bg-card/60 rounded-xl p-6 border border-accent/10 backdrop-blur-md flex flex-col gap-4 group transition-all duration-300 hover:-translate-y-[3px] hover:border-accent/40 animate-[fadeIn_0.3s_ease_both]"
+      style={{ boxShadow: 'var(--card-shadow)', animationDelay: `${index * 0.05}s` }}
     >
       {/* Header */}
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <div className="text-[14px] font-black tracking-[0.12em] text-[#22d3ee] mb-1.5 transition-all group-hover:drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+          <div className="text-[14px] font-black tracking-[0.12em] text-accent mb-1.5 transition-all group-hover:drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.5)]">
             {t.name}
           </div>
-          <div className="text-[8px] text-[#22d3ee]/25 tracking-[0.15em]">
+          <div className="text-[8px] text-accent/25 tracking-[0.15em]">
             BY {t.creator.username.toUpperCase()}
           </div>
         </div>
@@ -89,12 +89,12 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin }
       {/* Players bar */}
       <div>
         <div className="flex justify-between mb-1.5">
-          <span className="text-[8px] text-[#22d3ee]/30 tracking-[0.15em]">COMBATANTS</span>
-          <span className="text-[9px] text-[#22d3ee]/50 font-bold">{t.participants.length}/8</span>
+          <span className="text-[8px] text-accent/30 tracking-[0.15em]">COMBATANTS</span>
+          <span className="text-[9px] text-accent/50 font-bold">{t.participants.length}/8</span>
         </div>
-        <div className="h-[3px] rounded bg-[#22d3ee]/5 overflow-hidden">
+        <div className="h-[3px] rounded bg-accent/5 overflow-hidden">
           <div
-            className="h-full rounded bg-gradient-to-r from-[#22d3ee] to-[#06b6d4] shadow-[0_0_8px_rgba(34,211,238,0.4)] transition-all duration-300"
+            className="h-full rounded bg-gradient-to-r from-accent to-[#06b6d4] shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)] transition-all duration-300"
             style={{ width: `${(t.participants.length / 8) * 100}%` }}
           />
         </div>
@@ -106,7 +106,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin }
           <span
             key={p.id}
             title={p.username}
-            className="px-2 py-[2px] rounded-sm bg-[#22d3ee]/5 border border-[#22d3ee]/15 text-[8px] text-[#22d3ee]/50 tracking-[0.1em] font-semibold"
+            className="px-2 py-[2px] rounded-sm bg-accent/5 border border-accent/15 text-[8px] text-accent/50 tracking-[0.1em] font-semibold"
           >
             {p.username}
           </span>
@@ -114,7 +114,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin }
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 mt-auto pt-2 border-t border-[#22d3ee]/10">
+      <div className="flex gap-2 mt-auto pt-2 border-t border-accent/10">
         {canJoin && (
           <button
             onClick={() => onJoin(t.id)}
@@ -125,8 +125,8 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin }
               joining === t.id ? 'opacity-50 cursor-wait' : 'cursor-pointer'
             } ${
               hoveredBtn === "join" 
-              ? "bg-[#facc15]/15 border-[#facc15]/60 text-[#facc15]" 
-              : "bg-[#facc15]/5 border-[#facc15]/25 text-[#facc15]/60"
+              ? "bg-yellow-500/15 border-yellow-500/60 text-yellow-500" 
+              : "bg-yellow-500/5 border-yellow-500/25 text-yellow-500/60"
             }`}
             style={{ borderWidth: "1px" }}
           >
@@ -139,8 +139,8 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin }
           onMouseLeave={() => setHoveredBtn(null)}
           className={`flex-1 px-3.5 py-2 rounded-md text-[9px] font-extrabold tracking-[0.18em] font-mono cursor-pointer transition-all duration-200 ${
             hoveredBtn === "view"
-            ? "bg-[#22d3ee]/15 border-[#22d3ee]/60 text-[#22d3ee]"
-            : "bg-[#22d3ee]/5 border-[#22d3ee]/20 text-[#22d3ee]/60"
+            ? "bg-accent/15 border-accent/60 text-accent"
+            : "bg-accent/5 border-accent/20 text-accent/60"
           }`}
           style={{ borderWidth: "1px" }}
         >

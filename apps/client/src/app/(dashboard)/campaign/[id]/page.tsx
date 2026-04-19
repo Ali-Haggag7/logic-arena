@@ -15,10 +15,10 @@ interface LevelDetail {
 }
 
 const DIFF_CONFIG = {
-  EASY:   { color: "#22c55e", label: "EASY"   },
+  EASY:   { color: "var(--color-emerald-500)", label: "EASY"   },
   MEDIUM: { color: "#eab308", label: "MEDIUM" },
-  HARD:   { color: "#f97316", label: "HARD"   },
-  ELITE:  { color: "#ef4444", label: "ELITE"  },
+  HARD:   { color: "var(--color-orange-500)", label: "HARD"   },
+  ELITE:  { color: "var(--color-red-500)", label: "ELITE"  },
 } as const;
 
 type ModalState = "idle" | "loading" | "victory" | "defeat";
@@ -71,8 +71,8 @@ export default function CampaignLevelPage() {
 
   if (fetching || !level) {
     return (
-      <div className="min-h-screen bg-[#030712] font-mono flex items-center justify-center">
-        <div className="text-[#22d3ee]/40 text-[11px] tracking-[0.3em] animate-pulse">
+      <div className="min-h-screen bg-bg-primary font-mono flex items-center justify-center">
+        <div className="text-accent/40 text-[11px] tracking-[0.3em] animate-pulse">
           LOADING LEVEL DATA...
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function CampaignLevelPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Grid */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
@@ -106,18 +106,18 @@ export default function CampaignLevelPage() {
 
         <div className="max-w-[1100px] mx-auto px-6 pt-10 pb-[100px] relative z-10 animate-[fadeIn_0.35s_ease]">
           {/* Top bar */}
-          <div className="flex items-center justify-between mb-10 pb-6 border-b border-[#22d3ee]/10">
+          <div className="flex items-center justify-between mb-10 pb-6 border-b border-accent/10">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push("/campaign")}
-                className="text-[9px] tracking-[0.2em] text-[#22d3ee]/40 hover:text-[#22d3ee] border border-[#22d3ee]/15 hover:border-[#22d3ee]/40 rounded px-3 py-1.5 transition-all duration-200 cursor-pointer bg-transparent"
+                className="text-[9px] tracking-[0.2em] text-accent/40 hover:text-accent border border-accent/15 hover:border-accent/40 rounded px-3 py-1.5 transition-all duration-200 cursor-pointer bg-transparent"
               >
                 ← BACK
               </button>
-              <span className="text-[9px] text-[#22d3ee]/20 tracking-[0.2em]">
+              <span className="text-[9px] text-accent/20 tracking-[0.2em]">
                 LEVEL {String(level.id).padStart(2, "0")}
               </span>
-              <h1 className="m-0 text-[18px] font-black tracking-[0.2em] text-[#22d3ee] drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]">
+              <h1 className="m-0 text-[18px] font-black tracking-[0.2em] text-accent drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.7)]">
                 {level.name}
               </h1>
             </div>
@@ -134,42 +134,42 @@ export default function CampaignLevelPage() {
             {/* ── LEFT PANEL ── */}
             <div className="flex flex-col gap-5">
               {/* Mission brief */}
-              <div className="border border-[#22d3ee]/15 rounded-xl p-6 bg-[#22d3ee]/[0.02]">
-                <p className="text-[8px] tracking-[0.3em] text-[#22d3ee]/30 mb-3 uppercase">
+              <div className="border border-accent/15 rounded-xl p-6 bg-accent/[0.02]">
+                <p className="text-[8px] tracking-[0.3em] text-accent/30 mb-3 uppercase">
                   // MISSION_BRIEF
                 </p>
-                <p className="text-[11px] text-[#22d3ee]/70 tracking-[0.08em] leading-relaxed">
+                <p className="text-[11px] text-accent/70 tracking-[0.08em] leading-relaxed">
                   {level.description}
                 </p>
               </div>
 
               {/* Enemy Intel */}
-              <div className="border border-[#ef4444]/20 rounded-xl p-6 bg-[#ef4444]/[0.03]">
-                <p className="text-[8px] tracking-[0.3em] text-[#ef4444]/50 mb-4 uppercase">
+              <div className="border border-red-500/20 rounded-xl p-6 bg-red-500/[0.03]">
+                <p className="text-[8px] tracking-[0.3em] text-red-500/50 mb-4 uppercase">
                   // ENEMY_INTEL
                 </p>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-[#22d3ee]/40 tracking-[0.15em]">DESIGNATION</span>
-                    <span className="font-bold text-[#ef4444]/80 tracking-[0.12em]">{level.name}</span>
+                    <span className="text-accent/40 tracking-[0.15em]">DESIGNATION</span>
+                    <span className="font-bold text-red-500/80 tracking-[0.12em]">{level.name}</span>
                   </div>
-                  <div className="h-[1px] bg-[#ef4444]/10" />
+                  <div className="h-[1px] bg-red-500/10" />
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-[#22d3ee]/40 tracking-[0.15em]">THREAT LEVEL</span>
+                    <span className="text-accent/40 tracking-[0.15em]">THREAT LEVEL</span>
                     <span className="font-bold tracking-[0.12em]" style={{ color: dc.color }}>{level.difficulty}</span>
                   </div>
-                  <div className="h-[1px] bg-[#ef4444]/10" />
+                  <div className="h-[1px] bg-red-500/10" />
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-[#22d3ee]/40 tracking-[0.15em]">REWARD</span>
-                    <span className="font-bold text-[#22d3ee]/70 tracking-[0.12em]">+{level.rewardRank} RANK</span>
+                    <span className="text-accent/40 tracking-[0.15em]">REWARD</span>
+                    <span className="font-bold text-accent/70 tracking-[0.12em]">+{level.rewardRank} RANK</span>
                   </div>
                 </div>
               </div>
 
               {/* Tips */}
-              <div className="border border-[#22d3ee]/10 rounded-xl p-5 bg-transparent">
-                <p className="text-[8px] tracking-[0.3em] text-[#22d3ee]/25 mb-3 uppercase">// TACTICS</p>
-                <ul className="text-[9px] text-[#22d3ee]/35 tracking-[0.06em] leading-relaxed space-y-1.5 list-none p-0 m-0">
+              <div className="border border-accent/10 rounded-xl p-5 bg-transparent">
+                <p className="text-[8px] tracking-[0.3em] text-accent/25 mb-3 uppercase">// TACTICS</p>
+                <ul className="text-[9px] text-accent/35 tracking-[0.06em] leading-relaxed space-y-1.5 list-none p-0 m-0">
                   <li>→ Use SCAN to detect proximity</li>
                   <li>→ TIME your FIRE commands carefully</li>
                   <li>→ WHILE loops amplify your firepower</li>
@@ -181,10 +181,10 @@ export default function CampaignLevelPage() {
             {/* ── RIGHT PANEL ── */}
             <div className="flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <p className="text-[8px] tracking-[0.3em] text-[#22d3ee]/35 uppercase m-0">
+                <p className="text-[8px] tracking-[0.3em] text-accent/35 uppercase m-0">
                   // YOUR_ALISCRIPT
                 </p>
-                <span className="text-[8px] text-[#22d3ee]/20 tracking-[0.12em]">
+                <span className="text-[8px] text-accent/20 tracking-[0.12em]">
                   {script.split("\n").filter(Boolean).length} LINES
                 </span>
               </div>
@@ -193,8 +193,8 @@ export default function CampaignLevelPage() {
                 value={script}
                 onChange={(e) => setScript(e.target.value)}
                 placeholder={"// Write your AliScript here\n// Example:\nSET x = SCAN\nIF x > 0\n  FIRE\nELSE\n  MOVE RIGHT\nEND"}
-                className="w-full min-h-[380px] rounded-xl border border-[#22d3ee]/20 bg-[#030712] text-[#22d3ee]/85 p-5 text-[12px] leading-[1.7] resize-y focus:outline-none focus:border-[#22d3ee]/50 placeholder:text-[#22d3ee]/20 font-mono tracking-[0.04em]"
-                style={{ boxShadow: "inset 0 0 30px rgba(34,211,238,0.03)" }}
+                className="w-full min-h-[380px] rounded-xl border border-accent/20 bg-bg-primary text-accent/85 p-5 text-[12px] leading-[1.7] resize-y focus:outline-none focus:border-accent/50 placeholder:text-accent/20 font-mono tracking-[0.04em]"
+                style={{ boxShadow: "inset 0 0 30px rgba(var(--accent-rgb),0.03)" }}
                 spellCheck={false}
               />
 
@@ -204,10 +204,10 @@ export default function CampaignLevelPage() {
                 disabled={!script.trim() || modal === "loading"}
                 className={`w-full py-4 rounded-xl text-[11px] font-black tracking-[0.3em] font-mono cursor-pointer transition-all duration-200 border ${
                   modal === "loading"
-                    ? "bg-[#22d3ee]/5 border-[#22d3ee]/20 text-[#22d3ee]/40 cursor-not-allowed"
+                    ? "bg-accent/5 border-accent/20 text-accent/40 cursor-not-allowed"
                     : !script.trim()
-                    ? "bg-[#22d3ee]/5 border-[#22d3ee]/15 text-[#22d3ee]/25 cursor-not-allowed"
-                    : "bg-[#22d3ee]/10 border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/20 hover:border-[#22d3ee]/70 hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]"
+                    ? "bg-accent/5 border-accent/15 text-accent/25 cursor-not-allowed"
+                    : "bg-accent/10 border-accent/40 text-accent hover:bg-accent/20 hover:border-accent/70 hover:drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.5)]"
                 }`}
               >
                 {modal === "loading" ? "⟳ INITIALIZING COMBAT..." : "▶ DEPLOY & FIGHT"}
@@ -222,27 +222,27 @@ export default function CampaignLevelPage() {
             <div
               className={`rounded-2xl border p-10 text-center max-w-[420px] w-full mx-4 font-mono ${
                 modal === "victory"
-                  ? "bg-[#030712] border-[#22d3ee]/40 shadow-[0_0_60px_rgba(34,211,238,0.25)]"
-                  : "bg-[#030712] border-[#ef4444]/30 shadow-[0_0_60px_rgba(239,68,68,0.2)]"
+                  ? "bg-bg-primary border-accent/40 shadow-[0_0_60px_rgba(var(--accent-rgb),0.25)]"
+                  : "bg-bg-primary border-red-500/30 shadow-[0_0_60px_rgba(var(--color-red-500),0.2)]"
               }`}
               style={{ animation: "modalIn 0.3s ease" }}
             >
               {modal === "victory" ? (
                 <>
                   <div className="text-5xl mb-5">🏆</div>
-                  <h2 className="text-[18px] font-black tracking-[0.25em] text-[#22d3ee] drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] mb-2">
+                  <h2 className="text-[18px] font-black tracking-[0.25em] text-accent drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)] mb-2">
                     MISSION COMPLETE
                   </h2>
-                  <p className="text-[#22d3ee]/50 text-[10px] tracking-[0.15em] mb-6">
+                  <p className="text-accent/50 text-[10px] tracking-[0.15em] mb-6">
                     Enemy unit neutralized.
                   </p>
-                  <div className="inline-block border border-[#22d3ee]/20 rounded-lg px-6 py-3 bg-[#22d3ee]/5 mb-7">
-                    <span className="text-[#22d3ee]/40 text-[9px] tracking-[0.2em] block mb-1">RANK EARNED</span>
-                    <span className="text-[#22d3ee] font-black text-[22px] drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]">+{reward}</span>
+                  <div className="inline-block border border-accent/20 rounded-lg px-6 py-3 bg-accent/5 mb-7">
+                    <span className="text-accent/40 text-[9px] tracking-[0.2em] block mb-1">RANK EARNED</span>
+                    <span className="text-accent font-black text-[22px] drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.7)]">+{reward}</span>
                   </div>
                   <button
                     onClick={() => router.push("/campaign")}
-                    className="w-full py-3 rounded-lg text-[10px] font-black tracking-[0.25em] bg-[#22d3ee]/10 border border-[#22d3ee]/40 text-[#22d3ee] hover:bg-[#22d3ee]/20 hover:border-[#22d3ee]/70 transition-all duration-200 cursor-pointer"
+                    className="w-full py-3 rounded-lg text-[10px] font-black tracking-[0.25em] bg-accent/10 border border-accent/40 text-accent hover:bg-accent/20 hover:border-accent/70 transition-all duration-200 cursor-pointer"
                   >
                     → CONTINUE TO MAP
                   </button>
@@ -250,22 +250,22 @@ export default function CampaignLevelPage() {
               ) : (
                 <>
                   <div className="text-5xl mb-5">💀</div>
-                  <h2 className="text-[18px] font-black tracking-[0.25em] text-[#ef4444] drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] mb-2">
+                  <h2 className="text-[18px] font-black tracking-[0.25em] text-red-500 drop-shadow-[0_0_10px_rgba(var(--color-red-500),0.8)] mb-2">
                     UNIT DESTROYED
                   </h2>
-                  <p className="text-[#ef4444]/50 text-[10px] tracking-[0.15em] mb-7">
+                  <p className="text-red-500/50 text-[10px] tracking-[0.15em] mb-7">
                     Recalibrate your tactics and retry.
                   </p>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setModal("idle")}
-                      className="flex-1 py-3 rounded-lg text-[10px] font-black tracking-[0.2em] bg-[#22d3ee]/10 border border-[#22d3ee]/30 text-[#22d3ee]/70 hover:bg-[#22d3ee]/20 transition-all duration-200 cursor-pointer"
+                      className="flex-1 py-3 rounded-lg text-[10px] font-black tracking-[0.2em] bg-accent/10 border border-accent/30 text-accent/70 hover:bg-accent/20 transition-all duration-200 cursor-pointer"
                     >
                       ↺ RETRY
                     </button>
                     <button
                       onClick={() => router.push("/campaign")}
-                      className="flex-1 py-3 rounded-lg text-[10px] font-black tracking-[0.2em] bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#ef4444]/70 hover:bg-[#ef4444]/20 transition-all duration-200 cursor-pointer"
+                      className="flex-1 py-3 rounded-lg text-[10px] font-black tracking-[0.2em] bg-red-500/10 border border-red-500/30 text-red-500/70 hover:bg-red-500/20 transition-all duration-200 cursor-pointer"
                     >
                       ← RETREAT
                     </button>

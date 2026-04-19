@@ -20,12 +20,12 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#030712] font-mono p-6">
-      <form onSubmit={handleForgot} className="w-full max-w-[400px] bg-black/60 border border-[#a855f7]/30 p-8 rounded-xl flex flex-col gap-4 shadow-[#a855f7]/10 shadow-[0_0_20px]">
-        <h2 className="text-[#a855f7] text-xl tracking-[0.2em] text-center mb-4">RECOVER ACCESS</h2>
-        <input type="email" placeholder="COMMS LINK (EMAIL)" value={email} onChange={e => setEmail(e.target.value)} required className="bg-transparent border border-[#a855f7]/30 p-3 text-[#a855f7] tracking-[0.1em] focus:border-[#a855f7]" />
-        {status && <div className="text-center text-[10px] text-[#ef4444] mt-2">{status}</div>}
-        <button type="submit" className="w-full mt-4 p-3 border border-[#a855f7]/40 text-[#a855f7] hover:bg-[#a855f7]/10 tracking-[0.2em] transition-all">REQUEST RESET</button>
+    <div className="min-h-screen flex items-center justify-center bg-bg-primary font-mono p-6">
+      <form onSubmit={handleForgot} className="w-full max-w-[400px] bg-card/60 border border-accent/30 p-8 rounded-xl flex flex-col gap-4 shadow-[0_0_20px_rgba(var(--accent-rgb),0.1)]">
+        <h2 className="text-accent text-xl tracking-[0.2em] text-center mb-4">RECOVER ACCESS</h2>
+        <input type="email" placeholder="COMMS LINK (EMAIL)" value={email} onChange={e => setEmail(e.target.value)} required className="bg-transparent border border-accent/30 p-3 text-accent tracking-[0.1em] focus:border-accent" />
+        {status && <div className="text-center text-[10px] text-red-500 mt-2">{status}</div>}
+        <button type="submit" className="w-full mt-4 p-3 border border-accent/40 text-accent hover:bg-accent/10 tracking-[0.2em] transition-all">REQUEST RESET</button>
       </form>
     </div>
   );

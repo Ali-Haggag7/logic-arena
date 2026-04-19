@@ -27,12 +27,12 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
     const [isLogsOpen, setIsLogsOpen] = useState(true);
 
     return (
-        <div className={`transition-all duration-500 ease-out flex flex-col bg-black/70 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 ${isZenMode ? "fixed top-24 bottom-8 left-8 w-[800px] border-cyan-500/50 shadow-[0_0_80px_rgba(34,211,238,0.2)]" : "h-full min-w-[420px] w-auto"}`}>
+        <div className={`transition-all duration-500 ease-out flex flex-col bg-black/70 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 z-50 ${isZenMode ? "fixed top-24 bottom-8 left-8 w-[800px] border-cyan-500/50 shadow-[0_0_80px_rgba(34,211,238,0.2)]" : "h-full min-w-[420px] w-auto"}`} style={{ boxShadow: 'var(--card-shadow)' }}>
             
             {/* SENTIENT UPDATE Header */}
             <div className="flex justify-between items-center mb-4 border-b border-cyan-900/50 pb-2 shrink-0">
                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]"></span>
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_var(--accent)]"></span>
                     <span className="text-cyan-400 text-[10px] font-black tracking-[0.2em] uppercase">Sentient Update // ALISCRIPT V2.0</span>
                 </div>
                 <button 
@@ -66,7 +66,7 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({ socket, robotI
                                 className="w-full flex items-center justify-between px-3 py-1.5 bg-black/40 hover:bg-cyan-950/40 transition-colors group"
                             >
                                 <div className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_5px_#22d3ee]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_5px_var(--accent)]" />
                                     <span className="text-[9px] font-black tracking-widest text-cyan-600 uppercase">Telemetry Log</span>
                                     {output.length > 0 && (
                                         <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-cyan-900/50 text-cyan-400 border border-cyan-700/40">

@@ -1,34 +1,65 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── Theme Variables ── */
+:root,
+[data-theme='cyberpunk'] {
+  --bg-primary:     #030712;
+  --bg-secondary:   #0a0f1c;
+  --text-primary:   #f8fafc;
+  --text-secondary: #9ca3af;
+  --accent:         #22d3ee;
+  --accent-rgb:     34, 211, 238;
+  --border:         rgba(34, 211, 238, 0.2);
+  --card:           #000000;
+  --card-shadow: 0 0 20px rgba(var(--accent-rgb), 0.1), inset 0 0 20px rgba(var(--accent-rgb), 0.03);
+}
+
+[data-theme='light'] {
+  --bg-primary:     #fafafa;
+  --bg-secondary:   #f4f4f5;
+  --text-primary:   #18181b;
+  --text-secondary: #71717a;
+  --accent:         #6366f1;
+  --accent-rgb:     99, 102, 241;
+  --border:         #e4e4e7;
+  --card:           #ffffff;
+  --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='desert'] {
+  --bg-primary:     #fffbeb;
+  --bg-secondary:   #fef3c7;
+  --text-primary:   #1c1917;
+  --text-secondary: #78716c;
+  --accent:         #d97706;
+  --accent-rgb:     217, 119, 6;
+  --border:         #fef3c7;
+  --card:           #fffbeb;
+  --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg-primary:     var(--bg-primary);
+  --color-bg-secondary:   var(--bg-secondary);
+  --color-text-primary:   var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent:         var(--accent);
+  --color-card:           var(--card);
+  --color-border-theme:   var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 /* ─────────────────────────────────────────────────────────
  *  GLOBAL CYBERPUNK SCROLLBAR
  * ───────────────────────────────────────────────────────── */
- 
+
 /* WebKit (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 8px;
@@ -36,28 +67,50 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #030712;
-  border-left: 1px solid rgba(34, 211, 238, 0.1);
+  background: var(--bg-primary);
+  border-left: 1px solid rgba(var(--accent-rgb), 0.1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.2);
+  background: rgba(var(--accent-rgb), 0.2);
   border-radius: 4px;
-  border: 1px solid rgba(34, 211, 238, 0.4);
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.5);
-  border: 1px solid #22d3ee;
+  background: rgba(var(--accent-rgb), 0.5);
+  border: 1px solid var(--accent);
 }
 
 ::-webkit-scrollbar-corner {
-  background: #030712;
+  background: var(--bg-primary);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.3) #030712;
+  scrollbar-color: rgba(var(--accent-rgb), 0.3) var(--bg-primary);
 }
 
+/* ─────────────────────────────────────────────────────────
+ *  DISABLE NEON GLOWS ON LIGHT & DESERT THEMES
+ * ───────────────────────────────────────────────────────── */
+
+[data-theme='light'] [class*="drop-shadow-["],
+[data-theme='desert'] [class*="drop-shadow-["] {
+  filter: none !important;
+}
+
+[data-theme='light'] [class*="[text-shadow:"],
+[data-theme='desert'] [class*="[text-shadow:"],
+[data-theme='light'] [style*="text-shadow"],
+[data-theme='desert'] [style*="text-shadow"] {
+  text-shadow: none !important;
+}
+
+[data-theme='light'] [class*="shadow-[0_0_"],
+[data-theme='desert'] [class*="shadow-[0_0_"],
+[data-theme='light'] [style*="box-shadow: 0 0"],
+[data-theme='desert'] [style*="box-shadow: 0 0"] {
+  box-shadow: none !important;
+}

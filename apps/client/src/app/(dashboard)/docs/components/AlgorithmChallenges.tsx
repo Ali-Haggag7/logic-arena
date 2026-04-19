@@ -24,13 +24,13 @@ const ChallengeCard = ({
   isExpanded:   boolean;
   onToggle:     () => void;
 }) => {
-  const diffColor = DIFFICULTY_COLORS[challenge.difficulty] ?? '#22d3ee';
+  const diffColor = DIFFICULTY_COLORS[challenge.difficulty] ?? 'var(--accent)';
 
   return (
     <div
-      className="border bg-black/40 backdrop-blur-sm transition-all duration-300 rounded-sm overflow-hidden"
+      className="border bg-card/60 backdrop-blur-sm transition-all duration-300 rounded-sm overflow-hidden"
       style={{
-        borderColor:    isExpanded ? `${challenge.color}66` : 'rgba(34,211,238,0.12)',
+        borderColor:    isExpanded ? `${challenge.color}66` : 'rgba(var(--accent-rgb),0.12)',
         boxShadow:      isExpanded ? `0 0 20px ${challenge.color}22` : 'none',
       }}
     >
@@ -38,7 +38,7 @@ const ChallengeCard = ({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-white/[0.02]"
+        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-text-primary/[0.02]"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl" role="img" aria-label={challenge.title}>
@@ -59,13 +59,13 @@ const ChallengeCard = ({
                 {challenge.difficulty}
               </span>
             </div>
-            <p className="text-[10px] text-white/40 mt-0.5 tracking-wider">{challenge.concept}</p>
+            <p className="text-[10px] text-text-primary/40 mt-0.5 tracking-wider">{challenge.concept}</p>
           </div>
         </div>
         <span
           className="text-xs font-bold tracking-widest transition-transform duration-300"
           style={{
-            color:     'rgba(34,211,238,0.5)',
+            color:     'rgba(var(--accent-rgb),0.5)',
             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         >
@@ -75,8 +75,8 @@ const ChallengeCard = ({
 
       {/* Expandable body */}
       {isExpanded && (
-        <div className="px-5 pb-5 border-t border-white/5">
-          <p className="text-[11px] text-white/50 mt-4 mb-4 leading-relaxed tracking-wide">
+        <div className="px-5 pb-5 border-t border-text-primary/5">
+          <p className="text-[11px] text-text-primary/50 mt-4 mb-4 leading-relaxed tracking-wide">
             {challenge.description}
           </p>
 
@@ -87,21 +87,20 @@ const ChallengeCard = ({
               style={{ background: `linear-gradient(135deg, ${challenge.color}, transparent)` }}
             />
             <pre
-              className="text-[11px] leading-relaxed p-4 rounded-sm overflow-x-auto font-mono"
+              className="text-[11px] leading-relaxed p-4 rounded-sm overflow-x-auto font-mono bg-card/60 backdrop-blur-md"
               style={{
-                color:      '#a5f3fc',
-                background: 'rgba(0,0,0,0.6)',
-                border:     '1px solid rgba(34,211,238,0.1)',
+                color:      'var(--accent)',
+                border:     '1px solid rgba(var(--accent-rgb),0.1)',
               }}
             >
               {challenge.code
                 .split('\n')
                 .map((line, i) => {
-                  // Highlight comments in dim white, keywords in color
+                  // Highlight comments in dim text-primary, keywords in color
                   const isComment = line.trimStart().startsWith('//');
                   return (
                     <div key={i}>
-                      <span style={{ color: isComment ? 'rgba(255,255,255,0.2)' : undefined }}>
+                      <span style={{ color: isComment ? 'color-mix(in srgb, var(--text-primary) 30%, transparent)' : undefined }}>
                         {line}
                       </span>
                     </div>
@@ -144,32 +143,32 @@ export const AlgorithmChallenges = ({ onLoadScript }: AlgorithmChallengesProps) 
     <section className="mb-16">
       {/* Section header */}
       <div className="flex items-center gap-4 mb-6">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-500/30" />
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-accent/30" />
         <div className="text-center">
-          <div className="text-[9px] tracking-[0.5em] text-cyan-700 uppercase font-black mb-1">
+          <div className="text-[9px] tracking-[0.5em] text-accent/60 uppercase font-black mb-1">
             AliScript v2.0
           </div>
-          <h2 className="text-xl font-black tracking-[0.15em] text-white/90 uppercase">
+          <h2 className="text-xl font-black tracking-[0.15em] text-text-primary/90 uppercase">
             Algorithm Challenges
           </h2>
-          <p className="text-[10px] text-white/30 tracking-widest mt-1">
+          <p className="text-[10px] text-text-primary/30 tracking-widest mt-1">
             Production-ready scripts demonstrating real algorithmic thinking
           </p>
         </div>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-500/30" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-accent/30" />
       </div>
 
       {/* Info callout */}
-      <div className="mb-6 p-4 border border-cyan-900/40 bg-cyan-950/10 rounded-sm">
+      <div className="mb-6 p-4 border border-accent/20 bg-accent/5 rounded-sm">
         <div className="flex items-start gap-3">
-          <span className="text-cyan-400 text-lg mt-0.5">⚡</span>
+          <span className="text-accent text-lg mt-0.5">⚡</span>
           <div>
-            <div className="text-[10px] font-black tracking-[0.2em] text-cyan-400 mb-1 uppercase">
+            <div className="text-[10px] font-black tracking-[0.2em] text-accent mb-1 uppercase">
               Educational Mechanic
             </div>
-            <p className="text-[11px] text-white/40 leading-relaxed tracking-wide">
-              Every AliScript command costs energy. Robots that write <strong className="text-white/60">efficient algorithms</strong> (fewer commands, same damage output) achieve higher{' '}
-              <strong className="text-cyan-400">EFFICIENCY_SCORE</strong> and survive longer. Study these patterns to optimise your strategy.
+            <p className="text-[11px] text-text-primary/40 leading-relaxed tracking-wide">
+              Every AliScript command costs energy. Robots that write <strong className="text-text-primary/60">efficient algorithms</strong> (fewer commands, same damage output) achieve higher{' '}
+              <strong className="text-accent">EFFICIENCY_SCORE</strong> and survive longer. Study these patterns to optimise your strategy.
             </p>
           </div>
         </div>

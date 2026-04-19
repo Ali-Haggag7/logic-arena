@@ -10,10 +10,10 @@ export function QuickReferenceSection() {
         {QUICK_REF.map((card) => (
           <div
             key={card.title}
-            className="quick-card bg-black/60 rounded-xl p-6 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+            className="quick-card bg-card/60 rounded-xl p-6 backdrop-blur-md"
             style={{
+              boxShadow: 'var(--card-shadow)',
               border: `1px solid ${card.color}22`,
-              boxShadow: `0 4px 24px rgba(0,0,0,0.6), inset 0 1px 0 ${card.color}15`,
             }}
           >
             {/* Card header */}

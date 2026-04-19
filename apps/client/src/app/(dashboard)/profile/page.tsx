@@ -46,28 +46,28 @@ export default function ProfilePage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Grid background */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
-            backgroundImage: "linear-gradient(rgba(8,145,178,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.07) 1px, transparent 1px)",
+            backgroundImage: "linear-gradient(rgba(var(--accent-rgb),0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.07) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
 
         <div className="max-w-[900px] mx-auto px-6 pt-12 pb-[80px] relative z-10 animate-[fadeIn_0.35s_ease]">
           {/* ── Header ── */}
-          <div className="border-b border-[#22d3ee]/10 pb-6 mb-9">
-            <p className="text-[8px] tracking-[0.28em] text-[#22d3ee]/35 mb-2 uppercase">
+          <div className="border-b border-accent/10 pb-6 mb-9">
+            <p className="text-[8px] tracking-[0.28em] text-accent/35 mb-2 uppercase">
               // OPERATOR_FILE
             </p>
-            <h1 className="m-0 text-[clamp(24px,4vw,36px)] font-black tracking-[0.18em] text-[#22d3ee] drop-shadow-[0_0_10px_rgba(34,211,238,0.7)] shadow-[#22d3ee]/30 leading-tight">
+            <h1 className="m-0 text-[clamp(24px,4vw,36px)] font-black tracking-[0.18em] text-accent drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.7)] leading-tight">
               {loading ? "LOADING..." : error ? "ERROR" : profile?.username ?? "UNKNOWN"}
             </h1>
             {profile && (
-              <p className="mt-2 text-[10px] text-[#22d3ee]/35 tracking-[0.15em] flex items-center gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] shadow-[0_0_8px_#22c55e] inline-block" />
+              <p className="mt-2 text-[10px] text-accent/35 tracking-[0.15em] flex items-center gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_var(--color-emerald-500)] inline-block" />
                 RANK #{profile.rank} &nbsp;·&nbsp; MEMBER SINCE {fmtDate(profile.memberSince)}
               </p>
             )}
@@ -75,7 +75,7 @@ export default function ProfilePage() {
 
           {/* ── Error state ── */}
           {error && (
-            <div className="bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-lg p-[20px_24px] text-[#fca5a5] text-[11px] tracking-[0.12em]">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-[20px_24px] text-[#fca5a5] text-[11px] tracking-[0.12em]">
               [ERR] UPLINK FAILURE: {error}
             </div>
           )}
@@ -90,16 +90,16 @@ export default function ProfilePage() {
                       key={i}
                       className="h-[100px] rounded-[10px] animate-[shimmer_1.5s_infinite]"
                       style={{
-                        background: "linear-gradient(90deg, rgba(34,211,238,0.03) 0%, rgba(34,211,238,0.08) 50%, rgba(34,211,238,0.03) 100%)",
+                        background: "linear-gradient(90deg, rgba(var(--accent-rgb),0.03) 0%, rgba(var(--accent-rgb),0.08) 50%, rgba(var(--accent-rgb),0.03) 100%)",
                         backgroundSize: "200% 100%",
                       }}
                     />
                   ))
                 ) : (
                   <>
-                    <StatCard label="Total Matches" value={profile?.totalMatches ?? 0} accent="#22d3ee" />
-                    <StatCard label="Wins" value={profile?.wins ?? 0} accent="#22c55e" />
-                    <StatCard label="Losses" value={profile?.losses ?? 0} accent="#ef4444" />
+                    <StatCard label="Total Matches" value={profile?.totalMatches ?? 0} accent="var(--accent)" />
+                    <StatCard label="Wins" value={profile?.wins ?? 0} accent="var(--color-emerald-500)" />
+                    <StatCard label="Losses" value={profile?.losses ?? 0} accent="var(--color-red-500)" />
                     <StatCard label="Win Rate" value={`${profile?.winRate ?? 0}%`} accent="#a855f7" />
                   </>
                 )}
@@ -108,11 +108,11 @@ export default function ProfilePage() {
               {/* ── Match History section ── */}
               <div>
                 <div className="flex justify-between items-center mb-3.5">
-                  <h2 className="text-[10px] tracking-[0.22em] font-bold text-[#22d3ee]/50 m-0 uppercase">
+                  <h2 className="text-[10px] tracking-[0.22em] font-bold text-accent/50 m-0 uppercase">
                     Match History
                   </h2>
                   {profile && (
-                    <span className="text-[9px] text-[#22d3ee]/25 tracking-[0.15em]">
+                    <span className="text-[9px] text-accent/25 tracking-[0.15em]">
                       TOTAL: {profile.totalMatches}
                     </span>
                   )}

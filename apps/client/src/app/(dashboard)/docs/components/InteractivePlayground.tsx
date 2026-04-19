@@ -18,15 +18,15 @@ export function InteractivePlayground({ script, setScript, parsed, onParse }: In
         {/* Left: editor */}
         <div>
           <div className="flex justify-between items-center mb-2.5">
-            <span className="text-[8px] tracking-[0.22em] text-[#22d3ee]/30 uppercase">
+            <span className="text-[8px] tracking-[0.22em] text-accent/30 uppercase">
               // script_editor
             </span>
-            <span className="text-[8px] tracking-[0.15em] text-[#22d3ee]/20">
+            <span className="text-[8px] tracking-[0.15em] text-accent/20">
               {script.split("\n").filter(Boolean).length} LINES
             </span>
           </div>
           <textarea
-            className="docs-textarea docs-scrollbar"
+            className="docs-textarea docs-scrollbar bg-card/50 border border-accent/20 text-accent outline-none"
             value={script}
             onChange={(e) => setScript(e.target.value)}
             spellCheck={false}
@@ -39,8 +39,8 @@ export function InteractivePlayground({ script, setScript, parsed, onParse }: In
             onClick={onParse}
             className={`mt-3 w-full py-3 px-6 rounded-lg text-[10px] font-black tracking-[0.28em] font-mono transition-all duration-200 ${
               parseBtnHovered 
-                ? "bg-[#22d3ee]/20 text-[#22d3ee] border-[#22d3ee]/70 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)] shadow-[0_0_20px_rgba(34,211,238,0.15),inset_0_0_20px_rgba(34,211,238,0.05)] animate-[pulse-glow_1.5s_infinite]" 
-                : "bg-[#22d3ee]/10 border border-[#22d3ee]/30 text-[#22d3ee]/70"
+                ? "bg-accent/20 text-accent border-accent/70 drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.6)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.15),inset_0_0_20px_rgba(var(--accent-rgb),0.05)] animate-[pulse-glow_1.5s_infinite]" 
+                : "bg-accent/10 border border-accent/30 text-accent/70"
             }`}
           >
             ▶ PARSE SCRIPT
@@ -50,13 +50,13 @@ export function InteractivePlayground({ script, setScript, parsed, onParse }: In
         {/* Right: output */}
         <div>
           <div className="mb-2.5">
-            <span className="text-[8px] tracking-[0.22em] text-[#22d3ee]/30 uppercase">
+            <span className="text-[8px] tracking-[0.22em] text-accent/30 uppercase">
               // parsed_commands
             </span>
           </div>
-          <div className="docs-scrollbar min-h-[200px] max-h-[360px] overflow-y-auto bg-black/70 border border-[#22d3ee]/15 rounded-lg p-4 flex flex-col gap-2">
+          <div className="docs-scrollbar min-h-[200px] max-h-[360px] overflow-y-auto bg-card/70 border border-accent/15 rounded-lg p-4 flex flex-col gap-2">
             {parsed.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-[#22d3ee]/20 text-[10px] tracking-[0.2em] text-center p-12">
+              <div className="flex-1 flex items-center justify-center text-accent/20 text-[10px] tracking-[0.2em] text-center p-12">
                 AWAITING PARSE COMMAND...
               </div>
             ) : (
@@ -66,10 +66,10 @@ export function InteractivePlayground({ script, setScript, parsed, onParse }: In
                   className="flex items-center gap-2.5 animate-[fadeIn_0.2s_ease_both]"
                   style={{ animationDelay: `${idx * 0.04}s` }}
                 >
-                  <span className="text-[8px] text-[#22d3ee]/20 min-w-[24px] text-right font-bold">
+                  <span className="text-[8px] text-accent/20 min-w-[24px] text-right font-bold">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
-                  <span className="inline-block px-3.5 py-1.5 rounded-md bg-[#22d3ee]/10 border border-[#22d3ee]/30 text-[#22d3ee] text-[11px] font-bold tracking-[0.08em] font-mono drop-shadow-[0_0_8px_rgba(34,211,238,0.4)] shadow-[0_0_12px_rgba(34,211,238,0.08),inset_0_0_12px_rgba(34,211,238,0.04)]">
+                  <span className="inline-block px-3.5 py-1.5 rounded-md bg-accent/10 border border-accent/30 text-accent text-[11px] font-bold tracking-[0.08em] font-mono drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)] shadow-[0_0_12px_rgba(var(--accent-rgb),0.08),inset_0_0_12px_rgba(var(--accent-rgb),0.04)]">
                     {cmd}
                   </span>
                 </div>
@@ -78,7 +78,7 @@ export function InteractivePlayground({ script, setScript, parsed, onParse }: In
           </div>
 
           {parsed.length > 0 && (
-            <div className="mt-2.5 text-[9px] text-[#22d3ee]/25 tracking-[0.15em] text-right">
+            <div className="mt-2.5 text-[9px] text-accent/25 tracking-[0.15em] text-right">
               {parsed.length} COMMAND{parsed.length !== 1 ? "S" : ""} PARSED
             </div>
           )}

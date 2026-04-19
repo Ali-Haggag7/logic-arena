@@ -3,11 +3,11 @@
 import React from "react";
 
 const PALETTE = [
-  { hex: "#22d3ee", label: "CYAN" },
+  { hex: "var(--accent)", label: "CYAN" },
   { hex: "#a855f7", label: "PURPLE" },
-  { hex: "#22c55e", label: "GREEN" },
-  { hex: "#ef4444", label: "RED" },
-  { hex: "#f97316", label: "ORANGE" },
+  { hex: "var(--color-emerald-500)", label: "GREEN" },
+  { hex: "var(--color-red-500)", label: "RED" },
+  { hex: "var(--color-orange-500)", label: "ORANGE" },
   { hex: "#eab308", label: "YELLOW" },
   { hex: "#ffffff", label: "WHITE" },
   { hex: "#1e293b", label: "STEEL" },
@@ -21,7 +21,7 @@ interface ColorPickerProps {
 export function ColorPicker({ selected, onChange }: ColorPickerProps) {
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[8px] tracking-[0.28em] text-[#22d3ee]/35 uppercase">
+      <p className="text-[8px] tracking-[0.28em] text-accent/35 uppercase">
         // SELECT_TINT
       </p>
 
@@ -42,14 +42,14 @@ export function ColorPicker({ selected, onChange }: ColorPickerProps) {
                   background: hex,
                   boxShadow: isActive
                     ? `0 0 0 2px #030712, 0 0 0 4px ${hex}, 0 0 16px ${hex}88`
-                    : "0 0 0 1px rgba(34,211,238,0.15)",
+                    : "0 0 0 1px rgba(var(--accent-rgb),0.15)",
                   transform: isActive ? "scale(1.15)" : "scale(1)",
                 }}
               />
               {/* Label */}
               <span
                 className="text-[8px] tracking-[0.18em] transition-colors duration-200"
-                style={{ color: isActive ? hex : "rgba(34,211,238,0.3)" }}
+                style={{ color: isActive ? hex : "rgba(var(--accent-rgb),0.3)" }}
               >
                 {label}
               </span>

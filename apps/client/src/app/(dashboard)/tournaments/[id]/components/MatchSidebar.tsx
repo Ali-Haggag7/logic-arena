@@ -24,14 +24,14 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
   return (
     <div className="w-[280px] shrink-0">
       {myMatch && myOpponent && (
-        <div className="mb-5 p-5 rounded-xl bg-[#facc15]/5 border border-[#facc15]/25 animate-[pulse-border_2s_infinite]">
-          <div className="text-[8px] font-extrabold tracking-[0.3em] text-[#facc15]/50 mb-3 uppercase">
+        <div className="mb-5 p-5 rounded-xl bg-yellow-500/5 border border-yellow-500/25 animate-[pulse-border_2s_infinite]">
+          <div className="text-[8px] font-extrabold tracking-[0.3em] text-yellow-500/50 mb-3 uppercase">
             ⚡ YOUR MATCH
           </div>
-          <div className="text-[12px] font-bold text-[#facc15]/80 tracking-[0.1em] mb-1">
+          <div className="text-[12px] font-bold text-yellow-500/80 tracking-[0.1em] mb-1">
             VS {myOpponent.username.toUpperCase()}
           </div>
-          <div className="text-[8px] text-[#facc15]/30 tracking-[0.15em] mb-3.5">
+          <div className="text-[8px] text-yellow-500/30 tracking-[0.15em] mb-3.5">
             ROUND {roundLabels[myMatch.round] || `#${myMatch.round}`}
           </div>
           <button
@@ -43,8 +43,8 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
               simulating === myMatch.id ? 'cursor-wait' : 'cursor-pointer'
             } ${
               hoveredBtn === "sim"
-                ? "bg-[#22c55e]/20 border-[#22c55e]/70 text-[#22c55e]"
-                : "bg-[#22c55e]/10 border-[#22c55e]/30 text-[#22c55e]/70"
+                ? "bg-emerald-500/20 border-emerald-500/70 text-emerald-500"
+                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500/70"
             }`}
             style={{ borderWidth: "1px" }}
           >
@@ -54,8 +54,8 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
       )}
 
       {/* Participants list */}
-      <div className="p-5 rounded-xl bg-black/50 border border-[#22d3ee]/10 backdrop-blur-sm">
-        <div className="text-[8px] font-extrabold tracking-[0.3em] text-[#22d3ee]/30 mb-4 uppercase pb-2.5 border-b border-[#22d3ee]/5">
+      <div className="p-5 rounded-xl bg-card/60 border border-accent/10 backdrop-blur-sm">
+        <div className="text-[8px] font-extrabold tracking-[0.3em] text-accent/30 mb-4 uppercase pb-2.5 border-b border-accent/5">
           COMBATANTS ({tournament.participants.length})
         </div>
         <div className="flex flex-col gap-1.5">
@@ -74,29 +74,29 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
               <div
                 key={p.id}
                 className={`flex items-center gap-2 p-[8px_10px] rounded-md transition-all duration-200 ${
-                  isChampion ? "bg-[#22c55e]/10 border border-[#22c55e]/30" : "bg-[#22d3ee]/5 border border-[#22d3ee]/5"
+                  isChampion ? "bg-emerald-500/10 border border-emerald-500/30" : "bg-accent/5 border border-accent/5"
                 } ${isEliminated ? "opacity-40" : "opacity-100"}`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    isChampion ? "bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.5)]" : isEliminated ? "bg-[#ef4444]/40" : "bg-[#22d3ee]/30"
+                    isChampion ? "bg-emerald-500 shadow-[0_0_8px_rgba(var(--color-emerald-500),0.5)]" : isEliminated ? "bg-red-500/40" : "bg-accent/30"
                   }`}
                 />
                 <span
                   className={`text-[10px] font-bold tracking-[0.1em] flex-1 ${
-                    isChampion ? "text-[#22c55e]" : isEliminated ? "text-[#22d3ee]/30 line-through" : "text-[#22d3ee]/60"
+                    isChampion ? "text-emerald-500" : isEliminated ? "text-accent/30 line-through" : "text-accent/60"
                   }`}
                 >
                   {p.username}
                 </span>
                 {isChampion && <span className="text-[12px]">🏆</span>}
                 {isEliminated && !isChampion && (
-                  <span className="text-[7px] text-[#ef4444]/40 tracking-[0.15em] font-bold">
+                  <span className="text-[7px] text-red-500/40 tracking-[0.15em] font-bold">
                     OUT
                   </span>
                 )}
                 {p.id === userId && !isChampion && !isEliminated && (
-                  <span className="text-[7px] text-[#facc15]/50 tracking-[0.15em] font-bold">
+                  <span className="text-[7px] text-yellow-500/50 tracking-[0.15em] font-bold">
                     YOU
                   </span>
                 )}

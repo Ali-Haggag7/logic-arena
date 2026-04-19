@@ -11,7 +11,6 @@ interface NavLinkProps {
 
 export default function NavLink({ href, label, icon }: NavLinkProps) {
   const pathname = usePathname();
-  // Exact match for /dashboard to avoid matching all routes; prefix match for nested routes
   const isActive =
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
@@ -20,8 +19,8 @@ export default function NavLink({ href, label, icon }: NavLinkProps) {
       href={href}
       className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-md font-mono text-[10px] font-bold tracking-[0.18em] transition-all duration-200 relative group overflow-hidden ${
         isActive
-          ? "text-[#22d3ee] bg-[#22d3ee]/[0.08] border-l-2 border-[#22d3ee] shadow-[-4px_0_12px_rgba(34,211,238,0.3),inset_0_0_20px_rgba(34,211,238,0.04)] [text-shadow:0_0_10px_rgba(34,211,238,0.7)]"
-          : "text-[#22d3ee]/40 border-l-2 border-transparent hover:text-[#22d3ee]/85 hover:bg-[#22d3ee]/[0.05] hover:border-[#22d3ee]/40 hover:[text-shadow:0_0_5px_rgba(34,211,238,0.5)]"
+          ? "text-accent bg-accent/[0.08] border-l-2 border-accent shadow-[-4px_0_12px_rgba(var(--accent-rgb),0.3),inset_0_0_20px_rgba(var(--accent-rgb),0.04)] [text-shadow:0_0_10px_rgba(var(--accent-rgb),0.7)]"
+          : "text-accent/40 border-l-2 border-transparent hover:text-accent/85 hover:bg-accent/[0.05] hover:border-accent/40 hover:[text-shadow:0_0_5px_rgba(var(--accent-rgb),0.5)]"
       }`}
     >
       {icon && (
@@ -31,7 +30,7 @@ export default function NavLink({ href, label, icon }: NavLinkProps) {
       )}
       <span>{label}</span>
       {isActive && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#22d3ee] shadow-[0_0_8px_#22d3ee] shrink-0 animate-pulse" />
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)] shrink-0 animate-pulse" />
       )}
     </Link>
   );

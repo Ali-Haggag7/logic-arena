@@ -24,12 +24,12 @@ function Toast({ toast }: { toast: ToastState }) {
       style={{
         transform: "translateX(-50%)",
         animation: "fadeIn 0.25s ease",
-        background: isSuccess ? "rgba(34,211,238,0.08)" : "rgba(239,68,68,0.10)",
-        border: `1px solid ${isSuccess ? "rgba(34,211,238,0.35)" : "rgba(239,68,68,0.35)"}`,
-        color: isSuccess ? "#22d3ee" : "#fca5a5",
+        background: isSuccess ? "rgba(var(--accent-rgb),0.08)" : "rgba(var(--color-red-500),0.10)",
+        border: `1px solid ${isSuccess ? "rgba(var(--accent-rgb),0.35)" : "rgba(var(--color-red-500),0.35)"}`,
+        color: isSuccess ? "var(--accent)" : "#fca5a5",
         boxShadow: isSuccess
-          ? "0 0 24px rgba(34,211,238,0.15)"
-          : "0 0 24px rgba(239,68,68,0.15)",
+          ? "0 0 24px rgba(var(--accent-rgb),0.15)"
+          : "0 0 24px rgba(var(--color-red-500),0.15)",
       }}
     >
       {isSuccess ? "✓ " : "✗ "}
@@ -45,7 +45,7 @@ export default function RobotDetailPage() {
   const robotId = Array.isArray(params.robotId) ? params.robotId[0] : params.robotId ?? "";
 
   const robot = ROBOTS[robotId];
-  const [color, setColor] = useState("#22d3ee");
+  const [color, setColor] = useState("var(--accent)");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
@@ -53,7 +53,7 @@ export default function RobotDetailPage() {
   useEffect(() => {
     apiClient.get("/users/profile").then((res) => {
       if (res.data.selectedRobotId === robotId) {
-        setColor(res.data.selectedColor ?? "#22d3ee");
+        setColor(res.data.selectedColor ?? "var(--accent)");
       }
     }).catch(() => {/* silently ignore if not logged in */});
   }, [robotId]);
@@ -79,14 +79,14 @@ export default function RobotDetailPage() {
   /* Unknown robot */
   if (!robot) {
     return (
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 flex items-center justify-center">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#ef4444]/80 text-[13px] tracking-[0.2em] mb-4">
+          <p className="text-red-500/80 text-[13px] tracking-[0.2em] mb-4">
             [ERR] UNIT_NOT_FOUND: {robotId}
           </p>
           <button
             onClick={() => router.push("/garage")}
-            className="text-[10px] tracking-[0.2em] text-[#22d3ee]/50 hover:text-[#22d3ee] transition-colors"
+            className="text-[10px] tracking-[0.2em] text-accent/50 hover:text-accent transition-colors"
           >
             ← BACK TO GARAGE
           </button>
@@ -103,12 +103,12 @@ export default function RobotDetailPage() {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 12px rgba(34,211,238,0.2); }
-          50%       { box-shadow: 0 0 28px rgba(34,211,238,0.45); }
+          0%, 100% { box-shadow: 0 0 12px rgba(var(--accent-rgb),0.2); }
+          50%       { box-shadow: 0 0 28px rgba(var(--accent-rgb),0.45); }
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Grid background */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
@@ -124,19 +124,19 @@ export default function RobotDetailPage() {
           style={{ animation: "fadeIn 0.35s ease" }}
         >
           {/* ── Top bar ── */}
-          <div className="flex items-center justify-between border-b border-[#22d3ee]/10 pb-5 mb-8">
+          <div className="flex items-center justify-between border-b border-accent/10 pb-5 mb-8">
             <div>
-              <p className="text-[8px] tracking-[0.28em] text-[#22d3ee]/35 mb-1 uppercase">
+              <p className="text-[8px] tracking-[0.28em] text-accent/35 mb-1 uppercase">
                 // UNIT_VIEWER
               </p>
-              <h1 className="m-0 text-[clamp(20px,3.5vw,32px)] font-black tracking-[0.18em] text-[#22d3ee] drop-shadow-[0_0_12px_rgba(34,211,238,0.7)] leading-tight">
+              <h1 className="m-0 text-[clamp(20px,3.5vw,32px)] font-black tracking-[0.18em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.7)] leading-tight">
                 {robot.name}
               </h1>
             </div>
 
             <button
               onClick={() => router.push("/garage")}
-              className="text-[10px] tracking-[0.2em] text-[#22d3ee]/40 hover:text-[#22d3ee]/80 transition-colors duration-200 border border-[#22d3ee]/10 hover:border-[#22d3ee]/30 px-4 py-2 rounded-lg bg-[#22d3ee]/5 hover:bg-[#22d3ee]/10"
+              className="text-[10px] tracking-[0.2em] text-accent/40 hover:text-accent/80 transition-colors duration-200 border border-accent/10 hover:border-accent/30 px-4 py-2 rounded-lg bg-accent/5 hover:bg-accent/10"
             >
               ← BACK
             </button>
@@ -151,37 +151,37 @@ export default function RobotDetailPage() {
 
             {/* Controls panel */}
             <div
-              className="flex flex-col gap-6 border border-[#22d3ee]/10 rounded-xl p-6 bg-[#030712]/80 h-fit"
+              className="flex flex-col gap-6 border border-accent/10 rounded-xl p-6 bg-bg-primary/80 h-fit"
               style={{ animation: "glowPulse 4s ease-in-out infinite" }}
             >
               {/* Robot info */}
-              <div className="border-b border-[#22d3ee]/10 pb-5">
-                <p className="text-[8px] tracking-[0.28em] text-[#22d3ee]/35 mb-3 uppercase">
+              <div className="border-b border-accent/10 pb-5">
+                <p className="text-[8px] tracking-[0.28em] text-accent/35 mb-3 uppercase">
                   // UNIT_DATA
                 </p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-[10px] tracking-[0.12em]">
-                    <span className="text-[#22d3ee]/40">DESIGNATION</span>
-                    <span className="text-[#22d3ee]/80">{robot.name}</span>
+                    <span className="text-accent/40">DESIGNATION</span>
+                    <span className="text-accent/80">{robot.name}</span>
                   </div>
                   <div className="flex justify-between text-[10px] tracking-[0.12em]">
-                    <span className="text-[#22d3ee]/40">UNIT_ID</span>
-                    <span className="text-[#22d3ee]/80">{robotId.toUpperCase()}</span>
+                    <span className="text-accent/40">UNIT_ID</span>
+                    <span className="text-accent/80">{robotId.toUpperCase()}</span>
                   </div>
                   <div className="flex justify-between text-[10px] tracking-[0.12em]">
-                    <span className="text-[#22d3ee]/40">TINT_HEX</span>
+                    <span className="text-accent/40">TINT_HEX</span>
                     <span style={{ color }}>{color.toUpperCase()}</span>
                   </div>
                 </div>
               </div>
 
               {/* Color picker */}
-              <div className="border-b border-[#22d3ee]/10 pb-5">
+              <div className="border-b border-accent/10 pb-5">
                 <ColorPicker selected={color} onChange={setColor} />
               </div>
 
               {/* Orbit controls hint */}
-              <p className="text-[8px] tracking-[0.18em] text-[#22d3ee]/25 leading-relaxed">
+              <p className="text-[8px] tracking-[0.18em] text-accent/25 leading-relaxed">
                 DRAG TO ORBIT · SCROLL TO ZOOM · RIGHT-DRAG TO PAN
               </p>
 
@@ -191,24 +191,24 @@ export default function RobotDetailPage() {
                 disabled={saving}
                 className="w-full py-3 rounded-lg border tracking-[0.22em] text-[12px] font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: saving ? "rgba(34,211,238,0.05)" : "rgba(34,211,238,0.10)",
-                  borderColor: saving ? "rgba(34,211,238,0.15)" : "rgba(34,211,238,0.35)",
-                  color: "#22d3ee",
-                  boxShadow: saving ? "none" : "0 0 16px rgba(34,211,238,0.1)",
+                  background: saving ? "rgba(var(--accent-rgb),0.05)" : "rgba(var(--accent-rgb),0.10)",
+                  borderColor: saving ? "rgba(var(--accent-rgb),0.15)" : "rgba(var(--accent-rgb),0.35)",
+                  color: "var(--accent)",
+                  boxShadow: saving ? "none" : "0 0 16px rgba(var(--accent-rgb),0.1)",
                 }}
                 onMouseEnter={(e) => {
                   if (!saving) {
                     (e.currentTarget as HTMLButtonElement).style.background =
-                      "rgba(34,211,238,0.18)";
+                      "rgba(var(--accent-rgb),0.18)";
                     (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      "0 0 24px rgba(34,211,238,0.25)";
+                      "0 0 24px rgba(var(--accent-rgb),0.25)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.background =
-                    "rgba(34,211,238,0.10)";
+                    "rgba(var(--accent-rgb),0.10)";
                   (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                    "0 0 16px rgba(34,211,238,0.1)";
+                    "0 0 16px rgba(var(--accent-rgb),0.1)";
                 }}
               >
                 {saving ? "SAVING..." : "SAVE LOADOUT"}

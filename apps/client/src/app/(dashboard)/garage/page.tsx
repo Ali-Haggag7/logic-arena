@@ -11,7 +11,7 @@ const ROBOTS = [
 
 export default function GaragePage() {
   const [activeRobotId, setActiveRobotId] = useState<string | null>(null);
-  const [activeColor, setActiveColor] = useState("#22d3ee");
+  const [activeColor, setActiveColor] = useState("var(--accent)");
 
   useEffect(() => {
     apiClient.get("/users/profile").then((res) => {
@@ -33,13 +33,13 @@ export default function GaragePage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Cyan grid background */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(8,145,178,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.07) 1px, transparent 1px)",
+              "linear-gradient(rgba(var(--accent-rgb),0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.07) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
@@ -49,14 +49,14 @@ export default function GaragePage() {
           style={{ animation: "fadeIn 0.35s ease" }}
         >
           {/* ── Header ── */}
-          <div className="border-b border-[#22d3ee]/10 pb-6 mb-10">
-            <p className="text-[8px] tracking-[0.28em] text-[#22d3ee]/35 mb-2 uppercase">
+          <div className="border-b border-accent/10 pb-6 mb-10">
+            <p className="text-[8px] tracking-[0.28em] text-accent/35 mb-2 uppercase">
               // HANGAR_DECK
             </p>
-            <h1 className="m-0 text-[clamp(24px,4vw,38px)] font-black tracking-[0.18em] text-[#22d3ee] drop-shadow-[0_0_12px_rgba(34,211,238,0.7)] leading-tight">
+            <h1 className="m-0 text-[clamp(24px,4vw,38px)] font-black tracking-[0.18em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.7)] leading-tight">
               ROBOT_GARAGE
             </h1>
-            <p className="mt-2 text-[10px] text-[#22d3ee]/35 tracking-[0.15em]">
+            <p className="mt-2 text-[10px] text-accent/35 tracking-[0.15em]">
               SELECT A UNIT TO INSPECT AND CONFIGURE LOADOUT
             </p>
           </div>
@@ -72,8 +72,8 @@ export default function GaragePage() {
                     <div
                       className="absolute -top-3 left-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full text-[8px] font-bold tracking-[0.25em] border"
                       style={{
-                        background: "rgba(34,211,238,0.10)",
-                        borderColor: "rgba(34,211,238,0.45)",
+                        background: "rgba(var(--accent-rgb),0.10)",
+                        borderColor: "rgba(var(--accent-rgb),0.45)",
                         color: activeColor,
                         boxShadow: `0 0 12px ${activeColor}55`,
                       }}
@@ -89,7 +89,7 @@ export default function GaragePage() {
                     robotId={robotId}
                     name={name}
                     file={file}
-                    color={isActive ? activeColor : "#22d3ee"}
+                    color={isActive ? activeColor : "var(--accent)"}
                   />
                 </div>
               );
@@ -98,7 +98,7 @@ export default function GaragePage() {
 
           {/* ── Footer hint ── */}
           <p
-            className="text-center text-[9px] tracking-[0.22em] text-[#22d3ee]/20 mt-10"
+            className="text-center text-[9px] tracking-[0.22em] text-accent/20 mt-10"
             style={{ animation: "pulseGlow 3s ease-in-out infinite" }}
           >
             ◈ CLICK A UNIT TO OPEN FULL VIEWER ◈

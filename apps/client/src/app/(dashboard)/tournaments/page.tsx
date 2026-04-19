@@ -69,26 +69,26 @@ export default function TournamentsPage() {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <div className="min-h-screen bg-[#030712] font-mono text-[#22d3ee]/90 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
         {/* Grid bg */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
-            backgroundImage: "linear-gradient(rgba(8,145,178,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.06) 1px, transparent 1px)",
+            backgroundImage: "linear-gradient(rgba(var(--accent-rgb),0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.06) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
 
         <div className="max-w-[1100px] mx-auto px-6 pt-12 pb-[100px] relative z-10 animate-[fadeIn_0.35s_ease]">
           {/* HERO */}
-          <div className="border-b border-[#22d3ee]/10 pb-9 mb-10 flex justify-between items-end flex-wrap gap-5">
+          <div className="border-b border-accent/10 pb-9 mb-10 flex justify-between items-end flex-wrap gap-5">
             <div>
-              <p className="text-[9px] tracking-[0.4em] text-[#22d3ee]/30 mb-2.5 uppercase">
+              <p className="text-[9px] tracking-[0.4em] text-accent/30 mb-2.5 uppercase">
                 // BRACKET_SYSTEM_v1.0
               </p>
-              <h1 className="m-0 text-[clamp(28px,5vw,48px)] font-black tracking-[0.22em] text-[#22d3ee] drop-shadow-[0_0_12px_rgba(34,211,238,0.9)] leading-none">
+              <h1 className="m-0 text-[clamp(28px,5vw,48px)] font-black tracking-[0.22em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.9)] leading-none">
                 TOURNAMENT
-                <span className="block text-[0.38em] text-[#22d3ee]/40 tracking-[0.35em] mt-1.5 drop-shadow-none">
+                <span className="block text-[0.38em] text-accent/40 tracking-[0.35em] mt-1.5 drop-shadow-none">
                   _HUB
                 </span>
               </h1>
@@ -100,10 +100,10 @@ export default function TournamentsPage() {
                 onMouseEnter={() => setHoveredBtn("create")}
                 onMouseLeave={() => setHoveredBtn(null)}
                 onClick={() => setShowCreate(true)}
-                className={`px-7 py-3 rounded-lg text-[10px] font-black tracking-[0.28em] font-mono cursor-pointer transition-all duration-200 ${
+                className={`px-7 py-3 rounded-lg text-[10px] font-black tracking-[0.28em] font-mono cursor-pointer transition-all duration-200 border ${
                   hoveredBtn === "create"
-                    ? "bg-[#22d3ee]/20 border border-[#22d3ee]/70 text-[#22d3ee] drop-shadow-[0_0_12px_rgba(34,211,238,0.6)] shadow-[0_0_20px_rgba(34,211,238,0.15)]"
-                    : "bg-[#22d3ee]/10 border border-[#22d3ee]/30 text-[#22d3ee]/70"
+                    ? "bg-accent/20 border-accent/70 text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.6)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)]"
+                    : "bg-accent/10 border-accent/30 text-accent/70"
                 }`}
               >
                 [+] DEPLOY TOURNAMENT
@@ -129,10 +129,10 @@ export default function TournamentsPage() {
             ].map(({ label, value }) => (
               <div
                 key={label}
-                className="px-4 py-1.5 border border-[#22d3ee]/15 rounded bg-[#22d3ee]/5 text-[9px] tracking-[0.18em] text-[#22d3ee]/45 flex gap-2 items-center"
+                className="px-4 py-1.5 border border-accent/15 rounded bg-accent/5 text-[9px] tracking-[0.18em] text-accent/45 flex gap-2 items-center"
               >
-                <span className="text-[#22d3ee]/25">{label}:</span>
-                <span className="text-[#22d3ee] font-bold">{value}</span>
+                <span className="text-accent/25">{label}:</span>
+                <span className="text-accent font-bold">{value}</span>
               </div>
             ))}
           </div>
@@ -141,15 +141,15 @@ export default function TournamentsPage() {
           {loading ? (
             <TournamentSkeleton />
           ) : tournaments.length === 0 ? (
-            <div className="text-center p-[80px_24px] text-[#22d3ee]/20 text-[11px] tracking-[0.18em] border border-dashed border-[#22d3ee]/10 rounded-xl bg-black/30 backdrop-blur-md">
+            <div className="text-center p-[80px_24px] text-accent/20 text-[11px] tracking-[0.18em] border border-dashed border-accent/10 rounded-xl bg-card/30 backdrop-blur-md">
               NO TOURNAMENTS DETECTED. DEPLOY A NEW TOURNAMENT TO BEGIN.
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
               {tournaments.map((t, idx) => (
-                <TournamentCard 
-                  key={t.id} 
-                  tournament={t} 
+                <TournamentCard
+                  key={t.id}
+                  tournament={t}
                   index={idx}
                   userId={userId}
                   joining={joining}

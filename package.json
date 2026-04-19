@@ -14,6 +14,7 @@
   "dependencies": {
     "@nestjs/websockets": "^11.1.18",
     "@react-three/postprocessing": "^3.0.4",
+    "next-themes": "^0.4.6",
     "typescript": "^6.0.2",
     "use-sound": "^5.0.0"
   },

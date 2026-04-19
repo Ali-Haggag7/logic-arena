@@ -66,7 +66,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1px)', backgroundSize: '100px 100px' }}
         />
         <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%]" />
-        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px] [transform:perspective(500px)_rotateX(60deg)] [transform-origin:top]" />
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,var(--accent)_1px,transparent_1px),linear-gradient(to_bottom,var(--accent)_1px,transparent_1px)] bg-[size:40px_40px] [transform:perspective(500px)_rotateX(60deg)] [transform-origin:top]" />
       </div>
 
       <div className="relative z-20 flex flex-col items-center max-w-2xl w-full px-4">
@@ -116,7 +116,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
               <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${
-                    myScore >= 50 ? 'bg-cyan-400 shadow-[0_0_6px_#22d3ee]' :
+                    myScore >= 50 ? 'bg-cyan-400 shadow-[0_0_6px_var(--accent)]' :
                     myScore >= 20 ? 'bg-amber-400' : 'bg-red-500'
                   }`}
                   style={{ width: `${Math.min(myScore, 100)}%` }}

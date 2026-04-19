@@ -38,7 +38,7 @@ function LoadingPlaceholder() {
   return (
     <mesh ref={meshRef}>
       <boxGeometry args={[0.8, 0.8, 0.8]} />
-      <meshStandardMaterial color="#22d3ee" wireframe />
+      <meshStandardMaterial color="var(--accent)" wireframe />
     </mesh>
   );
 }
@@ -51,19 +51,19 @@ interface RobotViewerProps {
 
 export function RobotViewer({ file, color }: RobotViewerProps) {
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden border border-[#22d3ee]/10 bg-[#050d1a] relative">
+    <div className="w-full h-full rounded-xl overflow-hidden border border-accent/10 bg-[#050d1a] relative">
       {/* Corner decor */}
-      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#22d3ee]/60 rounded-tl z-10 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#22d3ee]/60 rounded-tr z-10 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#22d3ee]/60 rounded-bl z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#22d3ee]/60 rounded-br z-10 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-accent/60 rounded-tl z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-accent/60 rounded-tr z-10 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-accent/60 rounded-bl z-10 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-accent/60 rounded-br z-10 pointer-events-none" />
 
       {/* Scanlines */}
       <div
         className="absolute inset-0 pointer-events-none z-10 opacity-[0.025]"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(0deg, rgba(34,211,238,0.5) 0px, rgba(34,211,238,0.5) 1px, transparent 1px, transparent 4px)",
+            "repeating-linear-gradient(0deg, rgba(var(--accent-rgb),0.5) 0px, rgba(var(--accent-rgb),0.5) 1px, transparent 1px, transparent 4px)",
         }}
       />
 
@@ -72,9 +72,9 @@ export function RobotViewer({ file, color }: RobotViewerProps) {
         gl={{ antialias: true, alpha: true }}
       >
         <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 8, 5]} intensity={1.5} color="#22d3ee" />
+        <directionalLight position={[5, 8, 5]} intensity={1.5} color="var(--accent)" />
         <directionalLight position={[-5, 3, -5]} intensity={0.6} color="#a855f7" />
-        <pointLight position={[0, -3, 0]} intensity={1.2} color="#22d3ee" distance={8} />
+        <pointLight position={[0, -3, 0]} intensity={1.2} color="var(--accent)" distance={8} />
         <Suspense fallback={<LoadingPlaceholder />}>
           <RobotModel file={file} color={color} />
           <Environment preset="night" />
