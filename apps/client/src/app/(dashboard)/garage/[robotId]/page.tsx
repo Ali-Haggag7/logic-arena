@@ -7,9 +7,9 @@ import { ColorPicker } from "../components/ColorPicker";
 import { apiClient } from "../../../../lib/api-client";
 
 /* ─── Robot manifest ────────────────────────────────────────────── */
-const ROBOTS: Record<string, { name: string; file: string }> = {
-  "unit-01": { name: "UNIT-01", file: "/robot.glb" },
-  "unit-02": { name: "UNIT-02", file: "/robot2.glb" },
+const ROBOTS: Record<string, { name: string; file: string; scale?: number }> = {
+  "unit-01": { name: "UNIT-01", file: "/robot.glb", scale: 2.5 },
+  "unit-02": { name: "UNIT-02", file: "/robot2.glb", scale: 1.4 },
 };
 
 /* ─── Toast ─────────────────────────────────────────────────────── */
@@ -45,7 +45,7 @@ export default function RobotDetailPage() {
   const robotId = Array.isArray(params.robotId) ? params.robotId[0] : params.robotId ?? "";
 
   const robot = ROBOTS[robotId];
-  const [color, setColor] = useState("var(--accent)");
+  const [color, setColor] = useState("DEFAULT");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
@@ -53,7 +53,7 @@ export default function RobotDetailPage() {
   useEffect(() => {
     apiClient.get("/users/profile").then((res) => {
       if (res.data.selectedRobotId === robotId) {
-        setColor(res.data.selectedColor ?? "var(--accent)");
+        setColor(res.data.selectedColor ?? "DEFAULT");
       }
     }).catch(() => {/* silently ignore if not logged in */});
   }, [robotId]);
@@ -146,7 +146,7 @@ export default function RobotDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
             {/* 3-D viewer */}
             <div className="h-[480px] lg:h-[540px]">
-              <RobotViewer file={robot.file} color={color} />
+              <RobotViewer file={robot.file} color={color} scale={robot.scale} />
             </div>
 
             {/* Controls panel */}

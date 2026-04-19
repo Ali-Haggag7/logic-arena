@@ -133,8 +133,8 @@ export class UsersService {
     if (!ALLOWED_ROBOT_IDS.includes(robotId)) {
       throw new Error(`Invalid robotId "${robotId}". Must be one of: ${ALLOWED_ROBOT_IDS.join(', ')}`);
     }
-    if (!COLOR_REGEX.test(color)) {
-      throw new Error(`Invalid color "${color}". Must match #rrggbb format.`);
+    if (color !== 'DEFAULT' && !COLOR_REGEX.test(color)) {
+      throw new Error(`Invalid color "${color}". Must match #rrggbb format or be "DEFAULT".`);
     }
 
     await this.prisma.user.update({

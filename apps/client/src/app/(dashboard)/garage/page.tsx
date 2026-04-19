@@ -5,13 +5,13 @@ import { RobotCard } from "./components/RobotCard";
 import { apiClient } from "../../../lib/api-client";
 
 const ROBOTS = [
-  { robotId: "unit-01", name: "UNIT-01", file: "/robot.glb" },
-  { robotId: "unit-02", name: "UNIT-02", file: "/robot2.glb" },
+  { robotId: "unit-01", name: "UNIT-01", file: "/robot.glb", scale: 2.5 },
+  { robotId: "unit-02", name: "UNIT-02", file: "/robot2.glb", scale: 1.2 },
 ];
 
 export default function GaragePage() {
   const [activeRobotId, setActiveRobotId] = useState<string | null>(null);
-  const [activeColor, setActiveColor] = useState("var(--accent)");
+  const [activeColor, setActiveColor] = useState("DEFAULT");
 
   useEffect(() => {
     apiClient.get("/users/profile").then((res) => {
@@ -63,7 +63,7 @@ export default function GaragePage() {
 
           {/* ── Robot Grid ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {ROBOTS.map(({ robotId, name, file }) => {
+            {ROBOTS.map(({ robotId, name, file, scale }) => {
               const isActive = robotId === activeRobotId;
               return (
                 <div key={robotId} className="relative">
@@ -89,7 +89,8 @@ export default function GaragePage() {
                     robotId={robotId}
                     name={name}
                     file={file}
-                    color={isActive ? activeColor : "var(--accent)"}
+                    scale={scale}
+                    color={isActive ? activeColor : "DEFAULT"}
                   />
                 </div>
               );

@@ -3,11 +3,12 @@
 import React from "react";
 
 const PALETTE = [
-  { hex: "var(--accent)", label: "CYAN" },
+  { hex: "DEFAULT", label: "DEFAULT" },
+  { hex: "#22d3ee", label: "CYAN" },
   { hex: "#a855f7", label: "PURPLE" },
-  { hex: "var(--color-emerald-500)", label: "GREEN" },
-  { hex: "var(--color-red-500)", label: "RED" },
-  { hex: "var(--color-orange-500)", label: "ORANGE" },
+  { hex: "#10b981", label: "GREEN" },
+  { hex: "#ef4444", label: "RED" },
+  { hex: "#f97316", label: "ORANGE" },
   { hex: "#eab308", label: "YELLOW" },
   { hex: "#ffffff", label: "WHITE" },
   { hex: "#1e293b", label: "STEEL" },
@@ -39,9 +40,9 @@ export function ColorPicker({ selected, onChange }: ColorPickerProps) {
               <span
                 className="block w-9 h-9 rounded-md transition-all duration-200"
                 style={{
-                  background: hex,
+                  background: hex === "DEFAULT" ? "linear-gradient(135deg, #475569 50%, #1e293b 50%)" : hex,
                   boxShadow: isActive
-                    ? `0 0 0 2px #030712, 0 0 0 4px ${hex}, 0 0 16px ${hex}88`
+                    ? `0 0 0 2px #030712, 0 0 0 4px ${hex === "DEFAULT" ? "#94a3b8" : hex}, 0 0 16px ${hex === "DEFAULT" ? "#94a3b8" : hex}88`
                     : "0 0 0 1px rgba(var(--accent-rgb),0.15)",
                   transform: isActive ? "scale(1.15)" : "scale(1)",
                 }}
@@ -49,7 +50,7 @@ export function ColorPicker({ selected, onChange }: ColorPickerProps) {
               {/* Label */}
               <span
                 className="text-[8px] tracking-[0.18em] transition-colors duration-200"
-                style={{ color: isActive ? hex : "rgba(var(--accent-rgb),0.3)" }}
+                style={{ color: isActive ? (hex === "DEFAULT" ? "#94a3b8" : hex) : "rgba(var(--accent-rgb),0.3)" }}
               >
                 {label}
               </span>
@@ -59,8 +60,8 @@ export function ColorPicker({ selected, onChange }: ColorPickerProps) {
                 <span
                   className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
                   style={{
-                    background: hex,
-                    boxShadow: `0 0 6px ${hex}`,
+                    background: hex === "DEFAULT" ? "#94a3b8" : hex,
+                    boxShadow: `0 0 6px ${hex === "DEFAULT" ? "#94a3b8" : hex}`,
                   }}
                 />
               )}

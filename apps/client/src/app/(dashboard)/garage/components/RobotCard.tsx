@@ -8,21 +8,54 @@ import * as THREE from "three";
 import { useTheme } from "next-themes";
 
 /* ─── Spinning robot model ─────────────────────────────────────── */
-function RobotModel({ file, color }: { file: string; color: string }) {
+function RobotModel({ file, color, scale, onLoad }: { file: string; color: string; scale?: number; onLoad?: () => void }) {
   const { scene } = useGLTF(file);
   const groupRef = useRef<THREE.Group>(null!);
+  const originalMaterials = useRef(new Map());
+
+  useEffect(() => {
+    onLoad?.();
+  }, [onLoad]);
 
   // Apply tint colour to all meshes
-  React.useEffect(() => {
-    const col = new THREE.Color(color);
-    scene.traverse((obj) => {
-      if ((obj as THREE.Mesh).isMesh) {
-        const mesh = obj as THREE.Mesh;
-        const mat = (mesh.material as THREE.MeshStandardMaterial).clone();
-        mat.color = col;
-        mesh.material = mat;
+  useEffect(() => {
+    if (originalMaterials.current.size === 0) {
+      scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh) {
+          const mesh = obj as THREE.Mesh;
+          originalMaterials.current.set(mesh.uuid, mesh.material);
+        }
+      });
+    }
+
+    if (!color || color.trim().toUpperCase() === "DEFAULT") {
+      scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh) {
+          const mesh = obj as THREE.Mesh;
+          if (originalMaterials.current.has(mesh.uuid)) {
+            mesh.material = originalMaterials.current.get(mesh.uuid);
+          }
+        }
+      });
+    } else {
+      let col;
+      try {
+        col = new THREE.Color(color.trim());
+      } catch (e) {
+        col = new THREE.Color("#22d3ee");
       }
-    });
+      scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh) {
+          const mesh = obj as THREE.Mesh;
+          const originalMat = originalMaterials.current.get(mesh.uuid);
+          if (originalMat) {
+            const mat = (originalMat as THREE.MeshStandardMaterial).clone();
+            mat.color = col;
+            mesh.material = mat;
+          }
+        }
+      });
+    }
   }, [scene, color]);
 
   // Auto-rotate
@@ -32,7 +65,7 @@ function RobotModel({ file, color }: { file: string; color: string }) {
 
   return (
     <group ref={groupRef}>
-      <primitive object={scene} scale={1.2} position={[0, -1, 0]} />
+      <primitive object={scene} scale={scale ?? 1.2} position={[0, -1, 0]} />
     </group>
   );
 }
@@ -53,15 +86,17 @@ interface RobotCardProps {
   robotId: string;
   name: string;
   file: string;
+  scale?: number;
   color?: string;
 }
 
-export function RobotCard({ robotId, name, file, color }: RobotCardProps) {
+export function RobotCard({ robotId, name, file, scale, color }: RobotCardProps) {
   const router = useRouter();
   const { theme } = useTheme();
   
   // Resolve theme accent color for lighting
   const [resolvedAccent, setResolvedAccent] = useState("var(--accent)");
+  const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
     const computed = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
     if (computed) setResolvedAccent(computed);
@@ -91,7 +126,12 @@ export function RobotCard({ robotId, name, file, color }: RobotCardProps) {
       <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-accent/60 rounded-br-sm z-20" />
 
       {/* 3D Canvas */}
-      <div className="w-full h-[320px] bg-bg-secondary/40">
+      <div className="w-full h-[320px] bg-bg-secondary/40 relative">
+        {!isLoaded && (
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <CanvasFallback />
+          </div>
+        )}
         <Canvas
           camera={{ position: [0, 1.5, 4], fov: 45 }}
           gl={{ antialias: true, alpha: true }}
@@ -100,8 +140,8 @@ export function RobotCard({ robotId, name, file, color }: RobotCardProps) {
           <directionalLight position={[5, 5, 5]} intensity={1.2} color={resolvedAccent} />
           <directionalLight position={[-5, 3, -5]} intensity={0.5} color="#a855f7" />
           <pointLight position={[0, -2, 0]} intensity={0.8} color={resolvedAccent} distance={6} />
-          <Suspense fallback={<CanvasFallback />}>
-            <RobotModel file={file} color={effColor} />
+          <Suspense fallback={null}>
+            <RobotModel file={file} color={effColor} scale={scale} onLoad={() => setIsLoaded(true)} />
             <Environment preset="night" />
           </Suspense>
         </Canvas>
