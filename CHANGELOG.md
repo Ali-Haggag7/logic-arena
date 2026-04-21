@@ -539,3 +539,160 @@ to a production-grade, cloud-native system.
 All core game systems are operational. The infrastructure is 
 containerized, SSL-secured, and deployable via a single 
 `docker compose pull && docker compose up -d` command.
+
+## [2.1.0] - The Identity, UI Evolution & Mobile-First Transformation - 2026-04-21
+
+### Major Feature Release:
+Shipped a complete multi-theme design system, premium mobile-first 
+experience across all dashboard pages, a global footer system with 
+8 static pages, and resolved critical OAuth environment conflicts 
+that were blocking local development alongside production.
+
+---
+
+### New Features
+
+* **Multi-Theme Design System (3 Themes):** Launched a production-grade 
+  theme system with three distinct visual identities: Cyberpunk (default 
+  dark), Light (minimalist white), and Desert (warm gold/sand). Built on 
+  CSS custom properties mapped to Tailwind v4 `@theme inline` — zero 
+  hardcoded colors anywhere in the codebase. A `ThemeSwitcher` dropdown 
+  (Moon/Sun/Sunrise icons via lucide-react) is accessible from every page.
+
+* **Mobile-First Dashboard Experience:** Transformed all dashboard pages 
+  into a native app-like experience on mobile (≤768px). Implemented a 
+  fixed `MobileNav` bottom bar, `MobileHeader` top bar with ThemeSwitcher, 
+  and completely separate mobile JSX layouts (not responsive breakpoints) 
+  across: Dashboard, Leaderboard, Campaign, Profile, Lobby, Garage, Docs, 
+  and Replay pages. `isMobile` is calculated once per page via 
+  `useMediaQuery` and passed as a prop — never recalculated in children.
+
+* **Global Footer System:** Shipped a full cyberpunk footer with 5-column 
+  desktop layout (Brand, Navigate, Arena, Community, Legal) and a 
+  tap-to-expand accordion on mobile with left-accent inset glow. Includes 
+  scanline overlay, grid pattern, corner bracket headers, brand glitch 
+  animation, pulsing "ALL SYSTEMS ONLINE" status dot, and social icons.
+
+* **8 Static Pages:** Created `/how-it-works`, `/patch-notes`, 
+  `/bug-report`, `/feature-requests`, `/terms`, `/privacy`, `/cookies`, 
+  and `/contact` — all matching the cyberpunk terminal-panel aesthetic 
+  with full theme compatibility.
+
+* **Robot Garage Enhancements:** Added per-robot `scale` prop piped 
+  through to R3F `<primitive>` to fix UNIT-01 appearing too small. 
+  Added `DEFAULT` color option that restores original GLB materials. 
+  Introduced sticky "Save Loadout" footer on mobile detail page.
+
+* **CLAUDE.md Agent Rules:** Added three `CLAUDE.md` files (root, 
+  `apps/client/`, `apps/server/`) to guide AI agents with project 
+  conventions, reducing token consumption by ~60-70% per session.
+
+---
+
+### Technical Scars and Resolutions
+
+* **Issue — "The Double /api Prefix" (OAuth URL Collision):**
+  GitHub OAuth was redirecting to `/api/api/auth/github/callback` 
+  because `API_BASE_URL` in `api-client.ts` was constructed by 
+  appending `/api` to a `BASE_URL` that already contained `/api`, 
+  creating a duplicate prefix. Simultaneously, `CLIENT_URL` in the 
+  server `.env` was pointing to `logicarena.dev`, causing CORS to 
+  block all requests originating from `localhost:3000` during local 
+  development.
+
+  **Resolution:** Collapsed `BASE_URL` and `API_BASE_URL` into a 
+  single env-aware constant. Separated OAuth apps entirely — created 
+  a dedicated "Logic Arena Local" GitHub OAuth App with 
+  `http://localhost:3001/api/auth/github/callback` as its callback, 
+  and kept the production app pointing to `logicarena.dev`. Introduced 
+  `.env.local` for the server (loaded via `dotenv-cli`) so development 
+  and production credentials never collide. Google OAuth was handled 
+  differently since it supports multiple callback URLs in one app.
+
+* **Issue — "The GitHub Actions Secret Drift" (Broken CI/CD Pipeline):**
+  After a DigitalOcean Droplet password reset was forced due to lost 
+  credentials, the `DROPLET_PASSWORD` secret stored in GitHub Actions 
+  became stale. Every subsequent push triggered a successful Docker 
+  build but failed silently at the SSH deploy step, with the runner 
+  timing out on authentication.
+
+  **Resolution:** Rotated the `DROPLET_PASSWORD` secret in the GitHub 
+  repository settings to match the new Droplet credentials. Verified 
+  the full CI/CD chain end-to-end: push → build → Docker Hub publish 
+  → SSH deploy → `docker compose pull && up -d`.
+
+* **Issue — "The R3F HTML-in-Canvas Crash" (Garage Page):**
+  The Robot Garage page was throwing `R3F: Span is not part of the 
+  THREE namespace` because the `<Suspense fallback={<CanvasFallback />}>` 
+  inside `<Canvas>` was returning an HTML `<span>` element. React Three 
+  Fiber's Canvas only accepts Three.js scene objects — any HTML element 
+  in the fallback detonates the renderer.
+
+  **Resolution:** Replaced the HTML fallback with `fallback={null}` 
+  inside the Canvas. Moved the loading UI outside the Canvas entirely, 
+  controlled by an `isLoaded` state flag passed up from `RobotModel` 
+  via an `onLoad` callback prop.
+
+* **Issue — "The Three.js CSS Variable Wall" (Robot Colors Not Applying):**
+  Color swatches labeled GREEN, RED, and ORANGE were using Tailwind 
+  internal variables (`var(--color-emerald-500)`) as hex values passed 
+  to `new THREE.Color()`. Three.js cannot resolve CSS variables — it 
+  expects a raw hex string, so all three colors rendered as black.
+  Additionally, `directionalLight` props were using `color="var(--accent)"` 
+  which Three.js silently ignored.
+
+  **Resolution:** Replaced all CSS variable color strings with their 
+  resolved hex equivalents (`#10b981`, `#ef4444`, `#f97316`). Hardcoded 
+  all Three.js light colors to `#22d3ee`. Added `.trim().toUpperCase()` 
+  defensive cleaning on all color strings fed into `THREE.Color` and 
+  wrapped the constructor in `try/catch` to prevent console flooding 
+  on unexpected values.
+
+* **Issue — "The Cyberpunk Glow Wipeout" (Theme Refactor Side Effect):**
+  During the global color migration to CSS variables, the AI agent's 
+  find-and-replace pass unintentionally stripped `drop-shadow`, 
+  `text-shadow`, and `box-shadow` neon glow effects from titles, 
+  buttons, and card borders across all dashboard pages. The cyberpunk 
+  theme lost its signature visual identity.
+
+  **Resolution:** Restored all glow effects by adding a 
+  `[data-theme='cyberpunk']` block in `globals.css` that re-declares 
+  neon shadows using `rgba(var(--accent-rgb), X)`. Added 
+  `--glow-opacity: 0` overrides for `light` and `desert` themes to 
+  suppress glows on light backgrounds without touching component files.
+
+* **Issue — "The Mobile Layout Flash" (SSR Hydration Mismatch):**
+  Using `useMediaQuery` in components rendered server-side caused 
+  a hydration mismatch — the server always returned `false` (desktop), 
+  so mobile users saw a brief flash of the desktop layout before React 
+  hydrated and switched to the mobile view.
+
+  **Resolution:** Made `useMediaQuery` SSR-safe by defaulting to 
+  `false` on the server and attaching the `window.matchMedia` listener 
+  only after mount. Combined with `suppressHydrationWarning` on the 
+  root `<html>` element, this eliminated the flash entirely. The 
+  `ThemeProvider` mounted-state wrapper was also removed since 
+  `next-themes` handles hydration natively when `suppressHydrationWarning` 
+  is present.
+
+---
+
+### Infrastructure
+
+* Introduced `dotenv-cli` for environment-aware server startup — 
+  `start:dev` loads `.env.local`, production reads `.env` directly
+* Added `CLAUDE.md` convention files at root, client, and server 
+  level for AI-assisted development efficiency
+* Separated GitHub OAuth into two apps (Local + Production) for 
+  frictionless parallel development and deployment
+
+---
+
+### Current Status
+
+- Logic Arena is now a **visually cohesive, theme-aware, mobile-first 
+  platform** with a professional footer, legal pages, and a fully 
+  operational CI/CD pipeline. The codebase enforces CSS variable 
+  discipline and mobile UX patterns at the convention level via 
+  `CLAUDE.md`. Ready for: **Fog of War, Energy System, and University 
+  Competition features.**
