@@ -1,0 +1,100 @@
+import React from "react";
+import { LevelDetail, DIFF_CONFIG, ModalState } from "../types";
+
+interface LevelMobileLayoutProps {
+  level: LevelDetail;
+  script: string;
+  setScript: (s: string) => void;
+  modal: ModalState;
+  handleFight: () => void;
+  router: any;
+}
+
+export function LevelMobileLayout({ level, script, setScript, modal, handleFight, router }: LevelMobileLayoutProps) {
+  const dc = DIFF_CONFIG[level.difficulty];
+
+  return (
+    <div className="w-full flex flex-col min-h-[calc(100vh-80px-env(safe-area-inset-bottom))] px-4 pt-4 pb-[env(safe-area-inset-bottom)] relative z-10 animate-[fadeIn_0.35s_ease]">
+      {/* Top Header */}
+      <div className="flex flex-col gap-3 pb-4 mb-4 border-b border-accent/20 shrink-0">
+        <button
+          onClick={() => router.push("/campaign")}
+          className="w-max text-[9px] tracking-[0.25em] text-accent/40 hover:text-accent border border-accent/15 rounded px-2.5 py-1 uppercase"
+        >
+          ← BACK TO MAP
+        </button>
+        <div className="flex justify-between items-center w-full">
+          <div className="flex flex-col">
+            <span className="text-[9px] text-accent/40 tracking-[0.3em] font-bold block mb-0.5 uppercase">
+              LEVEL {String(level.id).padStart(2, "0")}
+            </span>
+            <h1 className="m-0 text-xl font-black tracking-[0.2em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.8)] leading-[1.1] uppercase max-w-[200px]">
+              {level.name}
+            </h1>
+          </div>
+          <span
+            className="inline-block text-[9px] font-black tracking-[0.3em] border rounded px-2 py-1 shadow-sm shrink-0"
+            style={{ color: dc.color, borderColor: `${dc.color}40`, backgroundColor: `${dc.color}10` }}
+          >
+            {dc.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Info Stack */}
+      <div className="flex flex-col gap-4 shrink-0 mb-4">
+        {/* Mission brief */}
+        <div className="border border-accent/15 rounded-xl p-4 bg-accent/[0.02]">
+          <p className="text-[9px] tracking-[0.3em] text-accent/30 mb-2 uppercase">// MISSION_BRIEF</p>
+          <p className="text-[10px] text-accent/70 tracking-[0.08em] leading-relaxed">{level.description}</p>
+        </div>
+
+        {/* Enemy Intel */}
+        <div className="border border-red-500/20 rounded-xl p-4 bg-red-500/[0.03]">
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-accent/40 tracking-[0.15em]">INTEL</span>
+              <span className="font-bold text-red-500/80 tracking-[0.12em]">{level.name}</span>
+            </div>
+            <div className="h-[1px] bg-red-500/10" />
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-accent/40 tracking-[0.15em]">REWARD</span>
+              <span className="font-bold text-accent/70 tracking-[0.12em]">+{level.rewardRank} PTS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Code Editor Full Width */}
+      <div className="flex flex-col flex-1 gap-3 pb-8">
+        <div className="flex justify-between items-center px-1">
+          <p className="text-[9px] tracking-[0.3em] text-accent/35 uppercase m-0">// YOUR_ALISCRIPT</p>
+          <span className="text-[9px] text-accent/20 tracking-[0.12em]">
+            {script.split("\n").filter(Boolean).length} LINES
+          </span>
+        </div>
+        <textarea
+          value={script}
+          onChange={(e) => setScript(e.target.value)}
+          placeholder={"// Write your AliScript here\n// Example:\nSET x = SCAN\nIF x > 0\n  FIRE\nELSE\n  MOVE RIGHT\nEND"}
+          className="w-full flex-1 min-h-[300px] rounded-xl border border-accent/20 bg-bg-primary text-accent/85 p-4 text-[11px] leading-[1.6] resize-none focus:outline-none focus:border-accent/50 placeholder:text-accent/20 font-mono tracking-[0.04em]"
+          style={{ boxShadow: "inset 0 0 20px rgba(var(--accent-rgb),0.03)" }}
+          spellCheck={false}
+        />
+        <button
+          onClick={handleFight}
+          disabled={!script.trim() || modal === "loading"}
+          className={`w-full h-[44px] shrink-0 rounded-xl text-[10px] font-black tracking-[0.2em] font-mono transition-transform duration-150 border active:scale-95 ${
+             modal === "loading"
+            ? "bg-accent/5 border-accent/20 text-accent/40"
+            : !script.trim()
+              ? "bg-accent/5 border-accent/15 text-accent/25"
+              : "bg-accent/10 border-accent/40 text-accent shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)]"
+            }`}
+        >
+          {modal === "loading" ? "INITIALIZING..." : "DEPLOY SCRIPT"}
+        </button>
+      </div>
+    </div>
+  );
+}

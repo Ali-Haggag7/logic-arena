@@ -1,56 +1,38 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiClient } from "../../../../lib/api-client";
 import { ReplayData, Snapshot } from "./types";
-import { ReplayCanvas, CANVAS_W } from "./components/ReplayCanvas";
+import { ReplayCanvas } from "./components/ReplayCanvas";
 import { ReplayControls } from "./components/ReplayControls";
 import { useMediaQuery } from "../../../../hooks/useMediaQuery";
-
-/** How many milliseconds one frame lasts at 1× speed. */
-const BASE_FRAME_MS = 500;
+import { useReplayPlayback } from "./hooks/useReplayPlayback";
+import { ReplayViewerDesktopLayout } from "./components/ReplayViewerDesktopLayout";
+import { ReplayViewerMobileLayout } from "./components/ReplayViewerMobileLayout";
 
 export default function ReplayPage() {
   const params = useParams();
   const router = useRouter();
   const matchId = params?.matchId as string;
 
-  // ── Data ──────────────────────────────────────────────────────────────────
   const [replayData, setReplayData] = useState<ReplayData | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ── UI state (exposed to controls) ───────────────────────────────────────
-  const [currentFrame, setCurrentFrame] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1); // 0.5 | 1 | 2
+  const {
+    currentFrame,
+    isPlaying,
+    speed,
+    lerpT,
+    setSpeed,
+    handlePlay,
+    handlePause,
+    handleReset,
+    handleScrub,
+  } = useReplayPlayback(snapshots);
 
-  // ── Lerp render state ─────────────────────────────────────────────────────
-  /**
-   * Lerp progress 0→1 between prevFrame and currFrame.
-   * Stored as state so the canvas re-renders on each rAF tick.
-   */
-  const [lerpT, setLerpT] = useState(0);
-
-  const totalFrames = snapshots.length;
-
-  // ── Refs (no re-render needed) ────────────────────────────────────────────
-  const snapshotsRef = useRef<Snapshot[]>([]);
-  const currFrameRef = useRef(0);
-  const speedRef = useRef(1);
-  const isPlayingRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
-  /** Timestamp of when the current frame tick started (for lerp). */
-  const frameStartTimeRef = useRef<number>(0);
-
-  // Keep refs in sync with state
-  useEffect(() => { snapshotsRef.current = snapshots; }, [snapshots]);
-  useEffect(() => { speedRef.current = speed; }, [speed]);
-  useEffect(() => { currFrameRef.current = currentFrame; }, [currentFrame]);
-
-  // ── Fetch replay ──────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchReplay = async () => {
       try {
@@ -59,7 +41,6 @@ export default function ReplayPage() {
         setReplayData(data);
         const snaps = Array.isArray(data.replayData) ? data.replayData : [];
         setSnapshots(snaps);
-        snapshotsRef.current = snaps;
       } catch (e: any) {
         if (e.response?.status === 401) {
           router.push("/login");
@@ -75,108 +56,10 @@ export default function ReplayPage() {
     fetchReplay();
   }, [matchId, router]);
 
-  // ── rAF playback loop ─────────────────────────────────────────────────────
-  const stopRaf = useCallback(() => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  const tick = useCallback(
-    (timestamp: number) => {
-      const snaps = snapshotsRef.current;
-      const frame = currFrameRef.current;
-      const spd = speedRef.current;
-      const frameDuration = BASE_FRAME_MS / spd; // ms per frame at current speed
-
-      const elapsed = timestamp - frameStartTimeRef.current;
-      const t = Math.min(1, elapsed / frameDuration);
-
-      setLerpT(t);
-
-      if (t >= 1) {
-        // Advance to the next frame
-        if (frame >= snaps.length - 1) {
-          // End of replay
-          isPlayingRef.current = false;
-          setIsPlaying(false);
-          setLerpT(0);
-          return;
-        }
-        const nextFrame = frame + 1;
-        currFrameRef.current = nextFrame;
-        setCurrentFrame(nextFrame);
-        frameStartTimeRef.current = timestamp;
-        setLerpT(0);
-      }
-
-      // Schedule next tick
-      rafRef.current = requestAnimationFrame(tick);
-    },
-    [] // stable — reads only refs
-  );
-
-  const startRaf = useCallback(
-    (timestamp?: number) => {
-      stopRaf();
-      frameStartTimeRef.current = timestamp ?? performance.now();
-      rafRef.current = requestAnimationFrame(tick);
-    },
-    [stopRaf, tick]
-  );
-
-  // Start/stop the rAF loop when isPlaying changes
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-    if (isPlaying && snapshots.length > 0) {
-      startRaf();
-    } else {
-      stopRaf();
-    }
-    return stopRaf;
-  }, [isPlaying, snapshots.length, startRaf, stopRaf]);
-
-  // ── Controls ──────────────────────────────────────────────────────────────
-  const handlePlay = useCallback(() => {
-    if (snapshots.length === 0) return;
-    if (currFrameRef.current >= snapshots.length - 1) {
-      currFrameRef.current = 0;
-      setCurrentFrame(0);
-    }
-    setIsPlaying(true);
-  }, [snapshots.length]);
-
-  const handlePause = useCallback(() => {
-    setIsPlaying(false);
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setIsPlaying(false);
-    currFrameRef.current = 0;
-    setCurrentFrame(0);
-    setLerpT(0);
-  }, []);
-
-  const handleScrub = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setIsPlaying(false);
-      const f = Number(e.target.value);
-      currFrameRef.current = f;
-      setCurrentFrame(f);
-      setLerpT(0);
-    },
-    []
-  );
-
-  // ── Derived snapshots for canvas ──────────────────────────────────────────
-  const prevSnapshot =
-    currentFrame > 0 ? snapshots[currentFrame - 1] : undefined;
+  const prevSnapshot = currentFrame > 0 ? snapshots[currentFrame - 1] : undefined;
   const currSnapshot = snapshots[currentFrame];
-
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // ── Shared viewer content ─────────────────────────────────────────────────
   const ViewerSection = (
     <>
       <ReplayCanvas
@@ -184,10 +67,9 @@ export default function ReplayPage() {
         currSnapshot={currSnapshot}
         lerpT={lerpT}
       />
-
       <ReplayControls
         currentFrame={currentFrame}
-        totalFrames={totalFrames}
+        totalFrames={snapshots.length}
         isPlaying={isPlaying}
         speed={speed}
         onPlay={handlePlay}
@@ -197,200 +79,6 @@ export default function ReplayPage() {
         onScrub={handleScrub}
       />
     </>
-  );
-
-  // ── Desktop layout ────────────────────────────────────────────────────────
-  const DesktopLayout = (
-    <div className="max-w-[860px] mx-auto px-6 pt-10 pb-[120px] relative z-10 animate-[fadeIn_0.35s_ease]">
-      {/* Header */}
-      <div className="mb-8 border-b border-accent/20 pb-6">
-        <div className="flex flex-col gap-4">
-          <button
-            onClick={() => router.back()}
-            className="w-max bg-transparent border border-accent/15 rounded px-3 py-1 hover:border-accent/40 text-accent/40 cursor-pointer text-[10px] tracking-[0.25em] font-mono mb-2 flex items-center gap-1.5 transition-all duration-200 uppercase"
-          >
-            ← BACK TO HISTORY
-          </button>
-          <div>
-            <p className="text-[9px] tracking-[0.28em] text-accent/40 mb-2 uppercase">
-              // MATCH_REPLAY
-            </p>
-            <h1
-              className="text-[clamp(20px,3.5vw,30px)] font-black tracking-[0.16em] text-accent m-0 leading-none break-words"
-              style={{
-                textShadow:
-                  "0 0 10px rgba(var(--accent-rgb),0.6), 0 0 30px rgba(var(--accent-rgb),0.25)",
-              }}
-            >
-              REPLAY VIEWER
-            </h1>
-          </div>
-        </div>
-        {replayData && (
-          <p className="mt-2 text-[10px] text-accent/40 tracking-[0.14em] flex items-center gap-2 flex-wrap uppercase">
-            <span className="shrink-0">ID: {replayData.id.slice(0, 8)}…</span>
-            <span>·</span>
-            <span className="shrink-0">
-              DUR: {replayData.duration}s <span>·</span>
-            </span>
-            <span className="shrink-0">
-              {new Date(replayData.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "2-digit",
-              })}
-            </span>
-          </p>
-        )}
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-[20px_24px] text-[#fca5a5] text-[11px] tracking-[0.12em]">
-          [ERR] REPLAY UPLINK FAILURE: {error}
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && !error && (
-        <div className="text-center py-20 text-accent/30 tracking-[0.2em] text-[11px] animate-pulse">
-          DECRYPTING REPLAY DATA…
-        </div>
-      )}
-
-      {/* No replay data */}
-      {!loading && !error && snapshots.length === 0 && (
-        <div className="text-center p-[60px] border border-accent/10 rounded-[10px] bg-card/60 text-accent/25 text-[11px] tracking-[0.18em]">
-          NO REPLAY DATA AVAILABLE FOR THIS MATCH.
-          <div className="mt-2.5 text-[10px] text-accent/15">
-            Only matches played after the replay system was enabled are
-            recorded.
-          </div>
-        </div>
-      )}
-
-      {/* Viewer */}
-      {!loading && !error && snapshots.length > 0 && (
-        <div className="flex flex-col items-center gap-6">
-          {ViewerSection}
-
-          {/* Legend */}
-          <div
-            className="w-full bg-black/35 border border-accent/[0.07] rounded-lg p-[12px_18px] flex gap-5 flex-wrap"
-            style={{ maxWidth: CANVAS_W }}
-          >
-            <div className="flex items-center gap-2 text-[10px] tracking-[0.14em] text-accent/40">
-              <div className="w-2.5 h-2.5 rounded-full bg-accent/20 border-[1.5px] border-accent" />
-              ROBOT
-            </div>
-            <div className="flex items-center gap-2 text-[10px] tracking-[0.14em] text-accent/40">
-              <div className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--accent)]" />
-              PROJECTILE
-            </div>
-            <div className="ml-auto text-[10px] tracking-[0.12em] text-accent/25">
-              SPEED:{" "}
-              {replayData
-                ? (snapshots.length / replayData.duration).toFixed(1)
-                : "—"}{" "}
-              FRAMES/s
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  // ── Mobile layout ─────────────────────────────────────────────────────────
-  const MobileLayout = (
-    <div className="w-full px-4 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))] relative z-10 animate-[fadeIn_0.35s_ease] flex flex-col min-h-[calc(100vh-80px)]">
-      {/* Header */}
-      <div className="mb-5 border-b border-accent/20 pb-4">
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => router.back()}
-            className="w-max bg-transparent border border-accent/15 rounded px-2.5 py-1 hover:border-accent/40 text-accent/40 cursor-pointer text-[9px] tracking-[0.25em] font-mono flex items-center gap-1.5 transition-all duration-200 uppercase"
-          >
-            ← HISTORY
-          </button>
-          <div>
-            <p className="text-[8px] tracking-[0.28em] text-accent/40 mb-1 uppercase">
-              // MATCH_REPLAY
-            </p>
-            <h1
-              className="text-2xl font-black tracking-[0.16em] text-accent m-0 leading-none"
-              style={{
-                textShadow:
-                  "0 0 10px rgba(var(--accent-rgb),0.6), 0 0 30px rgba(var(--accent-rgb),0.25)",
-              }}
-            >
-              VIEWER
-            </h1>
-          </div>
-        </div>
-        {replayData && (
-          <p className="mt-3 text-[9px] text-accent/40 tracking-[0.14em] flex flex-col gap-1 uppercase">
-            <span>ID: {replayData.id.slice(0, 8)}…</span>
-            <span>
-              DUR: {replayData.duration}s |{" "}
-              {new Date(replayData.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "2-digit",
-              })}
-            </span>
-          </p>
-        )}
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-[16px] text-[#fca5a5] text-[10px] tracking-[0.12em] mb-4">
-          [ERR] REPLAY: {error}
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && !error && (
-        <div className="text-center py-16 text-accent/30 tracking-[0.2em] text-[10px] animate-pulse">
-          DECRYPTING REPLAY DATA…
-        </div>
-      )}
-
-      {/* No replay data */}
-      {!loading && !error && snapshots.length === 0 && (
-        <div className="text-center p-8 border border-accent/10 rounded-[10px] bg-card/60 text-accent/25 text-[10px] tracking-[0.18em]">
-          NO REPLAY DATA AVAILABLE.
-        </div>
-      )}
-
-      {/* Viewer */}
-      {!loading && !error && snapshots.length > 0 && (
-        <div className="flex flex-col gap-4 w-full items-center">
-          {ViewerSection}
-
-          {/* Legend */}
-          <div className="w-[calc(100%-1rem)] max-w-[420px] mx-auto bg-black/35 border border-accent/[0.07] rounded-lg p-3 flex flex-col gap-2">
-            <div className="flex justify-between">
-              <div className="flex items-center gap-2 text-[9px] tracking-[0.14em] text-accent/40">
-                <div className="w-2.5 h-2.5 rounded-full bg-accent/20 border-[1.5px] border-accent" />
-                ROBOT
-              </div>
-              <div className="flex items-center gap-2 text-[9px] tracking-[0.14em] text-accent/40">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--accent)]" />
-                PROJECTILE
-              </div>
-            </div>
-            <div className="text-[9px] tracking-[0.12em] text-accent/25 text-center mt-1 border-t border-accent/10 pt-2">
-              SPEED:{" "}
-              {replayData
-                ? (snapshots.length / replayData.duration).toFixed(1)
-                : "—"}{" "}
-              FRAMES/s
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 
   return (
@@ -403,20 +91,35 @@ export default function ReplayPage() {
       `}</style>
 
       <div
-        className={`min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden ${isMobile ? "pb-[calc(80px+env(safe-area-inset-bottom))]" : ""
-          }`}
+        className={`min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden ${isMobile ? "pb-[calc(80px+env(safe-area-inset-bottom))]" : ""}`}
       >
-        {/* Grid BG */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
-            backgroundImage:
-              "linear-gradient(rgba(8,145,178,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.07) 1px, transparent 1px)",
+            backgroundImage: "linear-gradient(rgba(8,145,178,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.07) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
 
-        {isMobile ? MobileLayout : DesktopLayout}
+        {isMobile ? (
+          <ReplayViewerMobileLayout 
+            replayData={replayData} 
+            snapshots={snapshots} 
+            loading={loading} 
+            error={error} 
+            ViewerSection={ViewerSection} 
+            router={router} 
+          />
+        ) : (
+          <ReplayViewerDesktopLayout 
+            replayData={replayData} 
+            snapshots={snapshots} 
+            loading={loading} 
+            error={error} 
+            ViewerSection={ViewerSection} 
+            router={router} 
+          />
+        )}
       </div>
     </>
   );

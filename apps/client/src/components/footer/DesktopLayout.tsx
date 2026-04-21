@@ -1,0 +1,104 @@
+import React from 'react';
+import Link from 'next/link';
+import { NAV_LINKS, ARENA_LINKS, COMMUNITY_LINKS, LEGAL_LINKS } from './constants';
+import { GitHubIcon, LinkedinIcon, PortfolioIcon } from './Icons';
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <span className="text-accent/40 text-xs font-mono select-none">⌐</span>
+      <h3 className="text-[10px] font-black tracking-[0.4em] uppercase text-accent">{children}</h3>
+      <span className="text-accent/40 text-xs font-mono select-none">¬</span>
+    </div>
+  );
+}
+
+function FooterLink({ target, href, children }: { target?: string; href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      target={target}
+      href={href}
+      className="block text-[12px] text-text-secondary hover:text-accent py-1 transition-colors duration-150 leading-relaxed"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function DesktopSocialIcons() {
+  const icons = [
+    { label: "GitHub", el: <GitHubIcon size={18} /> },
+    { label: "LinkedIn", el: <LinkedinIcon size={18} /> },
+    { label: "Portfolio", el: <PortfolioIcon size={18} /> },
+  ];
+  return (
+    <div className="flex items-center gap-3 mt-4">
+      {icons.map(({ label, el }) => (
+        <a
+          key={label}
+          href="#"
+          aria-label={label}
+          className="flex items-center justify-center w-9 h-9 rounded-lg border border-accent/50 hover:border-accent/50 bg-bg-secondary/50 hover:bg-accent/10 text-text-secondary hover:text-accent transition-all duration-150"
+          onMouseEnter={(e) => (e.currentTarget.style.filter = "drop-shadow(0 0 6px var(--accent))")}
+          onMouseLeave={(e) => (e.currentTarget.style.filter = "")}
+        >
+          {el}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+export function DesktopLayout() {
+  return (
+    <div className="relative z-10 max-w-7xl mx-auto px-8 py-14">
+      <div className="grid grid-cols-5 gap-10">
+        <div className="col-span-1">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 border border-accent/40 rounded-lg flex items-center justify-center bg-accent/5 shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]">
+              <span className="text-accent text-sm">⬡</span>
+            </div>
+            <h2 className="footer-brand-name text-[15px] font-black tracking-[0.2em] text-accent drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)] cursor-default select-none">
+              LOGIC ARENA
+            </h2>
+          </div>
+          <p className="text-[9px] font-black tracking-[0.35em] text-accent/60 uppercase mb-3">
+            WHERE CODE MEETS COMBAT
+          </p>
+          <p className="text-[11px] text-text-secondary leading-relaxed mb-2">
+            The competitive programming arena where your algorithms fight to the death.
+          </p>
+          <DesktopSocialIcons />
+        </div>
+
+        <div>
+          <SectionHeader>Navigate</SectionHeader>
+          <div className="flex flex-col">
+            {NAV_LINKS.map((l) => <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>)}
+          </div>
+        </div>
+
+        <div>
+          <SectionHeader>Arena</SectionHeader>
+          <div className="flex flex-col">
+            {ARENA_LINKS.map((l) => <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>)}
+          </div>
+        </div>
+
+        <div>
+          <SectionHeader>Community</SectionHeader>
+          <div className="flex flex-col">
+            {COMMUNITY_LINKS.map((l) => <FooterLink key={l.label} target={l.target} href={l.href}>{l.label}</FooterLink>)}
+          </div>
+        </div>
+
+        <div>
+          <SectionHeader>Legal</SectionHeader>
+          <div className="flex flex-col">
+            {LEGAL_LINKS.map((l) => <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
