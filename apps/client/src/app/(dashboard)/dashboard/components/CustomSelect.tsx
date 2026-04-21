@@ -10,7 +10,7 @@ export const CustomSelect = ({ value, onChange, isMobile }: { value: string, onC
             <div className="relative w-full z-40">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full bg-bg-secondary border border-border rounded-xl px-4 py-3 flex items-center justify-between text-accent font-bold tracking-widest text-[10px] active:bg-accent/5 transition-colors"
+                    className="w-full bg-bg-secondary border border-accent/50 rounded-xl px-4 py-3 flex items-center justify-between text-accent font-bold tracking-widest text-[10px] active:bg-accent/5 transition-colors"
                 >
                     <span className="truncate">MOD: {value}</span>
                     <ChevronDown size={14} className={`text-accent/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -26,7 +26,7 @@ export const CustomSelect = ({ value, onChange, isMobile }: { value: string, onC
                                         <button
                                             key={opt}
                                             onClick={() => { onChange(opt); setIsOpen(false); }}
-                                            className={`w-full px-5 py-4 text-left text-[10px] font-bold tracking-widest transition-colors active:bg-accent/10 border-b border-border/50 last:border-0 ${value === opt ? 'bg-accent/10 text-accent' : 'text-text-secondary'}`}
+                                            className={`w-full px-5 py-4 text-left text-[10px] font-bold tracking-widest transition-colors active:bg-accent/10 border-b border-accent/50/50 last:border-0 ${value === opt ? 'bg-accent/10 text-accent' : 'text-text-secondary'}`}
                                         >
                                             {opt.replace('_', ' ')}
                                         </button>

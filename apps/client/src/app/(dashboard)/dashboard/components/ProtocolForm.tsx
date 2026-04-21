@@ -15,7 +15,7 @@ export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onS
     if (isMobile) {
         return (
             <div className="sticky top-4 z-30">
-                <div className={`bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 ease-in-out shadow-lg ${isExpanded ? "max-h-[300px]" : "max-h-[60px]"}`}>
+                <div className={`bg-card border border-accent/50 rounded-2xl overflow-hidden transition-all duration-300 ease-in-out shadow-lg ${isExpanded ? "max-h-[300px]" : "max-h-[60px]"}`}>
                     {!isExpanded ? (
                         <button
                             onClick={() => setIsExpanded(true)}
@@ -35,14 +35,14 @@ export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onS
                                     <ChevronDown size={16} className="text-text-secondary rotate-180 transition-transform duration-300" />
                                 </button>
                             </div>
-                            
+
                             <form onSubmit={(e) => { onSubmit(e); setIsExpanded(false); }} className="flex flex-col gap-4">
                                 <input
                                     type="text"
                                     value={newScriptTitle}
                                     onChange={(e) => setNewScriptTitle(e.target.value)}
                                     placeholder="Enter protocol name..."
-                                    className="w-full bg-bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent/50 transition-colors"
+                                    className="w-full bg-bg-secondary border border-accent/50 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent/50 transition-colors"
                                     autoFocus
                                 />
                                 <button

@@ -20,8 +20,8 @@ interface ScriptCardProps {
 export const ScriptCard = ({ script, onEditBrain, onDeployToLobby, onDeployToArena, isMobile }: ScriptCardProps) => {
     if (isMobile) {
         return (
-            <div 
-                className="group relative flex flex-col w-full bg-card border border-border rounded-2xl overflow-hidden transition-all duration-200"
+            <div
+                className="group relative flex flex-col w-full bg-card border border-accent/50 rounded-2xl overflow-hidden transition-all duration-200"
                 style={{ boxShadow: 'inset 3px 0 0 var(--accent), 0 1px 3px rgba(0,0,0,0.2)' }}
             >
                 <div className="p-5 flex flex-col gap-1">
@@ -34,7 +34,7 @@ export const ScriptCard = ({ script, onEditBrain, onDeployToLobby, onDeployToAre
                         <span>{new Date(script.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}</span>
                     </div>
                 </div>
-                
+
                 <div className="px-5 pb-5 flex flex-row items-center gap-3">
                     <button
                         onClick={() => onEditBrain(script.id)}
@@ -45,7 +45,7 @@ export const ScriptCard = ({ script, onEditBrain, onDeployToLobby, onDeployToAre
                     </button>
                     <button
                         onClick={() => onDeployToLobby(script.id)}
-                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-bg-secondary border border-border text-text-secondary text-[10px] font-bold tracking-[0.1em] rounded-full active:bg-border transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-bg-secondary border border-accent/50 text-text-secondary text-[10px] font-bold tracking-[0.1em] rounded-full active:bg-border transition-colors"
                     >
                         <Users size={12} />
                         LOBBY

@@ -5,7 +5,7 @@ export const ScriptSkeleton = ({ isMobile }: { isMobile?: boolean }) => {
         <div className="flex flex-col gap-4">
             {[1, 2, 3].map((i) => (
                 isMobile ? (
-                    <div key={i} className="flex flex-col w-full bg-card/60 border border-border rounded-2xl p-5 gap-4 animate-pulse">
+                    <div key={i} className="flex flex-col w-full bg-card/60 border border-accent/50 rounded-2xl p-5 gap-4 animate-pulse">
                         <div className="flex flex-col gap-2">
                             <div className="h-5 w-1/2 bg-accent/10 rounded"></div>
                             <div className="h-3 w-1/3 bg-accent/5 rounded"></div>

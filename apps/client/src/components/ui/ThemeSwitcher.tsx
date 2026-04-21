@@ -99,8 +99,8 @@ export function ThemeSwitcher({ variant = "default" }: { variant?: "default" | "
           )}
         </button>
 
-        <div 
-          className={`absolute ${variant === "minimal" ? "top-[calc(100%+8px)] right-0 min-w-[140px]" : "bottom-[calc(100%+8px)] left-0 right-0"} bg-card border border-border rounded-lg p-1 z-50 transition-all duration-150 ease-in-out ${isOpen ? "opacity-100 translate-y-0 visible" : `opacity-0 ${variant === "minimal" ? "-translate-y-2" : "translate-y-2"} invisible`}`}
+        <div
+          className={`absolute ${variant === "minimal" ? "top-[calc(100%+8px)] right-0 min-w-[140px]" : "bottom-[calc(100%+8px)] left-0 right-0"} bg-card border border-accent/50 rounded-lg p-1 z-50 transition-all duration-150 ease-in-out ${isOpen ? "opacity-100 translate-y-0 visible" : `opacity-0 ${variant === "minimal" ? "-translate-y-2" : "translate-y-2"} invisible`}`}
           style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
         >
           {THEMES.map(({ id, label, icon }) => {

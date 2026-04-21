@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 const navItems = [
   { href: "/dashboard", label: "COMMAND", icon: (
@@ -39,13 +42,16 @@ const navItems = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  if (!isMobile) return null;
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-40 flex justify-center bg-bg-primary/80 backdrop-blur-xl border-t border-accent/[0.12] shadow-[0_-10px_30px_rgba(var(--accent-rgb),0.05),inset_0_2px_10px_rgba(var(--accent-rgb),0.05)] w-full transition-all duration-150"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <nav className="flex items-center justify-around w-full h-[64px] px-1">
+      <nav className="flex items-center justify-around w-full h-[64px] px-1 mb-[6px]">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
