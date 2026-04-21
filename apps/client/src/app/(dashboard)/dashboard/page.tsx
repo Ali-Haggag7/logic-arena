@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "../../../lib/api-client";
@@ -9,6 +9,7 @@ import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { ScriptSkeleton } from "./components/ScriptSkeleton";
 import { ScriptCard, RobotScript } from "./components/ScriptCard";
 import { ProtocolForm } from "./components/ProtocolForm";
+import { EditScriptModal } from "./components/EditScriptModal";
 import { Plus, ChevronDown, Edit2, Play, Swords, Terminal, Box, Users } from "lucide-react";
 
 const DashboardPage = () => {
@@ -18,6 +19,7 @@ const DashboardPage = () => {
     const [status, setStatus] = useState<{ message: string; type: "error" | "success" | null }>({ message: "", type: null });
     const [isLoading, setIsLoading] = useState(false);
     const [selectedMode, setSelectedMode] = useState<"COMBAT" | "RACING" | "TRAINING_SOLO">("COMBAT");
+    const [editingScript, setEditingScript] = useState<RobotScript | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -69,6 +71,19 @@ const DashboardPage = () => {
         localStorage.setItem("selectedScriptId", scriptId);
         router.push("/lobby");
     };
+
+    const handleEditScript = useCallback((id: string) => {
+        const found = scripts.find((s) => s.id === id) ?? null;
+        setEditingScript(found);
+    }, [scripts]);
+
+    const handleOptimisticUpdate = useCallback((updated: RobotScript) => {
+        setScripts((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    }, []);
+
+    const handleRevert = useCallback((original: RobotScript) => {
+        setScripts((prev) => prev.map((s) => (s.id === original.id ? original : s)));
+    }, []);
 
     const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -123,7 +138,7 @@ const DashboardPage = () => {
                                 <ScriptCard
                                     key={script.id}
                                     script={script}
-                                    onEditBrain={(id) => console.log("Edit script:", id)}
+                                    onEditBrain={handleEditScript}
                                     onDeployToLobby={handleGoToLobby}
                                     onDeployToArena={handleGoToArena}
                                     isMobile={isMobile}
@@ -219,7 +234,7 @@ const DashboardPage = () => {
                             <ScriptCard
                                 key={script.id}
                                 script={script}
-                                onEditBrain={(id) => console.log("Edit script:", id)}
+                                onEditBrain={handleEditScript}
                                 onDeployToLobby={handleGoToLobby}
                                 onDeployToArena={handleGoToArena}
                                 isMobile={true}
@@ -237,6 +252,16 @@ const DashboardPage = () => {
                 style={{ backgroundImage: 'linear-gradient(rgba(var(--accent-rgb),0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.2) 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
             </div>
             {isMobile ? MobileLayout : DesktopLayout}
+
+            {/* Edit Script Modal */}
+            {editingScript && (
+                <EditScriptModal
+                    script={editingScript}
+                    onClose={() => setEditingScript(null)}
+                    onOptimisticUpdate={handleOptimisticUpdate}
+                    onRevert={handleRevert}
+                />
+            )}
         </div>
     );
 };
