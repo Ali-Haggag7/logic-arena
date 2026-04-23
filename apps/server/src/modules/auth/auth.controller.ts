@@ -86,7 +86,7 @@ export class AuthController {
     const isDev = process.env.NODE_ENV === 'development';
     const clientUrl = isDev ? 'http://localhost:3000' : (process.env.CLIENT_URL || 'https://logicarena.dev');
     res.redirect(
-      `${clientUrl}/auth/callback?token=${access_token}&userId=${userId}&username=${username}`
+      `${clientUrl}/callback?token=${access_token}&userId=${userId}&username=${username}`
     );
   }
 
@@ -103,7 +103,7 @@ export class AuthController {
     const isDev = process.env.NODE_ENV === 'development';
     const clientUrl = isDev ? 'http://localhost:3000' : (process.env.CLIENT_URL || 'https://logicarena.dev');
     res.redirect(
-      `${clientUrl}/auth/callback?token=${access_token}&userId=${userId}&username=${username}`
+      `${clientUrl}/callback?token=${access_token}&userId=${userId}&username=${username}`
     );
   }
 }

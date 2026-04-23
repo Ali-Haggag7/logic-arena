@@ -2,28 +2,29 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { CyberSelect, CyberSelectOption } from "../../components/ui/CyberSelect";
+import { CyberSelect, CyberSelectOption } from "../../../components/ui/CyberSelect";
 
-type Priority = "" | "NICE_TO_HAVE" | "MODERATE" | "HIGH" | "CRITICAL";
+type Severity = "" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
-const FEATURE_OPTIONS: CyberSelectOption[] = [
-  { value: "NICE_TO_HAVE", label: "NICE TO HAVE", description: "Quality of life improvement" },
-  { value: "MODERATE", label: "MODERATE", description: "Significantly improves workflow" },
-  { value: "HIGH", label: "HIGH", description: "Missing feature blocking my strategy" },
-  { value: "CRITICAL", label: "CRITICAL", description: "Core to the arena experience", colorClass: "text-accent" },
+const BUG_OPTIONS: CyberSelectOption[] = [
+  { value: "LOW", label: "LOW", description: "Minor visual glitch, cosmetic issue", colorClass: "text-text-primary" },
+  { value: "MEDIUM", label: "MEDIUM", description: "Feature partially broken", colorClass: "text-text-primary" },
+  { value: "HIGH", label: "HIGH", description: "Combat logic affected, data loss possible", colorClass: "text-text-primary" },
+  { value: "CRITICAL", label: "CRITICAL", description: "Platform crash, security vulnerability", colorClass: "text-red-500" },
 ];
 
-export default function FeatureRequestsPage() {
+export default function BugReportPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [useCase, setUseCase] = useState("");
-  const [priority, setPriority] = useState<Priority>("");
+  const [steps, setSteps] = useState("");
+  const [severity, setSeverity] = useState<Severity>("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    // Simulate async submit
     setTimeout(() => {
       setLoading(false);
       setSubmitted(true);
@@ -71,28 +72,19 @@ export default function FeatureRequestsPage() {
           <div className="px-10 py-10 relative z-10 w-full">
             <p className="text-[10px] font-black tracking-[0.45em] text-accent/60 uppercase mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-accent/40 animate-pulse" />
-              OPERATOR_INTEL
+              COMMAND_CENTER_REPORT
             </p>
             <h1 className="text-4xl sm:text-5xl font-black tracking-[0.15em] text-accent drop-shadow-[0_0_15px_rgba(var(--accent-rgb),0.4)] mb-4 uppercase">
-              Feature Requests
+              Submit a Bug
             </h1>
             <div className="h-px w-full max-w-sm bg-gradient-to-r from-accent/50 to-transparent mb-4" />
             <p className="text-[12px] font-mono text-accent/70 leading-relaxed tracking-[0.03em] drop-shadow-[0_0_1px_rgba(var(--accent-rgb),0.1)]">
-              Have an idea that would make Logic Arena even more legendary? Submit it below.
-              Top requests are reviewed every sprint cycle.
+              Encountered an issue in the arena? Transmit a full report to our engineering team.
             </p>
           </div>
         </div>
 
-        {/* Sprint note */}
-        <div className="mb-8 px-5 py-4 border border-accent/20 bg-accent/5 rounded-xl flex items-center gap-4 shadow-[0_0_15px_rgba(var(--accent-rgb),0.03)] backdrop-blur-sm relative overflow-hidden group hover:border-accent/40 transition-colors duration-300">
-          <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-accent/40 group-hover:bg-accent transition-colors" />
-          <span className="text-accent text-lg drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.4)]">◈</span>
-          <p className="text-[10.5px] text-accent/80 tracking-[0.15em] leading-relaxed font-black uppercase drop-shadow-[0_0_2px_rgba(var(--accent-rgb),0.2)]">
-            Top requests are reviewed every sprint cycle — the community votes on what gets built next.
-          </p>
-        </div>
-
+        {/* Form / Success */}
         <div className="bg-bg-secondary/40 backdrop-blur-sm border border-accent/20 rounded-xl p-8 mb-8 shadow-[0_0_30px_rgba(var(--accent-rgb),0.03)] relative group">
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-accent/[0.02] to-transparent rounded-xl" />
           <div className="relative z-10 w-full">
@@ -105,10 +97,10 @@ export default function FeatureRequestsPage() {
                   REPORT TRANSMITTED TO COMMAND CENTER _
                 </h2>
                 <p className="text-[13px] font-mono text-accent/60 max-w-md leading-[1.8] tracking-[0.03em]">
-                  Your feature request has been logged. Our team reviews community submissions every sprint and the best ideas ship in the next release.
+                  Our engineering team will triage your report within 48 hours. Thank you for keeping the arena clean.
                 </p>
                 <button
-                  onClick={() => { setSubmitted(false); setTitle(""); setDescription(""); setUseCase(""); setPriority(""); }}
+                  onClick={() => { setSubmitted(false); setTitle(""); setDescription(""); setSteps(""); setSeverity(""); }}
                   className="mt-6 px-8 py-3.5 text-[11px] tracking-[0.3em] font-black uppercase border border-accent/30 bg-accent/10 text-accent rounded-lg hover:bg-accent/20 hover:border-accent hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all duration-300"
                 >
                   TRANSMIT ANOTHER
@@ -116,14 +108,14 @@ export default function FeatureRequestsPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                {/* Feature Title */}
+                {/* Bug Title */}
                 <div>
-                  <label htmlFor="feature-title" className={labelClass}>// FEATURE_TITLE</label>
+                  <label htmlFor="bug-title" className={labelClass}>// BUG_TITLE</label>
                   <input
-                    id="feature-title"
+                    id="bug-title"
                     type="text"
                     className={inputClass}
-                    placeholder="What should we build?"
+                    placeholder="Short, descriptive title..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -133,11 +125,11 @@ export default function FeatureRequestsPage() {
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="feature-description" className={labelClass}>// DESCRIPTION</label>
+                  <label htmlFor="bug-description" className={labelClass}>// DESCRIPTION</label>
                   <textarea
-                    id="feature-description"
+                    id="bug-description"
                     className={inputClass}
-                    placeholder="Describe the feature in detail. What problem does it solve?"
+                    placeholder="What happened? What did you expect to happen?"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     required
@@ -146,30 +138,30 @@ export default function FeatureRequestsPage() {
                   />
                 </div>
 
-                {/* Use Case */}
+                {/* Steps to Reproduce */}
                 <div>
-                  <label htmlFor="feature-usecase" className={labelClass}>// USE_CASE</label>
+                  <label htmlFor="bug-steps" className={labelClass}>// STEPS_TO_REPRODUCE</label>
                   <textarea
-                    id="feature-usecase"
+                    id="bug-steps"
                     className={inputClass}
-                    placeholder="How would you use this? Walk us through a concrete scenario..."
-                    value={useCase}
-                    onChange={(e) => setUseCase(e.target.value)}
+                    placeholder={"1. Open the arena...\n2. Click...\n3. Observe..."}
+                    value={steps}
+                    onChange={(e) => setSteps(e.target.value)}
                     required
-                    rows={3}
+                    rows={4}
                     disabled={loading}
                   />
                 </div>
 
-                {/* Priority */}
+                {/* Severity */}
                 <div>
-                  <label htmlFor="feature-priority" className={labelClass}>// PRIORITY</label>
+                  <label htmlFor="bug-severity" className={labelClass}>// SEVERITY_LEVEL</label>
                   <CyberSelect
-                    id="feature-priority"
-                    value={priority}
-                    onChange={(val) => setPriority(val as Priority)}
-                    options={FEATURE_OPTIONS}
-                    placeholder="SELECT PRIORITY..."
+                    id="bug-severity"
+                    value={severity}
+                    onChange={(val) => setSeverity(val as Severity)}
+                    options={BUG_OPTIONS}
+                    placeholder="SELECT SEVERITY..."
                     disabled={loading}
                   />
                 </div>
@@ -185,10 +177,10 @@ export default function FeatureRequestsPage() {
                       {loading ? (
                         <>
                           <span className="w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-                          TRANSMITTING INTEL...
+                          TRANSMITTING INCIDENT...
                         </>
                       ) : (
-                        <>TRANSMIT FEATURE REQUEST <span>→</span></>
+                        <>TRANSMIT BUG REPORT <span>→</span></>
                       )}
                     </span>
                   </button>

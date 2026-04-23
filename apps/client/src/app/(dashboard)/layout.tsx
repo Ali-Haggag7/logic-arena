@@ -1,61 +1,23 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Settings } from "lucide-react";
-import NavLink from "../../components/ui/NavLink";
-import { ThemeSwitcher } from "../../components/ui/ThemeSwitcher";
-import { useGlobalSocket } from "../../hooks/useGlobalSocket";
-import { SocketContext } from "../../context/SocketContext";
+import React from "react";
 import dynamic from "next/dynamic";
+import { SocketContext } from "../../context/SocketContext";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { useDashboardAuth } from "./components/layout/hooks/useDashboardAuth";
+import { useChallengeSystem } from "./components/layout/hooks/useChallengeSystem";
+import { DashboardSidebar } from "./components/layout/components/DashboardSidebar";
+import { DashboardHeader } from "./components/layout/components/DashboardHeader";
+import { ChallengeModal } from "./components/layout/components/ChallengeModal";
+import { ToastNotification } from "./components/layout/components/ToastNotification";
 
 const MobileNav = dynamic(() => import("../../components/MobileNav").then((mod) => mod.MobileNav), { ssr: false });
 const MobileHeader = dynamic(() => import("../../components/MobileHeader").then((mod) => mod.MobileHeader), { ssr: false });
 
-const SIDEBAR_WIDTH = 220;
-
-const navItems = [
-  { href: "/dashboard", label: "COMMAND_CENTER", icon: "⬡" },
-  { href: "/leaderboard", label: "NEURAL_RANKINGS", icon: "◈" },
-  { href: "/lobby", label: "BATTLE_LOBBY", icon: "▶" },
-  { href: "/campaign", label: "CAMPAIGN_MODE", icon: "⚡" },
-  { href: "/profile", label: "OPERATOR_PROFILE", icon: "◉" },
-  { href: "/garage", label: "ROBOT_GARAGE", icon: "⚙" },
-  { href: "/docs", label: "ALISCRIPT_DOCS", icon: "◈" },
-  { href: "/tournaments", label: "TOURNAMENT_HUB", icon: "⚔" },
-];
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [username, setUsername] = useState<string | null>(null);
-  const [incomingChallenge, setIncoming] = useState<{ challengerId: string; challengerName: string } | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "info" | "error" } | null>(null);
+  const { username, handleLogout } = useDashboardAuth();
+  const { incomingChallenge, setIncoming, toast, sendChallenge, acceptChallenge } = useChallengeSystem();
   const isMobile = useMediaQuery("(max-width: 768px)");
-
-  useEffect(() => {
-    setUsername(localStorage.getItem("username"));
-  }, []);
-
-  const showToast = useCallback((message: string, type: "info" | "error" = "info") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  }, []);
-
-  const { sendChallenge, acceptChallenge } = useGlobalSocket({
-    onChallengeReceived: (data) => setIncoming(data),
-    onChallengeSent: () => showToast("⚔ CHALLENGE SENT — AWAITING RESPONSE"),
-    onChallengeFailed: () => showToast("TARGET IS OFFLINE", "error"),
-    onChallengeAccepted: () => showToast("CHALLENGE ACCEPTED — DEPLOYING TO ARENA"),
-  });
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("jwtToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    router.push("/login");
-  };
 
   return (
     <SocketContext.Provider value={{ sendChallenge }}>
@@ -73,172 +35,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen bg-bg-primary font-mono selection:bg-accent/30 overflow-hidden">
         {isMobile && <MobileHeader />}
 
-        {/* ── SIDEBAR ── */}
-        {!isMobile && (
-          <aside
-            className="flex flex-col bg-bg-primary/95 border-r border-accent/[0.12] shadow-[4px_0_30px_rgba(var(--accent-rgb),0.04)] sticky top-0 h-screen overflow-y-auto z-50 shrink-0 scrollbar-thin scrollbar-thumb-accent/20 scrollbar-track-transparent"
-            style={{ width: SIDEBAR_WIDTH }}
-          >
-            {/* Scanline overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none z-0"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(var(--accent-rgb),0.015) 3px, rgba(var(--accent-rgb),0.015) 4px)",
-              }}
-            />
+        {!isMobile && <DashboardSidebar username={username} onLogout={handleLogout} />}
 
-            {/* Top accent line */}
-            <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-60 shrink-0" />
-
-            {/* ── SYSTEM STATUS (Replaces Logo for more Nav room) ── */}
-            <div className="p-[20px_14px_8px] relative z-10 w-full">
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-emerald-500/5 border border-emerald-500/20 rounded-md shadow-[inset_0_0_10px_rgba(16,185,129,0.05)] text-[9px] tracking-[0.2em] font-bold text-emerald-500 uppercase overflow-hidden">
-                <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                <span className="truncate">UPLINK_SECURE</span>
-              </div>
-            </div>
-
-            {/* ── NAV LINKS ── */}
-            <nav className="flex-1 p-[16px_10px] flex flex-col gap-1 relative z-10">
-              <div className="text-[9px] tracking-[0.22em] text-accent/25 font-bold px-1 pb-2 uppercase">
-                navigation
-              </div>
-              {navItems.map((item) => (
-                <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
-              ))}
-              <div className="my-2 h-px bg-accent/[0.06]" />
-              <NavLink
-                href="/settings"
-                label="OPERATOR_SETTINGS"
-                iconNode={<Settings size={13} strokeWidth={2.5} />}
-              />
-            </nav>
-
-            {/* ── USER + LOGOUT ── */}
-            <div className="p-[14px_12px] border-t border-accent/[0.08] relative z-10">
-              <div className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-accent/[0.04] rounded-md border border-accent/10 hover:border-accent/30 transition-colors group cursor-default">
-                <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)] transition-all duration-300">
-                  ◉
-                </span>
-                <div className="overflow-hidden">
-                  <div className="text-[9px] text-accent/35 tracking-[0.18em] mb-[2px]">OPERATOR</div>
-                  <div className="text-[10px] text-accent/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
-                    {username ?? "UNKNOWN"}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-1.5 py-[9px] px-[14px] bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/60 rounded-md text-red-500/50 hover:text-red-300 text-[10px] font-bold tracking-[0.2em] font-mono cursor-pointer transition-all duration-200 group"
-              >
-                <span className="text-[11px] transition-all group-hover:drop-shadow-[0_0_8px_rgba(var(--color-red-500),0.5)]">⏻</span>
-                <span className="transition-all group-hover:drop-shadow-[0_0_8px_rgba(var(--color-red-500),0.5)]">DISCONNECT</span>
-              </button>
-
-              <div className="mt-3 text-[8px] text-accent/15 tracking-[0.15em] text-center uppercase">
-                LOGIC-ARENA © 2026
-              </div>
-            </div>
-          </aside>
-        )}
-
-        {/* ── MAIN CONTENT ── */}
         <main className={`flex-1 flex flex-col overflow-x-hidden overflow-y-auto bg-bg-primary relative scroll-smooth scrollbar-thin scrollbar-thumb-accent/10 scrollbar-track-transparent ${isMobile ? "pt-12 pb-[calc(80px+env(safe-area-inset-bottom))] max-w-[100vw]" : ""}`}>
-          
-          {/* ── DESKTOP TOP HEADER ── */}
-          {!isMobile && (
-            <header className="sticky top-0 z-40 w-full bg-bg-primary/90 backdrop-blur-xl border-b border-accent/[0.08] p-[16px_28px] flex items-center justify-between shrink-0 shadow-[0_10px_40px_rgba(var(--accent-rgb),0.05)]">
-              <div>
-                <div className="text-[9px] tracking-[0.25em] text-accent/60 font-bold mb-1.5 uppercase">
-                  // SYS_v2.2.0
-                </div>
-                <h1 className="m-0 text-[18px] font-black tracking-[0.25em] text-accent leading-none [text-shadow:0_0_8px_rgba(var(--accent-rgb),0.8),0_0_15px_rgba(var(--accent-rgb),0.3)]">
-                  LOGIC ARENA
-                </h1>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 px-3 py-1.5 border border-accent/20 bg-accent/5 rounded-md text-[9px] tracking-[0.2em] font-bold text-accent/60 shadow-[inset_0_0_10px_rgba(var(--accent-rgb),0.05)] uppercase max-w-[200px]">
-                  <span className="shrink-0 text-accent/40">NODE:</span>
-                  <span className="text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.6)] truncate">
-                    {username || "UNKNOWN"}
-                  </span>
-                </div>
-                <ThemeSwitcher variant="minimal" />
-              </div>
-            </header>
-          )}
+          {!isMobile && <DashboardHeader username={username} />}
           {children}
         </main>
 
         {isMobile && <MobileNav />}
 
-        {/* ── TOAST ── */}
-        {toast && (
-          <div
-            className="fixed left-1/2 z-[100] font-mono text-[11px] tracking-[0.15em] px-5 py-3 rounded-lg border pointer-events-none whitespace-nowrap"
-            style={{
-              bottom: isMobile ? "96px" : "24px",
-              transform: "translateX(-50%)",
-              animation: "fadeInUp 0.25s ease",
-              background:
-                toast.type === "info"
-                  ? "rgba(var(--accent-rgb),0.08)"
-                  : "rgba(var(--color-red-500),0.10)",
-              border: `1px solid ${toast.type === "info"
-                ? "rgba(var(--accent-rgb),0.35)"
-                : "rgba(var(--color-red-500),0.35)"
-                }`,
-              color: toast.type === "info" ? "var(--accent)" : "#fca5a5",
-              boxShadow: toast.type === "info"
-                ? "0 0 20px rgba(var(--accent-rgb),0.1)"
-                : "0 0 20px rgba(var(--color-red-500),0.1)",
-            }}
-          >
-            {toast.message}
-          </div>
-        )}
+        <ToastNotification toast={toast} isMobile={isMobile} />
 
-        {/* ── CHALLENGE MODAL ── */}
         {incomingChallenge && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-card/60 backdrop-blur-sm">
-            <div
-              className="border border-accent/30 bg-bg-primary rounded-xl p-8 max-w-sm w-full mx-4 font-mono"
-              style={{
-                boxShadow: "0 0 40px rgba(var(--accent-rgb),0.15)",
-                animation: "modalIn 0.2s ease",
-              }}
-            >
-              <p className="text-[9px] tracking-[0.28em] text-accent/35 mb-2">
-                // INCOMING_TRANSMISSION
-              </p>
-              <h2 className="text-accent font-black tracking-[0.18em] text-xl mb-2">
-                COMBAT REQUEST
-              </h2>
-              <p className="text-accent/60 text-[11px] tracking-[0.12em] mb-6">
-                <span className="text-accent">{incomingChallenge.challengerName}</span>
-                {" "}challenges you to combat.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    acceptChallenge(incomingChallenge.challengerId);
-                    setIncoming(null);
-                  }}
-                  className="flex-1 py-2 text-[11px] tracking-[0.18em] font-bold border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 rounded-lg transition-all"
-                >
-                  ACCEPT
-                </button>
-                <button
-                  onClick={() => setIncoming(null)}
-                  className="flex-1 py-2 text-[11px] tracking-[0.18em] font-bold border border-red-500/30 bg-red-500/5 text-red-500/70 hover:bg-red-500/15 rounded-lg transition-all"
-                >
-                  DECLINE
-                </button>
-              </div>
-            </div>
-          </div>
+          <ChallengeModal
+            challenge={incomingChallenge}
+            onAccept={(id) => {
+              acceptChallenge(id);
+              setIncoming(null);
+            }}
+            onDecline={() => setIncoming(null)}
+          />
         )}
       </div>
     </SocketContext.Provider>
