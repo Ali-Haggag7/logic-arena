@@ -74,7 +74,29 @@ export class Lexer {
 
         switch (this.char) {
             case '<':
+                if (this.peekChar() === '=') {
+                    this.readChar();
+                    token = { type: TokenType.OPERATOR, value: "<=" };
+                } else {
+                    token = { type: TokenType.OPERATOR, value: '<' };
+                }
+                break;
             case '>':
+                if (this.peekChar() === '=') {
+                    this.readChar();
+                    token = { type: TokenType.OPERATOR, value: ">=" };
+                } else {
+                    token = { type: TokenType.OPERATOR, value: '>' };
+                }
+                break;
+            case '!':
+                if (this.peekChar() === '=') {
+                    this.readChar();
+                    token = { type: TokenType.OPERATOR, value: "!=" };
+                } else {
+                    token = { type: TokenType.EOF, value: "" };
+                }
+                break;
             case '*':
             case '/':
             case '%':
@@ -92,7 +114,13 @@ export class Lexer {
                 break;
             case '"':
                 token = { type: TokenType.STRING, value: this.readString() };
-                return token; 
+                return token;
+            case '(':
+                token = { type: TokenType.LPAREN, value: "(" };
+                break;
+            case ')':
+                token = { type: TokenType.RPAREN, value: ")" };
+                break;
             case ',':
                 token = { type: TokenType.COMMA, value: "," };
                 break;

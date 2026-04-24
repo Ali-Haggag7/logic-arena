@@ -5,7 +5,8 @@ export const KEYWORDS = new Set([
   "FIRE", "BURST_FIRE",
   "MOVE", "MOVE_FAST", "STOP", "BACKUP",
   "PATHFIND", "SET",
-  "NOT", "TRUE", "FALSE",
+  "NOT", "AND", "OR",
+  "TRUE", "FALSE",
   "WAIT", "SCAN"
 ]);
 

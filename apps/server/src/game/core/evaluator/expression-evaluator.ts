@@ -32,6 +32,12 @@ export class ExpressionEvaluator {
       case NodeType.BinaryExpression: {
         const left  = this.evaluateExpression(robot, expression.left,  memory, getRobots);
         const right = this.evaluateExpression(robot, expression.right, memory, getRobots);
+
+        // Logical operators — must come BEFORE the numeric type guard (operands are booleans)
+        if (expression.operator === 'AND') return Boolean(left) && Boolean(right);
+        if (expression.operator === 'OR')  return Boolean(left) || Boolean(right);
+
+        // Arithmetic operators require numbers
         if (typeof left !== 'number' || typeof right !== 'number') return undefined;
         switch (expression.operator) {
           case '+': return left + right;
@@ -53,11 +59,13 @@ export class ExpressionEvaluator {
       case NodeType.ComparisonExpression: {
         const lv = this.evaluateExpression(robot, expression.left,  memory, getRobots);
         const rv = this.evaluateExpression(robot, expression.right, memory, getRobots);
-        if (typeof lv !== typeof rv) return false;
         switch (expression.operator) {
-          case '<':  return (lv as number) < (rv as number);
-          case '>':  return (lv as number) > (rv as number);
+          case '<':  return (lv as number) <  (rv as number);
+          case '>':  return (lv as number) >  (rv as number);
+          case '<=': return (lv as number) <= (rv as number);
+          case '>=': return (lv as number) >= (rv as number);
           case '==': return lv === rv;
+          case '!=': return lv !== rv;
           default:   return false;
         }
       }

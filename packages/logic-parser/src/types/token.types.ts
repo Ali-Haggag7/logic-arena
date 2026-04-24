@@ -8,6 +8,8 @@ export enum TokenType {
   ASSIGN = "ASSIGN",
   COMMA = "COMMA",
   COLON = "COLON",
+  LPAREN = "LPAREN",
+  RPAREN = "RPAREN",
 }
 
 export interface Token {

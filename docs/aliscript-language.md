@@ -24,7 +24,7 @@ AliScript is a simple, line-based scripting language specifically designed for p
 - `WAIT [ticks]`: Suspends code execution for the defined cycles (60 ticks = 1 second).
 
 ### Sensors & Combat
-- `SCAN`: Populates `scanned_distance`, `scanned_angle`, and `scanned_spotted` immediately without moving the bot.
+- `SCAN`: Rotates the FOV cone +15° per call (sweeping the environment) and populates `scanned_distance`, `scanned_angle`, and `scanned_spotted`. Costs 5 energy but is not blocked by STASIS.
 - `FIRE`: Standard projectile (500ms cooldown).
 - `BURST_FIRE`: Rapid multi-fire variant.
 
@@ -34,11 +34,37 @@ Operators `+`, `-`, `*`, `/`, `%` are supported in calculations.
 - `NOT`: Inverts a boolean condition. Example: `IF NOT spotted THEN SCAN`
 
 ### Memory Interface
-ReadOnly Core Variables:
-- `health`: Core Integrity (0-100).
-- `distance`: Immediate distance to nearest enemy (if visible).
-- `spotted`: TRUE if an enemy is in the standard FOV.
-- `rotation`: Facing angle in radians.
+
+#### Read-Only — Core
+- `health`: Core Integrity (0–100).
+- `rotation` / `angle` / `rot`: Facing angle in radians. All three are writable via `SET`.
+- `fovDirection`: Scanner FOV cone angle — independent from body rotation. Writable via `SET`.
+- `lockVision`: SET to `TRUE` to sync `fovDirection` to `rotation` every tick.
+- `distance`: Distance to nearest **visible** (in-FOV) enemy. `Infinity` if none.
+- `spotted`: TRUE if any enemy is within the FOV cone. Alias for `CAN_SEE_ENEMY`.
+- `bullet_speed`: Projectile velocity constant (400 arena units/sec).
+
+#### Read-Only — Energy
+- `MY_ENERGY`: Current energy level (0–1000).
+- `ENERGY_PCT`: Energy as a percentage (0–100).
+- `IN_STASIS`: TRUE when energy ≤ 0. Movement and fire are blocked until energy ≥ 50.
+
+#### Read-Only — FOV / Visibility
+- `CAN_SEE_ENEMY`: TRUE if one or more enemies are within the current FOV cone.
+- `VISIBLE_ENEMY_COUNT`: Number of enemies currently within the FOV cone.
+- `NEAREST_VISIBLE_X` / `NEAREST_VISIBLE_Y`: Coordinates of the nearest visible enemy (own position if none visible).
+- `FOV_ANGLE`: Current FOV cone angle in degrees (default 120°).
+
+#### Read-Only — Scan Memory (populated by `SCAN`)
+- `scanned_distance`: Distance to nearest visible enemy as of the last `SCAN` call.
+- `scanned_angle`: Angle toward nearest visible enemy as of the last `SCAN` call.
+- `scanned_spotted`: TRUE if any enemy was visible during the last `SCAN` call.
+
+#### Read-Only — Advanced Targeting (undocumented until now)
+- `target_vx`: Velocity of the nearest visible enemy on the X axis. Useful for predictive leading shots.
+- `target_vy`: Velocity of the nearest visible enemy on the Y axis.
+- `last_spotted_x`: Last **known** X position of the nearest visible enemy. Retained between ticks — updated only when the enemy is within FOV.
+- `last_spotted_y`: Last **known** Y position of the nearest visible enemy.
 
 ## Battle Tactics (High-Level Examples)
 
