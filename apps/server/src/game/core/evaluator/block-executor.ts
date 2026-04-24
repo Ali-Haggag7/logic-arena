@@ -5,7 +5,7 @@ import {
   CallStatement, WaitStatement, ScanStatement, FunctionDeclaration
 } from '../../../../../../packages/logic-parser/src';
 import { ActionExecutor } from '../executor';
-import { ExpressionEvaluator } from './expression-evaluator';
+import { ExpressionEvaluator } from './expression-facade';
 import { CONSTANTS } from './types';
 
 export class BlockExecutor {

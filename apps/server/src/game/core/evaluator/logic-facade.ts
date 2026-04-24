@@ -1,7 +1,7 @@
 import { GameLoop } from '@logic-arena/engine';
 import { Program } from '../../../../../../packages/logic-parser/src';
 import { ActionExecutor } from '../executor';
-import { ExpressionEvaluator } from './expression-evaluator';
+import { ExpressionEvaluator } from './expression-facade';
 import { LogicRegistry } from './logic-registry';
 import { BlockExecutor } from './block-executor';
 import { syncRotationToMemory, syncFovToMemory } from './memory-sync';
