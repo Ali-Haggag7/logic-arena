@@ -1,109 +1,22 @@
 import { GameLoop, Robot } from '@logic-arena/engine';
 import {
-  Program, Statement, NodeType,
+  Statement, NodeType,
   IfStatement, WhileStatement, AssignmentStatement, ActionStatement,
-  CallStatement, FunctionDeclaration, WaitStatement, ScanStatement,
+  CallStatement, WaitStatement, ScanStatement, FunctionDeclaration
 } from '../../../../../../packages/logic-parser/src';
 import { ActionExecutor } from '../executor';
 import { ExpressionEvaluator } from './expression-evaluator';
-import { MemoryManager } from './memory-manager';
+import { CONSTANTS } from './types';
 
-export class LogicEvaluator {
-  private robotLogic = new Map<string, Program>();
-  private memories = new MemoryManager();
-  private expressionEvaluator = new ExpressionEvaluator();
-  private functions = new Map<string, Map<string, FunctionDeclaration>>();
-  private readonly MAX_WHILE_ITERS = 10;
-  private readonly MAX_TICK_DURATION_MS = 5;
+export class BlockExecutor {
+  constructor(
+    private gameLoop: GameLoop,
+    private actionExecutor: ActionExecutor,
+    private expressionEvaluator: ExpressionEvaluator,
+    private functions: Map<string, Map<string, FunctionDeclaration>>
+  ) {}
 
-  constructor(private gameLoop: GameLoop, private actionExecutor: ActionExecutor) { }
-
-  // ---------------------------------------------------------------------------
-  // Script management
-  // ---------------------------------------------------------------------------
-
-  setLogic(robotId: string, ast: Program): void {
-    this.robotLogic.set(robotId, ast);
-    this.memories.initialize(robotId);
-    this.actionExecutor.clearState(robotId);
-
-    const funcs = new Map<string, FunctionDeclaration>();
-    ast.body.forEach(stmt => {
-      if (stmt.type === NodeType.FunctionDeclaration) {
-        funcs.set((stmt as FunctionDeclaration).name.value, stmt as FunctionDeclaration);
-      }
-    });
-    this.functions.set(robotId, funcs);
-  }
-
-  clearAllLogic(): void {
-    this.robotLogic.clear();
-    this.memories.clearAll();
-    this.functions.clear();
-  }
-
-  clearLogicForRobot(robotId: string): void {
-    this.robotLogic.delete(robotId);
-    this.memories.clearForRobot(robotId);
-    this.functions.delete(robotId);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Per-tick evaluation entry point
-  // ---------------------------------------------------------------------------
-
-  evaluate(robotId: string): void {
-    const program = this.robotLogic.get(robotId);
-    const robot = this.gameLoop.getRobots().find(r => r.id === robotId);
-    if (!program || !robot || robot.health <= 0) return;
-
-    const memory = this.memories.getMemory(robotId);
-
-    // Honour WAIT ticks
-    const waitTicks = (memory['___waitTicks'] as number) ?? 0;
-    if (waitTicks > 0) {
-      memory['___waitTicks'] = waitTicks - 1;
-      return;
-    }
-
-    // Sync physical rotational state into script memory each tick
-    // so `set rotation = ...` knows the actual current facing.
-    // All aliases (rotation / angle / rot) are synchronized simultaneously.
-    memory['rotation'] = robot.rotation;
-    memory['angle'] = robot.rotation;
-    memory['rot'] = robot.rotation;
-    memory['fovDirection'] = robot.fovDirection;
-
-    // --- FOV-aware last_spotted memory ---
-    // Only update last_spotted_x/y when the enemy is WITHIN the robot's FOV.
-    // This enforces true blindness: a robot that hasn't scanned toward the enemy
-    // retains the last known position but cannot refresh it.
-    const visibleRobots = robot.visibleEntities?.robots ?? [];
-    if (visibleRobots.length > 0) {
-      // Use nearest visible enemy
-      let nearest = visibleRobots[0];
-      let nearestDst = Infinity;
-      for (const r of visibleRobots) {
-        const dx = r.position.x - robot.position.x;
-        const dy = r.position.y - robot.position.y;
-        const dst = dx * dx + dy * dy;
-        if (dst < nearestDst) { nearestDst = dst; nearest = r; }
-      }
-      memory['last_spotted_x'] = nearest.position.x;
-      memory['last_spotted_y'] = nearest.position.y;
-    }
-    // If nothing visible, last_spotted_x/y remain from the previous tick
-    // (players must implement their own "forget after N ticks" logic)
-
-    const tickStart = Date.now();
-    this.executeBlock(robotId, robot, program.body, memory, tickStart);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Statement execution
-  // ---------------------------------------------------------------------------
-
-  private executeBlock(
+  executeBlock(
     robotId: string,
     robot: Robot,
     statements: Statement[],
@@ -112,7 +25,7 @@ export class LogicEvaluator {
   ): void {
     for (const stmt of statements) {
       if (robot.health <= 0) return;
-      if (Date.now() - tickStart > this.MAX_TICK_DURATION_MS) {
+      if (Date.now() - tickStart > CONSTANTS.MAX_TICK_DURATION_MS) {
         console.warn(`[SANDBOX] Robot ${robotId} exceeded tick CPU limit`);
         return;
       }
@@ -165,7 +78,7 @@ export class LogicEvaluator {
         case NodeType.WhileStatement: {
           const whileStmt = stmt as WhileStatement;
           let iters = 0;
-          while (iters < this.MAX_WHILE_ITERS) {
+          while (iters < CONSTANTS.MAX_WHILE_ITERS) {
             const cond = this.expressionEvaluator.evaluateCondition(
               robot, whileStmt.condition, memory, () => this.gameLoop.getRobots(),
             );
@@ -184,8 +97,11 @@ export class LogicEvaluator {
 
         case NodeType.CallStatement: {
           const funcName = (stmt as CallStatement).functionName.value;
-          const func = this.functions.get(robotId)?.get(funcName);
-          if (func) this.executeBlock(robotId, robot, func.body, memory, tickStart);
+          const funcMap = this.functions.get(robotId);
+          if (funcMap) {
+            const func = funcMap.get(funcName);
+            if (func) this.executeBlock(robotId, robot, func.body, memory, tickStart);
+          }
           break;
         }
 

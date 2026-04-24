@@ -1,6 +1,6 @@
 import { Robot } from '@logic-arena/engine';
 import { Parser } from '../../../../../packages/logic-parser/src';
-import { LogicEvaluator } from '../../game/core/evaluator/logic-evaluator';
+import { LogicEvaluator } from '../../game/core/evaluator/index';
 
 const ROBOT_COLORS = ['#00ffff', '#ff00ff'];
 
