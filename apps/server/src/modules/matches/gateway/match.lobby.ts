@@ -10,7 +10,7 @@ export class MatchLobbyManager {
     private state: MatchState,
     private server: Server,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   async handleJoinMatch(
     client: AuthenticatedSocket,
@@ -158,13 +158,21 @@ export class MatchLobbyManager {
 
   handleManualCommand(client: AuthenticatedSocket, data: { command: string }) {
     if (client.matchId && this.state.matches.has(client.matchId)) {
-      const match = this.state.matches.get(client.matchId);
-      match?.receiveManualCommand(client.userId!, data.command);
-      client.emit('logicExecuted', {
-        robotId: client.userId,
-        action: data.command,
-        message: 'Manual command executed.',
-      });
+      const match = this.state.matches.get(client.matchId)!;
+      const executed = match.receiveManualCommand(client.userId!, data.command);
+      if (!executed) {
+        client.emit('logicExecuted', {
+          robotId: client.userId,
+          action: 'STASIS',
+          message: '[STASIS] Manual override rejected — robot is recharging.',
+        });
+      } else {
+        client.emit('logicExecuted', {
+          robotId: client.userId,
+          action: data.command.toUpperCase(),
+          message: `Manual override: ${data.command.toUpperCase()}`,
+        });
+      }
     }
   }
 }

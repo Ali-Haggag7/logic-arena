@@ -1,6 +1,10 @@
 import { Robot } from '@logic-arena/engine';
+import { DEFAULT_MAX_ENERGY } from '@logic-arena/engine';
 
-export function syncRotationToMemory(robot: Robot, memory: Record<string, unknown>): void {
+export function syncRotationToMemory(
+  robot: Robot,
+  memory: Record<string, unknown>,
+): void {
   // Sync physical rotational state into script memory each tick
   // so `set rotation = ...` knows the actual current facing.
   // All aliases (rotation / angle / rot) are synchronized simultaneously.
@@ -10,7 +14,10 @@ export function syncRotationToMemory(robot: Robot, memory: Record<string, unknow
   memory['fovDirection'] = robot.fovDirection;
 }
 
-export function syncFovToMemory(robot: Robot, memory: Record<string, unknown>): void {
+export function syncFovToMemory(
+  robot: Robot,
+  memory: Record<string, unknown>,
+): void {
   // --- FOV-aware last_spotted memory ---
   // Only update last_spotted_x/y when the enemy is WITHIN the robot's FOV.
   // This enforces true blindness: a robot that hasn't scanned toward the enemy
@@ -34,4 +41,17 @@ export function syncFovToMemory(robot: Robot, memory: Record<string, unknown>): 
   }
   // If nothing visible, last_spotted_x/y remain from the previous tick
   // (players must implement their own "forget after N ticks" logic)
+}
+
+export function syncEnergyToMemory(
+  robot: Robot,
+  memory: Record<string, unknown>,
+): void {
+  // Write live energy values into memory each tick so any cached variable
+  // (e.g. SET e = MY_ENERGY) is refreshed and script logic stays accurate.
+  const maxEnergy = robot.maxEnergy ?? DEFAULT_MAX_ENERGY;
+  const energy = robot.energy ?? maxEnergy;
+  memory['MY_ENERGY'] = energy;
+  memory['ENERGY_PCT'] = Math.round((energy / maxEnergy) * 100);
+  memory['IN_STASIS'] = robot.inStasis ?? false;
 }

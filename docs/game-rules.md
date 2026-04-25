@@ -24,21 +24,22 @@
 ## Energy System & STASIS
 *   **Energy Consumption:** 
     *   `MOVE` / `BACKUP`: 2 energy per tick.
-    *   `MOVE_FAST`: 5 energy per tick.
+    *   `MOVE_FAST`: 4 energy per tick.
     *   `PATHFIND`: 3 energy per tick.
-    *   `SCAN`: 5 energy per call.
-    *   `FIRE`: 50 energy per shot.
-    *   `BURST_FIRE`: 150 energy per burst.
-*   **Energy Regeneration:** Robots passively regenerate **3 energy per tick**.
-*   **STASIS:** If a robot's energy drops to 0, it enters a `STASIS` condition. During STASIS, all energy-intensive commands (`MOVE`, `FIRE`, `PATHFIND`, etc.) are completely blocked until energy passively regenerates back up to **50 energy or higher**. (Note: `SCAN` can still be executed in STASIS).
+    *   `SCAN`: 3 energy per call.
+    *   `FIRE`: 8 energy per shot.
+    *   `BURST_FIRE`: 18 energy per burst.
+*   **Energy Capacity:** Maximum energy is **100**.
+*   **Energy Regeneration:** Robots passively regenerate **60 energy per second** (time-based, exactly 3 per 20tps tick).
+*   **STASIS:** If a robot's energy drops to 0, it enters a `STASIS` condition. During STASIS, all energy-intensive commands (`MOVE`, `FIRE`, `PATHFIND`, `SCAN`, etc.) are blocked until energy passively regenerates back to **20 or higher**. Scripts continue executing — use `IF IN_STASIS THEN WAIT 10 END` to handle recharge gracefully.
 
 ## Vision and Scanning
 *   **Line of Sight:** Robots can only "see" other robots or objects that are within their `Sensor Range` and bounded natively within their FOV Cone Angle.
 *   **Scanning:** A robot can perform an active `SCAN` action to sweep its environment (+15° rotation of the scanner per call independant of the body), fetching precise distances and velocities cleanly tracking targets explicitly avoiding blind spots securely.
 
 ## Combat
-*   **Firing (`FIRE`):** Consumes 50 energy and incurs a 500ms cooldown. Fires a single projectile natively.
-*   **Burst Firing (`BURST_FIRE`):** Consumes 150 energy. Fires 3 projectiles exactly uniformly dispersed cleanly at `-8°`, `0°`, and `+8°` natively ensuring a horizontal spread staggering opponents perfectly gracefully natively.
+*   **Firing (`FIRE`):** Consumes 8 energy per shot with a 500ms cooldown.
+*   **Burst Firing (`BURST_FIRE`):** Consumes 18 energy per burst. Fires 3 projectiles exactly uniformly dispersed at `-8°`, `0°`, and `+8°` natively ensuring a horizontal spread staggering opponents perfectly gracefully natively.
 *   **Damage:** Projectiles deal damage upon impact and are destroyed upon target contact cleanly natively resolving array memory instantly.
 *   **Destruction:** A robot is destroyed when its health reaches 0. 
 

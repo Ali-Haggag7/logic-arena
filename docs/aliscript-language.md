@@ -50,9 +50,9 @@ Constants: `TRUE`, `FALSE`
 - `bullet_speed`: Projectile velocity constant (400 arena units/sec).
 
 #### Read-Only — Energy
-- `MY_ENERGY`: Current energy level (0–1000).
+- `MY_ENERGY`: Current energy level (0–100).
 - `ENERGY_PCT`: Energy as a percentage (0–100).
-- `IN_STASIS`: TRUE when energy ≤ 0. Movement and fire are blocked until energy ≥ 50.
+- `IN_STASIS`: TRUE when energy ≤ 0. Movement and fire are blocked until energy ≥ 20.
 
 #### Read-Only — FOV / Visibility
 - `CAN_SEE_ENEMY`: TRUE if one or more enemies are within the current FOV cone.
@@ -120,18 +120,20 @@ END
 ```
 
 ## Energy System
-Each action (movement and firing) consumes energy. Robots regenerate energy passively over time (3 energy per tick). Complex commands like `BURST_FIRE` and `MOVE_FAST` consume energy at a significantly higher rate.
+Each action (movement and firing) consumes energy. Robots regenerate **60 energy per second** passively (time-based). A typical `SCAN + MOVE` loop costs 5/tick vs 3/tick regen — net drain of 2/tick — so energy management is a core strategy. `WAIT` lets robots recover without acting.
 
 ### Energy Costs Table
-| Command | Energy Cost | blocked by STASIS |
+| Command | Energy Cost | Blocked by STASIS |
 | :--- | :--- | :--- |
 | `MOVE` | 2 per tick | Yes |
-| `MOVE_FAST` | 5 per tick | Yes |
+| `MOVE_FAST` | 4 per tick | Yes |
 | `BACKUP` | 2 per tick | Yes |
 | `STOP` | 0 | No |
 | `PATHFIND` | 3 per tick | Yes |
-| `SCAN` | 5 per call | No |
-| `FIRE` | 50 per shot | Yes |
-| `BURST_FIRE` | 150 per burst | Yes |
+| `SCAN` | 3 per call | Yes |
+| `FIRE` | 8 per shot | Yes |
+| `BURST_FIRE` | 18 per burst | Yes |
 | `WAIT` | 0 | No |
 | `SET` / Logic | 0 | No |
+
+> **Regen rate:** 60 energy/sec (3/tick at 20tps). STASIS exits at ≥20 energy (~0.33s recovery from 0).

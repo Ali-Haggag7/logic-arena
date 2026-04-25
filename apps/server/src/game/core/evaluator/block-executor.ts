@@ -1,8 +1,16 @@
 import { GameLoop, Robot } from '@logic-arena/engine';
 import {
-  Statement, NodeType,
-  IfStatement, WhileStatement, AssignmentStatement, ActionStatement,
-  CallStatement, WaitStatement, ScanStatement, FunctionDeclaration
+  Statement,
+  NodeType,
+  IfStatement,
+  WhileStatement,
+  AssignmentStatement,
+  ActionStatement,
+  CallStatement,
+  WaitStatement,
+  ScanStatement,
+  FunctionDeclaration,
+  ActionExpression,
 } from '../../../../../../packages/logic-parser/src';
 import { ActionExecutor } from '../executor';
 import { ExpressionEvaluator } from './expression-facade';
@@ -22,8 +30,21 @@ const ALLOWED_NODE_TYPES = new Set<string>([
 
 // ── Sandbox: allowed action command strings ─────────────────────────────────
 const ALLOWED_ACTION_COMMANDS = new Set<string>([
-  'MOVE', 'MOVE_FAST', 'BACKUP', 'STOP', 'PATHFIND',
-  'WAIT', 'SCAN', 'FIRE', 'BURST_FIRE',
+  'MOVE',
+  'MOVE_FAST',
+  'BACKUP',
+  'STOP',
+  'PATHFIND',
+  'WAIT',
+  'SCAN',
+  'FIRE',
+  'BURST_FIRE',
+]);
+
+// ── Commands blocked during STASIS (user's script can still read IN_STASIS and branch)
+// STOP and WAIT are intentionally excluded — they cost 0 energy and don't move the robot.
+const STASIS_BLOCKED_ACTION_CMDS = new Set([
+  'MOVE', 'MOVE_FAST', 'BACKUP', 'PATHFIND', 'FIRE', 'BURST_FIRE',
 ]);
 
 export class BlockExecutor {
@@ -31,7 +52,7 @@ export class BlockExecutor {
     private gameLoop: GameLoop,
     private actionExecutor: ActionExecutor,
     private expressionEvaluator: ExpressionEvaluator,
-    private functions: Map<string, Map<string, FunctionDeclaration>>
+    private functions: Map<string, Map<string, FunctionDeclaration>>,
   ) {}
 
   executeBlock(
@@ -41,6 +62,10 @@ export class BlockExecutor {
     memory: Record<string, unknown>,
     tickStart: number,
   ): void {
+    // Script execution continues during STASIS so users can branch on IN_STASIS.
+    // Movement/combat commands are blocked at the action level below.
+    // The physics layer (robot-updater.ts) enforces velocity=0 and no position updates.
+
     for (const stmt of statements) {
       if (robot.health <= 0) return;
       if (Date.now() - tickStart > CONSTANTS.MAX_TICK_DURATION_MS) {
@@ -50,22 +75,29 @@ export class BlockExecutor {
 
       // ── Whitelist gate — skip unknown node types silently ────────────────
       if (!ALLOWED_NODE_TYPES.has(stmt.type)) {
-        console.warn(`[SANDBOX] Skipping disallowed node type "${stmt.type}" for robot ${robotId}`);
+        console.warn(
+          `[SANDBOX] Skipping disallowed node type "${stmt.type}" for robot ${robotId}`,
+        );
         continue;
       }
 
       switch (stmt.type) {
-        // SET always executes — even in STASIS (preserves stateful scripts)
+        // SET executes normally when the robot is active
         case NodeType.AssignmentStatement: {
           const assign = stmt as AssignmentStatement;
           const val = this.expressionEvaluator.evaluateExpression(
-            robot, assign.value, memory, () => this.gameLoop.getRobots(),
+            robot,
+            assign.value,
+            memory,
+            () => this.gameLoop.getRobots(),
           );
           memory[assign.name.value] = val;
 
           const ROTATION_ALIASES = ['rotation', 'angle', 'rot'];
-          if (ROTATION_ALIASES.includes(assign.name.value) && typeof val === 'number') {
-
+          if (
+            ROTATION_ALIASES.includes(assign.name.value) &&
+            typeof val === 'number'
+          ) {
             if ((robot.collisionCooldown ?? 0) > 0) {
               memory['rotation'] = robot.rotation;
               memory['angle'] = robot.rotation;
@@ -76,11 +108,13 @@ export class BlockExecutor {
             robot.rotation = val;
             robot.fovDirection = val;
             robot.isManualRotation = true;
-
-          } else if (assign.name.value === 'fovDirection' && typeof val === 'number') {
+          } else if (
+            assign.name.value === 'fovDirection' &&
+            typeof val === 'number'
+          ) {
             robot.fovDirection = val;
           } else if (assign.name.value === 'lockVision') {
-            (robot as any).lockVision = Boolean(val);
+            robot.lockVision = Boolean(val);
           }
           break;
         }
@@ -89,26 +123,51 @@ export class BlockExecutor {
         case NodeType.IfStatement: {
           const ifStmt = stmt as IfStatement;
           const cond = this.expressionEvaluator.evaluateCondition(
-            robot, ifStmt.condition, memory, () => this.gameLoop.getRobots(),
+            robot,
+            ifStmt.condition,
+            memory,
+            () => this.gameLoop.getRobots(),
           );
           if (cond) {
-            this.executeBlock(robotId, robot, ifStmt.consequence, memory, tickStart);
+            this.executeBlock(
+              robotId,
+              robot,
+              ifStmt.consequence,
+              memory,
+              tickStart,
+            );
           } else if (ifStmt.alternate) {
-            this.executeBlock(robotId, robot, ifStmt.alternate, memory, tickStart);
+            this.executeBlock(
+              robotId,
+              robot,
+              ifStmt.alternate,
+              memory,
+              tickStart,
+            );
           }
           break;
         }
 
-        // WHILE always evaluates — stasis check is inside the action itself
+        // WHILE — condition and body still execute during STASIS
+        // so scripts can loop on IN_STASIS checks.
         case NodeType.WhileStatement: {
           const whileStmt = stmt as WhileStatement;
           let iters = 0;
           while (iters < CONSTANTS.MAX_WHILE_ITERS) {
             const cond = this.expressionEvaluator.evaluateCondition(
-              robot, whileStmt.condition, memory, () => this.gameLoop.getRobots(),
+              robot,
+              whileStmt.condition,
+              memory,
+              () => this.gameLoop.getRobots(),
             );
             if (!cond) break;
-            this.executeBlock(robotId, robot, whileStmt.body, memory, tickStart);
+            this.executeBlock(
+              robotId,
+              robot,
+              whileStmt.body,
+              memory,
+              tickStart,
+            );
             iters++;
           }
           break;
@@ -118,9 +177,14 @@ export class BlockExecutor {
           const action = (stmt as ActionStatement).consequence;
           const cmd = action.command.toUpperCase();
           if (!ALLOWED_ACTION_COMMANDS.has(cmd)) {
-            console.warn(`[SANDBOX] Skipping disallowed action "${cmd}" for robot ${robotId}`);
+            console.warn(
+              `[SANDBOX] Skipping disallowed action "${cmd}" for robot ${robotId}`,
+            );
             break;
           }
+          // Skip movement and combat commands during STASIS.
+          // STOP and WAIT are always allowed (they don't move the robot).
+          if (robot.inStasis && STASIS_BLOCKED_ACTION_CMDS.has(cmd)) break;
           this.executeActionIfOffCooldown(robotId, action, memory);
           break;
         }
@@ -130,7 +194,8 @@ export class BlockExecutor {
           const funcMap = this.functions.get(robotId);
           if (funcMap) {
             const func = funcMap.get(funcName);
-            if (func) this.executeBlock(robotId, robot, func.body, memory, tickStart);
+            if (func)
+              this.executeBlock(robotId, robot, func.body, memory, tickStart);
           }
           break;
         }
@@ -141,9 +206,14 @@ export class BlockExecutor {
           return; // Stop current block execution
         }
 
-        // SCAN always executes — costs energy but is not stasis-blocked
+        // SCAN is blocked during STASIS — it costs energy which the robot doesn't have.
         case NodeType.ScanStatement: {
-          this.actionExecutor.executeAction(robotId, stmt as ScanStatement, memory);
+          if (robot.inStasis) break;
+          this.actionExecutor.executeAction(
+            robotId,
+            stmt as ScanStatement,
+            memory,
+          );
           break;
         }
       }
@@ -152,7 +222,7 @@ export class BlockExecutor {
 
   private executeActionIfOffCooldown(
     robotId: string,
-    action: any,
+    action: ActionExpression,
     memory: Record<string, unknown>,
   ): void {
     const cmd = action.command.toUpperCase();

@@ -18,25 +18,25 @@ export interface FovConfig {
 // This is intentionally a lightweight snapshot — IDs + positions only.
 // ---------------------------------------------------------------------------
 export interface VisibleEntities {
-  robots:      Robot[];
+  robots: Robot[];
   projectiles: Projectile[];
-  obstacles:   Obstacle[];
+  obstacles: Obstacle[];
 }
 
 // ---------------------------------------------------------------------------
 // Robot
 // ---------------------------------------------------------------------------
 export interface Robot {
-  id:             string;
-  team:           'A' | 'B';
-  position:       Vector2;
-  rotation:       number;
-  velocity:       Vector2;
-  health:         number;
+  id: string;
+  team: 'A' | 'B';
+  position: Vector2;
+  rotation: number;
+  velocity: Vector2;
+  health: number;
   lastActionTime: number;
-  isAlive:        boolean;
-  code:           string;
-  memory:         Record<string, unknown>;
+  isAlive: boolean;
+  code: string;
+  memory: Record<string, unknown>;
 
   /** Color hex string used for rendering (e.g. '#00ffff'). */
   color?: string;
@@ -73,14 +73,14 @@ export interface Robot {
   // --- Energy / Battery (Feature 2) ---
   /**
    * Current energy level. Depletes on every AliScript command.
-   * Regenerates passively (+2/tick). Default: 1000.
+   * Regenerates passively (+3/tick). Default: 100.
    */
-  energy?:    number;
-  /** Maximum energy capacity. Default: 1000. */
+  energy?: number;
+  /** Maximum energy capacity. Default: 100. */
   maxEnergy?: number;
   /**
    * True when energy <= 0. Robot cannot move or fire in stasis.
-   * Cleared automatically when energy regenerates to >= 50.
+   * Cleared automatically when energy regenerates to >= 20.
    */
   inStasis?: boolean;
   /**
@@ -93,6 +93,8 @@ export interface Robot {
    * Never reset during the match.
    */
   totalDamageDealt?: number;
+  /** Tracks if an active command was executed this tick, disabling regen. */
+  executedCommandThisTick?: boolean;
 
   // --- Field of View (Feature 1) ---
   /**
@@ -118,11 +120,11 @@ export interface Robot {
 // Projectile
 // ---------------------------------------------------------------------------
 export interface Projectile {
-  id:       string;
-  ownerId:  string;
+  id: string;
+  ownerId: string;
   position: Vector2;
   velocity: Vector2;
-  team:     'A' | 'B';
+  team: 'A' | 'B';
 }
 
 // ---------------------------------------------------------------------------
@@ -136,22 +138,22 @@ export interface Projectile {
 export type ObstacleType = 'SOLID' | 'TRAP' | 'LAVA';
 
 export interface Obstacle {
-  id:        string;
-  type:      ObstacleType;
-  position:  Vector2;   // center position in arena units
-  width:     number;    // collision width
-  height:    number;    // collision height
-  rotation:  number;    // rotation in radians for visual variety
-  health?:   number;    // optional — destructible obstacles
+  id: string;
+  type: ObstacleType;
+  position: Vector2;   // center position in arena units
+  width: number;    // collision width
+  height: number;    // collision height
+  rotation: number;    // rotation in radians for visual variety
+  health?: number;    // optional — destructible obstacles
 }
 
 // ---------------------------------------------------------------------------
 // Game State
 // ---------------------------------------------------------------------------
 export interface GameState {
-  robots:      Robot[];
+  robots: Robot[];
   projectiles: Projectile[];
-  obstacles:   Obstacle[];
+  obstacles: Obstacle[];
 }
 
 // ---------------------------------------------------------------------------
@@ -160,6 +162,6 @@ export interface GameState {
 export type GameMode = 'COMBAT' | 'RACING' | 'TRAINING_SOLO';
 
 export interface GameConfig {
-  mode:                GameMode;
+  mode: GameMode;
   disableProjectiles?: boolean;
 }

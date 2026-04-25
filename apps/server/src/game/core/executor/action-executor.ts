@@ -1,6 +1,9 @@
 import { GameLoop, EnergyManager } from '@logic-arena/engine';
 import { Socket } from 'socket.io';
-import { ActionExpression, ScanStatement } from '../../../../../../packages/logic-parser/src';
+import {
+  ActionExpression,
+  ScanStatement,
+} from '../../../../../../packages/logic-parser/src';
 import { Pathfinder } from '../pathfinder/index';
 import { CooldownManager } from './cooldown-manager';
 import { MovementExecutor } from './movement-executor';
@@ -20,8 +23,12 @@ export class ActionExecutor {
     private energyManager: EnergyManager,
   ) {
     this.movementExecutor = new MovementExecutor(gameLoop, pathfinder);
-    this.combatExecutor   = new CombatExecutor(gameLoop, this.cooldowns, energyManager);
-    this.scanExecutor     = new ScanExecutor(gameLoop);
+    this.combatExecutor = new CombatExecutor(
+      gameLoop,
+      this.cooldowns,
+      energyManager,
+    );
+    this.scanExecutor = new ScanExecutor(gameLoop);
   }
 
   isBareActionOffCooldown(robotId: string, actionCommand: string): boolean {
@@ -45,14 +52,14 @@ export class ActionExecutor {
     // --- Energy gate ---
     // deduct() returns false if the robot is in STASIS and the command is blocked.
     // It still deducts cost for allowed commands (SCAN costs energy even in stasis).
-    const robot = this.gameLoop.getRobots().find(r => r.id === robotId);
+    const robot = this.gameLoop.getRobots().find((r) => r.id === robotId);
     if (!robot) return;
 
     const allowed = this.energyManager.deduct(robot, actionCommand);
     if (!allowed) {
       // Robot is in stasis and this command is blocked — emit STASIS hint once
       if (this.cooldowns.shouldEmitAction(robotId, 'STASIS')) {
-        this.connectedClients.forEach(client =>
+        this.connectedClients.forEach((client) =>
           client.emit('logicExecuted', {
             robotId,
             action: 'STASIS',
@@ -64,9 +71,14 @@ export class ActionExecutor {
       return;
     }
 
+    // Mark that the robot performed an active command (blocks regen for this tick)
+    if (actionCommand !== 'STOP') {
+      robot.executedCommandThisTick = true;
+    }
+
     // --- Emit logicExecuted to clients (rate-limited by cooldown) ---
     if (this.cooldowns.shouldEmitAction(robotId, actionCommand)) {
-      this.connectedClients.forEach(client =>
+      this.connectedClients.forEach((client) =>
         client.emit('logicExecuted', {
           robotId,
           action: actionCommand,

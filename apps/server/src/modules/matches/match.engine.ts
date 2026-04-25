@@ -2,6 +2,7 @@ import { GameLoop, Robot, GameConfig, GameMode } from '@logic-arena/engine';
 import { SandboxRunner } from '../../common/sandbox.runner';
 import { createRobot, parseAndSetLogic } from './robot-factory';
 import { createGameDependencies, GameDependencies } from './game-dependencies';
+import { NodeType, ActionExpression, ScanStatement } from '@logic-arena/logic-parser';
 
 export class MatchEngine {
   private gameLoop: GameLoop;
@@ -115,11 +116,33 @@ export class MatchEngine {
     if (index !== -1) this.initialPlayers[index].script = script;
   }
 
-  receiveManualCommand(userId: string, command: string): void {
+  /** Commands allowed via the manual override input. */
+  private static readonly MANUAL_ALLOWED = new Set([
+    'MOVE', 'MOVE_FAST', 'BACKUP', 'STOP', 'FIRE', 'BURST_FIRE', 'SCAN',
+  ]);
+
+  /**
+   * Execute a manual override command for a robot.
+   * Routes through actionExecutor.executeAction() which owns the full
+   * energy-deduction + stasis-check pipeline via energyManager.deduct().
+   * Returns false if blocked (stasis, unknown command, or robot not found).
+   */
+  receiveManualCommand(userId: string, command: string): boolean {
+    const cmd   = command.toUpperCase();
     const robot = this.gameLoop.getRobots().find(r => r.id === userId);
-    if (robot) {
-      console.log(`[MatchEngine] Manual command for ${userId}: ${command}`);
+    if (!robot || !robot.isAlive) return false;
+    if (!MatchEngine.MANUAL_ALLOWED.has(cmd)) return false;
+
+    if (cmd === 'SCAN') {
+      const scanStmt: ScanStatement = { type: NodeType.ScanStatement };
+      this.deps.actionExecutor.executeAction(userId, scanStmt, {});
+    } else {
+      const action: ActionExpression = { type: NodeType.ActionExpression, command: cmd, args: [] };
+      this.deps.actionExecutor.executeAction(userId, action, {});
     }
+
+    console.log(`[MatchEngine] Manual command for ${userId}: ${cmd}`);
+    return true;
   }
 
   // ---------------------------------------------------------------------------

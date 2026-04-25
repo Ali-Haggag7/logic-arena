@@ -14,35 +14,44 @@ const SPAWN_POSITIONS = [
   { x: 150, y: 450 },
 ];
 
-export function createRobot(id: string, script: string, index: number, colorOverride?: string): Robot {
+export function createRobot(
+  id: string,
+  script: string,
+  index: number,
+  colorOverride?: string,
+): Robot {
   const spawn = SPAWN_POSITIONS[index % SPAWN_POSITIONS.length];
   return {
     id,
-    position:          { ...spawn },
-    health:            100,
-    color:             colorOverride || ROBOT_COLORS[index % ROBOT_COLORS.length],
-    velocity:          { x: 0, y: 0 },
-    rotation:          0,
-    isAlive:           true,
-    team:              index % 2 === 0 ? 'A' : 'B',
-    lastActionTime:    0,
-    code:              script,
-    memory:            {},
+    position: { ...spawn },
+    health: 100,
+    color: colorOverride || ROBOT_COLORS[index % ROBOT_COLORS.length],
+    velocity: { x: 0, y: 0 },
+    rotation: 0,
+    isAlive: true,
+    team: index % 2 === 0 ? 'A' : 'B',
+    lastActionTime: 0,
+    code: script,
+    memory: {},
     // Energy fields — EnergyManager.initRobot() will also set these,
     // but we set them here for clarity and to avoid undefined on first tick.
-    energy:             1000,
-    maxEnergy:          1000,
-    inStasis:           false,
+    energy: 100,
+    maxEnergy: 100,
+    inStasis: false,
     totalEnergyConsumed: 0,
-    totalDamageDealt:    0,
+    totalDamageDealt: 0,
     // FOV fields
-    fov:          { angle: 120, range: 300 },
+    fov: { angle: 120, range: 300 },
     fovDirection: 0,
     visibleEntities: { robots: [], projectiles: [], obstacles: [] },
   };
 }
 
-export function parseAndSetLogic(id: string, script: string, logicEvaluator: LogicEvaluator): void {
+export function parseAndSetLogic(
+  id: string,
+  script: string,
+  logicEvaluator: LogicEvaluator,
+): void {
   try {
     const parser = new Parser(script);
     const ast = parser.parse();

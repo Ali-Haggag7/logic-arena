@@ -1,4 +1,8 @@
-import { Program, FunctionDeclaration, NodeType } from '../../../../../../packages/logic-parser/src';
+import {
+  Program,
+  FunctionDeclaration,
+  NodeType,
+} from '../../../../../../packages/logic-parser/src';
 import { MemoryManager } from './memory-manager';
 import { ActionExecutor } from '../executor';
 
@@ -15,9 +19,12 @@ export class LogicRegistry {
     this.actionExecutor.clearState(robotId);
 
     const funcs = new Map<string, FunctionDeclaration>();
-    ast.body.forEach(stmt => {
+    ast.body.forEach((stmt) => {
       if (stmt.type === NodeType.FunctionDeclaration) {
-        funcs.set((stmt as FunctionDeclaration).name.value, stmt as FunctionDeclaration);
+        funcs.set(
+          (stmt as FunctionDeclaration).name.value,
+          stmt as FunctionDeclaration,
+        );
       }
     });
     this.functions.set(robotId, funcs);
@@ -33,5 +40,15 @@ export class LogicRegistry {
     this.robotLogic.delete(robotId);
     this.memories.clearForRobot(robotId);
     this.functions.delete(robotId);
+  }
+
+  /**
+   * Reset a robot's runtime execution state without touching its AST or functions.
+   * Called when the robot exits STASIS so it re-executes from the top of its script
+   * with a clean slate — no stale variables, no pending waitTicks, no cooldowns.
+   */
+  resetRuntimeState(robotId: string): void {
+    this.memories.initialize(robotId);
+    this.actionExecutor.clearState(robotId);
   }
 }

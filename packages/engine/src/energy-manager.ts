@@ -4,14 +4,14 @@ import { Robot } from './types';
 // Energy costs per AliScript command (energy units per invocation/tick)
 // ---------------------------------------------------------------------------
 export const ENERGY_COSTS: Readonly<Record<string, number>> = {
-  MOVE:        1,
-  MOVE_FAST:   2,   // was 3
-  BACKUP:      1,
-  ROTATE:      0.5,
-  FIRE:        8,   // was 15
-  BURST_FIRE:  15,  // was 20  (×3 shots = 45 total; higher than FIRE's 8 is intentional)
-  SCAN:        1,   // was 5
-  PATHFIND:    2,
+  MOVE:        2,
+  MOVE_FAST:   4,
+  BACKUP:      2,
+  ROTATE:      0,
+  FIRE:        8,
+  BURST_FIRE:  18,
+  SCAN:        3,
+  PATHFIND:    3,
   // Free — cognitive only:
   STOP:        0,
   SET:         0,
@@ -24,17 +24,21 @@ export const ENERGY_COSTS: Readonly<Record<string, number>> = {
 // Thresholds and defaults
 // ---------------------------------------------------------------------------
 
-/** Passive energy regeneration per game tick. */
-export const ENERGY_REGEN_PER_TICK = 3; // was 2 — rebalanced alongside cost reductions
+/**
+ * Passive energy regeneration rate (energy units per second).
+ * Time-based — consistent regardless of physics frame rate.
+ * At 60/sec with STASIS_EXIT_THRESHOLD=20, recovery takes ~0.33s.
+ */
+export const ENERGY_REGEN_PER_SECOND = 60;
 
 /** Energy level at which a robot enters STASIS (cannot move/fire). */
 export const STASIS_ENTRY_THRESHOLD = 0;
 
 /** Energy level required to exit STASIS. */
-export const STASIS_EXIT_THRESHOLD = 50;
+export const STASIS_EXIT_THRESHOLD = 20;
 
 /** Default starting / max energy for a robot. */
-export const DEFAULT_MAX_ENERGY = 1000;
+export const DEFAULT_MAX_ENERGY = 100;
 
 /**
  * Commands that are blocked during STASIS.
@@ -69,18 +73,23 @@ export class EnergyManager {
   }
 
   /**
-   * Apply passive energy regeneration for one tick.
-   * Clears STASIS when energy reaches the exit threshold.
+   * Apply passive energy regeneration for one physics frame.
+   * Regen only occurs when the robot is in STASIS (+3/tick).
+   * Active robots do not regenerate energy, even when idle.
    */
   regen(robot: Robot): void {
     if (!robot.isAlive) return;
 
-    const max = robot.maxEnergy ?? DEFAULT_MAX_ENERGY;
-    robot.energy = Math.min(max, (robot.energy ?? 0) + ENERGY_REGEN_PER_TICK);
+    // Reset flag for next tick (even though active regen is removed)
+    robot.executedCommandThisTick = false;
 
-    // Exit stasis once energy has recovered sufficiently
-    if (robot.inStasis && (robot.energy ?? 0) >= STASIS_EXIT_THRESHOLD) {
-      robot.inStasis = false;
+    if (robot.inStasis) {
+      const max = robot.maxEnergy ?? DEFAULT_MAX_ENERGY;
+      robot.energy = Math.min(max, (robot.energy ?? 0) + 3);
+      
+      if (robot.energy >= STASIS_EXIT_THRESHOLD) {
+        robot.inStasis = false;
+      }
     }
   }
 
@@ -108,6 +117,11 @@ export class EnergyManager {
       // Enter stasis when energy hits zero
       if ((robot.energy ?? 0) <= STASIS_ENTRY_THRESHOLD) {
         robot.inStasis = true;
+        // Block the command that caused the depletion too —
+        // prevents a final MOVE/FIRE from executing at zero energy.
+        if (STASIS_BLOCKED_COMMANDS.has(cmd)) {
+          return false;
+        }
       }
     }
 

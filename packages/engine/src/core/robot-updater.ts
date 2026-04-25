@@ -10,22 +10,35 @@ export function updateRobotPhysics(
   arenaW: number,
   arenaH: number,
   energyManager: EnergyManager,
-  deltaTime: number
+  deltaTime: number,
 ): void {
   if (!robot.isAlive) {
     robot.velocity = { x: 0, y: 0 };
     return;
   }
 
-  // --- Passive energy regeneration (per physics tick) ---
+  // --- Passive energy regeneration (conditional per tick) ---
+  // Regen runs unconditionally here, but EnergyManager decides the amount.
   energyManager.regen(robot);
+
+  // --- STASIS: complete freeze ---
+  // Zero velocity AND return immediately. Nothing below here can execute:
+  //   - no collision checks (which could impart bounce velocity)
+  //   - no position integration (which would apply any residual velocity)
+  //   - no rotation updates (body and FOV stay frozen)
+  //   - no lockVision sync
+  // The ONLY thing that runs during STASIS is regen (above).
+  if (robot.inStasis) {
+    robot.velocity.x = 0;
+    robot.velocity.y = 0;
+    return;
+  }
 
   // --- Reset per-tick transient flags ---
   robot.insideLava = false;
   robot.speedMultiplier = 1.0;
 
   // Boundary + Obstacle Collisions
-  // Snapshot hitWallTimestamp before so we can detect if collision fired this tick
   const prevHitWall = robot.hitWallTimestamp ?? 0;
   checkWallBounds(robot, arenaW, arenaH);
   for (const obstacle of obstacles) {
@@ -56,8 +69,8 @@ export function updateRobotPhysics(
   // Clear the manual rotation flag so the next tick the physics can drive it naturally
   robot.isManualRotation = false;
 
-  // --- lockVision: sync fovDirection to rotation every tick unless manually overridden ---  
-  if ((robot as any).lockVision) {
+  // --- lockVision: sync fovDirection to rotation every tick unless manually overridden ---
+  if (robot.lockVision) {
     robot.fovDirection = robot.rotation;
   }
 
@@ -67,8 +80,6 @@ export function updateRobotPhysics(
   robot.position.y += robot.velocity.y * speed * deltaTime;
 
   // Update facing rotation from velocity direction.
-  // 1. If actively in a bounce trajectory (isCoolingDown), FORCE the body to face the escape trajectory.
-  // 2. Otherwise, skip if script manually set rotation or if wall bounce already set it this tick.
   const vMag = Math.hypot(robot.velocity.x, robot.velocity.y);
   if ((isCoolingDown && vMag > 0.001) || (!robot.isManualRotation && !hitWallThisTick && vMag > 0.001)) {
     robot.rotation = Math.atan2(robot.velocity.y, robot.velocity.x);
