@@ -5,6 +5,7 @@ import { ThemeProvider } from "../providers/ThemeProvider";
 import Footer from "../components/Footer";
 import { MobileHeader } from "../components/MobileHeader";
 import { MobileNav } from "../components/MobileNav";
+import PullToRefresh from "../components/PullToRefresh";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +58,9 @@ export default function RootLayout({
           <MobileHeader />
 
           {/* Page content — each route group manages its own inner layout */}
-          <main className="flex-1">{children}</main>
+          <PullToRefresh>
+            <main className="flex-1">{children}</main>
+          </PullToRefresh>
 
           {/* Global footer — self-suppresses on /arena via FOOTER_SUPPRESSED_PATHS */}
           <Footer />

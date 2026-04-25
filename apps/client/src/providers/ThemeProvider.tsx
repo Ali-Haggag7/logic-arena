@@ -2,21 +2,17 @@
 
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
+import { ThemeProvider as NextThemeProvider } from "next-themes";
 
 const THEME_COLORS: Record<string, string> = {
   cyberpunk: "#030712",
-  light: "#f8fafc",
-  desert: "#fdf4e3",
+  light: "#ffffff",
+  desert: "#fdf6e3",
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProviderInner>{children}</ThemeProviderInner>
-  );
+  return <ThemeProviderInner>{children}</ThemeProviderInner>;
 }
-
-// Split into inner so useTheme works after NextThemeProvider mounts
-import { ThemeProvider as NextThemeProvider } from "next-themes";
 
 function ThemeProviderInner({ children }: { children: React.ReactNode }) {
   return (
@@ -32,17 +28,20 @@ function ThemeProviderInner({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Keeps <meta name="theme-color"> in sync with the active theme */
+/** Keeps <meta name="theme-color"> AND body background in sync */
 function ThemeMetaSync() {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+
     const color = THEME_COLORS[resolvedTheme ?? "cyberpunk"] ?? "#030712";
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) {
-      meta.setAttribute("content", color);
-    }
+
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", color);
+
+    document.body.style.backgroundColor = color;
   }, [resolvedTheme]);
 
   return null;
