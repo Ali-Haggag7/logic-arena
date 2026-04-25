@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { apiClient } from "../../../lib/api-client";
 import { CustomSelect } from "./components/CustomSelect";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
@@ -10,7 +9,9 @@ import { ScriptSkeleton } from "./components/ScriptSkeleton";
 import { ScriptCard, RobotScript } from "./components/ScriptCard";
 import { ProtocolForm } from "./components/ProtocolForm";
 import { EditScriptModal } from "./components/EditScriptModal";
-import { Plus, ChevronDown, Edit2, Play, Swords, Terminal, Box, Users } from "lucide-react";
+import { Terminal, Box } from "lucide-react";
+
+type GameMode = "COMBAT" | "RACING" | "TRAINING_SOLO";
 
 const DashboardPage = () => {
     const [scripts, setScripts] = useState<RobotScript[]>([]);
@@ -18,7 +19,7 @@ const DashboardPage = () => {
     const [newScriptTitle, setNewScriptTitle] = useState("");
     const [status, setStatus] = useState<{ message: string; type: "error" | "success" | null }>({ message: "", type: null });
     const [isLoading, setIsLoading] = useState(false);
-    const [selectedMode, setSelectedMode] = useState<"COMBAT" | "RACING" | "TRAINING_SOLO">("COMBAT");
+    const [selectedMode, setSelectedMode] = useState<GameMode>("COMBAT");
     const [editingScript, setEditingScript] = useState<RobotScript | null>(null);
     const router = useRouter();
 
@@ -27,9 +28,10 @@ const DashboardPage = () => {
             try {
                 const response = await apiClient.get("/scripts");
                 setScripts(response.data);
-            } catch (error: any) {
-                console.error("Failed to fetch scripts:", error.response?.data?.message || error.message);
-                if (error.response?.status === 401) {
+            } catch (error: unknown) {
+                const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+                console.error("Failed to fetch scripts:", axiosError.response?.data?.message ?? axiosError.message);
+                if (axiosError.response?.status === 401) {
                     router.push("/login");
                 }
             } finally {
@@ -52,10 +54,11 @@ const DashboardPage = () => {
             setNewScriptTitle("");
             setStatus({ message: "[SYS] NEW SCRIPT PROTOCOL INITIALIZED.", type: "success" });
             setTimeout(() => setStatus({ message: "", type: null }), 3000);
-        } catch (error: any) {
-            console.error("Failed to create script:", error.response?.data?.message || error.message);
+        } catch (error: unknown) {
+            const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+            console.error("Failed to create script:", axiosError.response?.data?.message ?? axiosError.message);
             setStatus({
-                message: `[ERR] COMPILATION FAILED: ${error.response?.data?.message || error.message}`,
+                message: `[ERR] COMPILATION FAILED: ${axiosError.response?.data?.message ?? axiosError.message}`,
                 type: "error"
             });
         } finally {
@@ -85,6 +88,30 @@ const DashboardPage = () => {
         setScripts((prev) => prev.map((s) => (s.id === original.id ? original : s)));
     }, []);
 
+    const handleDeleteScript = useCallback(async (id: string) => {
+        // Optimistic removal
+        const snapshot = scripts.find((s) => s.id === id);
+        setScripts((prev) => prev.filter((s) => s.id !== id));
+        setStatus({ message: "PROTOCOL TERMINATED", type: "error" });
+        setTimeout(() => setStatus({ message: "", type: null }), 1000);
+
+        try {
+            await apiClient.delete(`/scripts/${id}`);
+        } catch (error: unknown) {
+            const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+            console.error("Failed to delete script:", axiosError.response?.data?.message ?? axiosError.message);
+            // Restore on failure
+            if (snapshot) {
+                setScripts((prev) => {
+                    const exists = prev.some((s) => s.id === snapshot.id);
+                    return exists ? prev : [...prev, snapshot];
+                });
+            }
+            setStatus({ message: `[ERR] DELETE FAILED: ${axiosError.response?.data?.message ?? axiosError.message}`, type: "error" });
+            setTimeout(() => setStatus({ message: "", type: null }), 3000);
+        }
+    }, [scripts]);
+
     const isMobile = useMediaQuery("(max-width: 768px)");
 
     const DesktopLayout = (
@@ -102,7 +129,7 @@ const DashboardPage = () => {
             </div>
 
             {status.message && (
-                <div className={`mb-8 p-3 rounded border text-xs break-words ${status.type === 'error' ? 'bg-red-950/40 border-red-900/50 text-red-400' :
+                <div className={`mb-8 p-3 rounded border text-xs wrap-break-word ${status.type === 'error' ? 'bg-red-950/40 border-red-900/50 text-red-400' :
                     status.type === 'success' ? 'bg-green-950/40 border-green-900/50 text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.4)]' :
                         'bg-accent/10 border-accent/20 text-accent animate-[pulse_1.5s_ease-in-out_infinite]'
                     }`}>
@@ -118,7 +145,7 @@ const DashboardPage = () => {
                             <div className="w-auto">
                                 <CustomSelect
                                     value={selectedMode}
-                                    onChange={(val) => setSelectedMode(val as any)}
+                                    onChange={(val) => setSelectedMode(val as GameMode)}
                                     isMobile={isMobile}
                                 />
                             </div>
@@ -141,6 +168,7 @@ const DashboardPage = () => {
                                     onEditBrain={handleEditScript}
                                     onDeployToLobby={handleGoToLobby}
                                     onDeployToArena={handleGoToArena}
+                                    onDelete={handleDeleteScript}
                                     isMobile={isMobile}
                                 />
                             ))}
@@ -165,7 +193,7 @@ const DashboardPage = () => {
         <div className="w-full px-4 pt-4 pb-[env(safe-area-inset-bottom)] relative z-20 flex flex-col gap-6">
             {/* Mobile Header */}
             <header className="flex flex-col gap-1">
-                <h1 className="text-accent font-black text-2xl tracking-[0.1em] drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]">
+                <h1 className="text-accent font-black text-2xl tracking-widest drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]">
                     COMMAND CENTER
                 </h1>
                 <p className="text-[10px] text-text-secondary tracking-[0.2em] font-medium uppercase opacity-70">
@@ -187,11 +215,11 @@ const DashboardPage = () => {
                 <div className="flex-1">
                     <CustomSelect
                         value={selectedMode}
-                        onChange={(val) => setSelectedMode(val as any)}
+                        onChange={(val) => setSelectedMode(val as GameMode)}
                         isMobile={true}
                     />
                 </div>
-                <div className="bg-accent/10 border border-accent/20 rounded-full px-4 py-2 flex items-center gap-2 shrink-0 h-[44px]">
+                <div className="bg-accent/10 border border-accent/20 rounded-full px-4 py-2 flex items-center gap-2 shrink-0 h-11">
                     <Terminal size={10} className="text-accent" />
                     <span className="text-[10px] font-bold text-accent tracking-tighter">TOTAL: {scripts.length}</span>
                 </div>
@@ -200,8 +228,8 @@ const DashboardPage = () => {
             {/* Status Feedback (Mobile Optimized) */}
             {status.message && (
                 <div className={`p-4 rounded-xl border text-[10px] font-bold tracking-wider shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 ${status.type === 'error' ? 'bg-red-950/20 border-red-900/40 text-red-400' :
-                        status.type === 'success' ? 'bg-green-950/20 border-green-900/40 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]' :
-                            'bg-accent/10 border-accent/20 text-accent'
+                    status.type === 'success' ? 'bg-green-950/20 border-green-900/40 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]' :
+                        'bg-accent/10 border-accent/20 text-accent'
                     }`}>
                     <div className="flex items-center gap-2">
                         <div className={`w-1 h-1 rounded-full animate-pulse ${status.type === 'error' ? 'bg-red-500' : status.type === 'success' ? 'bg-green-500' : 'bg-accent'
@@ -235,6 +263,7 @@ const DashboardPage = () => {
                                 onEditBrain={handleEditScript}
                                 onDeployToLobby={handleGoToLobby}
                                 onDeployToArena={handleGoToArena}
+                                onDelete={handleDeleteScript}
                                 isMobile={true}
                             />
                         ))}
@@ -246,7 +275,7 @@ const DashboardPage = () => {
 
     return (
         <div className={`min-h-screen bg-bg-primary font-mono text-accent selection:bg-accent/30 relative overflow-hidden ${isMobile ? "pb-[calc(80px+env(safe-area-inset-bottom))]" : "pb-12"}`}>
-            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none fixed"
+            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none"
                 style={{ backgroundImage: 'linear-gradient(rgba(var(--accent-rgb),0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.2) 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
             </div>
             {isMobile ? MobileLayout : DesktopLayout}
