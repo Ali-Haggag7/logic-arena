@@ -15,7 +15,7 @@ import { EnergyBarSprite } from './EnergyBar';
 export class RobotErrorBoundary extends React.Component<RobotErrorBoundaryProps, RobotErrorBoundaryState> {
   state: RobotErrorBoundaryState = { hasError: false };
   static getDerivedStateFromError(): RobotErrorBoundaryState { return { hasError: true }; }
-  componentDidCatch(): void {}
+  componentDidCatch(): void { }
   render() {
     return this.state.hasError ? this.props.fallback : this.props.children;
   }
@@ -35,15 +35,15 @@ export const FallbackRobot = ({ position, color }: FallbackRobotProps) => (
 export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
   const canvas = useMemo(() => {
     const c = document.createElement('canvas');
-    c.width  = 64;
+    c.width = 64;
     c.height = 12;
     return c;
   }, []);
 
   const [texture] = useState(() => {
-    const tex       = new THREE.CanvasTexture(canvas);
-    tex.minFilter   = THREE.LinearFilter;
-    tex.magFilter   = THREE.LinearFilter;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
     tex.needsUpdate = true;
     return tex;
   });
@@ -74,19 +74,17 @@ export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
 
 /* ── Inner robot model ─────────────────────────────────────────────────── */
 
-const RobotModelInner = memo(({ 
-  scene, color, position, health, velocity, rotation, hitTimestamp, spotted, 
-  energy = 1000, maxEnergy = 1000, inStasis = false, fovDirection, 
-  scale = 2 
+const RobotModelInner = memo(({
+  scene, color, position, health, velocity, rotation, hitTimestamp, spotted,
+  energy = 1000, maxEnergy = 1000, inStasis = false, fovDirection,
+  scale = 2
 }: RobotModelProps & { scene: THREE.Group; scale?: number }) => {
-  const groupRef        = useRef<THREE.Group>(null);
-  const targetPosition  = useRef(new THREE.Vector3(...position));
-  const basePosition    = useRef(new THREE.Vector3(...position));
-  const hoverOffset     = useRef(0);
-  const baseColorRef    = useRef(new THREE.Color(color));
-  const tempColorRef    = useRef(new THREE.Color());
-  const flashWhite      = useRef(new THREE.Color('#ffffff'));
-  const stasisBlue      = useRef(new THREE.Color('#4488ff'));
+  const groupRef = useRef<THREE.Group>(null);
+  const targetPosition = useRef(new THREE.Vector3(...position));
+  const basePosition = useRef(new THREE.Vector3(...position));
+  const hoverOffset = useRef(0);
+  const flashWhite = useRef(new THREE.Color('#ffffff'));
+  const stasisBlue = useRef(new THREE.Color('#4488ff'));
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
@@ -95,8 +93,19 @@ const RobotModelInner = memo(({
         const mesh = child as THREE.Mesh;
         const applyMat = (m: THREE.Material) => {
           const mat = (m as THREE.MeshStandardMaterial).clone();
-          mat.emissive.set(color);
-          mat.emissiveIntensity = 0.3;
+
+          if (color && color.trim().toUpperCase() !== 'DEFAULT') {
+            try {
+              mat.color = new THREE.Color(color.trim());
+            } catch (e) {
+              mat.color = new THREE.Color('#22d3ee');
+            }
+          }
+
+          // Store original emissive properties for hit flash / stasis
+          mat.userData.origEmissive = mat.emissive ? mat.emissive.clone() : new THREE.Color(0x000000);
+          mat.userData.origEmissiveIntensity = mat.emissiveIntensity !== undefined ? mat.emissiveIntensity : 1;
+
           return mat;
         };
         mesh.material = Array.isArray(mesh.material)
@@ -105,7 +114,7 @@ const RobotModelInner = memo(({
       }
     });
     return clone;
-  }, [scene]); // color is stable per robot
+  }, [scene, color]);
 
   const meshList = useMemo(() => {
     const list: THREE.Mesh[] = [];
@@ -117,7 +126,6 @@ const RobotModelInner = memo(({
 
   useEffect(() => { hoverOffset.current = Math.random() * Math.PI * 2; }, []);
   useEffect(() => { targetPosition.current.set(...position); }, [position]);
-  useEffect(() => { baseColorRef.current.set(color); }, [color]);
 
   const resolveRotation = (value?: number) => {
     if (typeof value !== 'number' || Number.isNaN(value)) return null;
@@ -162,25 +170,32 @@ const RobotModelInner = memo(({
     group.position.z = basePosition.current.z;
 
     // Hit flash / stasis tint
-    const now          = performance.now() / 1000;
+    const now = performance.now() / 1000;
     const timeSinceHit = hitTimestamp ? now - hitTimestamp : Infinity;
-    const flash        = timeSinceHit < HIT_FLASH_DURATION ? 1 - timeSinceHit / HIT_FLASH_DURATION : 0;
+    const flash = timeSinceHit < HIT_FLASH_DURATION ? 1 - timeSinceHit / HIT_FLASH_DURATION : 0;
 
     for (const mesh of meshList) {
       const mat = mesh.material as THREE.MeshStandardMaterial;
-      if (!mat?.emissive) continue;
+      if (!mat) continue;
+
       if (flash > 0) {
         // Hit flash → white
-        tempColorRef.current.copy(baseColorRef.current).lerp(flashWhite.current, flash);
-        mat.emissive.copy(tempColorRef.current);
+        mat.emissive.copy(flashWhite.current);
+        mat.emissiveIntensity = flash * 2;
       } else if (inStasis) {
         // Stasis → faint blue tint
-        tempColorRef.current.copy(baseColorRef.current).lerp(stasisBlue.current, 0.4);
-        mat.emissive.copy(tempColorRef.current);
+        mat.emissive.copy(stasisBlue.current);
+        mat.emissiveIntensity = 0.4;
         mat.opacity = 0.7;
         mat.transparent = true;
       } else {
-        mat.emissive.copy(baseColorRef.current);
+        // Reset to original
+        if (mat.userData.origEmissive) {
+          mat.emissive.copy(mat.userData.origEmissive);
+        } else {
+          mat.emissive.setHex(0x000000);
+        }
+        mat.emissiveIntensity = mat.userData.origEmissiveIntensity ?? 1;
         mat.opacity = 1;
         mat.transparent = false;
       }
@@ -190,8 +205,9 @@ const RobotModelInner = memo(({
   return (
     <group ref={groupRef}>
       <primitive object={clonedScene} scale={scale} position={[0, 0, 0]} />
-      <pointLight position={[0, 0.4, 0]}  intensity={inStasis ? 1.0 : 3.0} distance={5} color={inStasis ? '#4488ff' : color} />
-      <pointLight position={[0, -0.2, 0]} intensity={1.0} distance={4} color={color} />
+      {inStasis && (
+        <pointLight position={[0, 0.4, 0]} intensity={1.0} distance={5} color="#4488ff" />
+      )}
 
       {/* Spotted indicator */}
       {spotted && (
@@ -218,7 +234,7 @@ const ROBOT_FILES: Record<string, string> = {
 };
 
 const ROBOT_SCALES: Record<string, number> = {
-  '/robot.glb':  2,
+  '/robot.glb': 2,
   '/robot2.glb': 0.8,
 };
 
