@@ -51,13 +51,26 @@ export class Pathfinder {
 
     // Dynamically invalidate active path routing if the target repositions outside the tolerance threshold
     const moved = Math.hypot(target.position.x - last.x, target.position.y - last.y);
-    if (path.length === 0 || moved > PATH_CONFIG.RECOMPUTE_DIST) {
+    const targetMoved = moved > PATH_CONFIG.RECOMPUTE_DIST;
+
+    if (targetMoved) {
+      // Target repositioned — recompute full A* path
       path = this.astar.performAStar(
         robot.position.x, robot.position.y,
         target.position.x, target.position.y,
       );
       this.pathCache.set(id, path);
       this.lastTarget.set(id, { x: target.position.x, y: target.position.y });
+    } else if (path.length === 0) {
+      // Path exhausted but target hasn't moved — steer directly to target.
+      // Do NOT recompute A*: that would generate a path whose first waypoint
+      // is behind the robot (robot overshot the last grid cell centre),
+      // causing the back-and-forth oscillation.
+      const angle = Math.atan2(target.position.y - robot.position.y, target.position.x - robot.position.x);
+      robot.velocity.x = Math.cos(angle) * PATH_CONFIG.SPEED;
+      robot.velocity.y = Math.sin(angle) * PATH_CONFIG.SPEED;
+      robot.rotation   = angle;
+      return;
     }
 
     // Eliminate consumed topological checkpoints
