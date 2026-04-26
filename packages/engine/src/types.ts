@@ -51,6 +51,12 @@ export interface Robot {
   isManualRotation?: boolean;
 
   /**
+   * Last known forward-facing direction (in radians), updated every tick when not in STASIS.
+   * Used by BACKUP to always reverse the original facing direction, not the physics-computed one.
+   */
+  facingDirection?: number;
+
+  /**
    * If set to true by AliScript (`SET lockVision = TRUE`),
    * the fovDirection will automatically match robot.rotation every physics tick,
    * effectively locking the scanner to where the robot is physically facing.

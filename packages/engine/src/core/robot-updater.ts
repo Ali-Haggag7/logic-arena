@@ -55,19 +55,15 @@ export function updateRobotPhysics(
   const currentSpeed = Math.hypot(robot.velocity.x, robot.velocity.y);
   const isCoolingDown = (robot.collisionCooldown ?? 0) > 0;
 
-  if (!isCoolingDown) {
-    if (robot.isManualRotation && currentSpeed > 0.1) {
-      robot.velocity.x = Math.cos(robot.rotation) * currentSpeed;
-      robot.velocity.y = Math.sin(robot.rotation) * currentSpeed;
-    }
-  }
+  // Clear the manual flag so the next tick the physics can drive it naturally, but save it for this tick
+  const wasManualRotation = robot.isManualRotation;
+  robot.isManualRotation = false;
+  // Note: facingDirection is only updated by movement-executor on MOVE/MOVE_FAST,
+  // never from physics — prevents atan2 from corrupting it when velocity points backward.
 
   if ((robot.collisionCooldown ?? 0) > 0) {
     robot.collisionCooldown = robot.collisionCooldown! - 1;
   }
-
-  // Clear the manual rotation flag so the next tick the physics can drive it naturally
-  robot.isManualRotation = false;
 
   // --- lockVision: sync fovDirection to rotation every tick unless manually overridden ---
   if (robot.lockVision) {
@@ -81,7 +77,7 @@ export function updateRobotPhysics(
 
   // Update facing rotation from velocity direction.
   const vMag = Math.hypot(robot.velocity.x, robot.velocity.y);
-  if ((isCoolingDown && vMag > 0.001) || (!robot.isManualRotation && !hitWallThisTick && vMag > 0.001)) {
+  if ((isCoolingDown && vMag > 0.001) || (!wasManualRotation && !hitWallThisTick && vMag > 0.001)) {
     robot.rotation = Math.atan2(robot.velocity.y, robot.velocity.x);
   }
 }

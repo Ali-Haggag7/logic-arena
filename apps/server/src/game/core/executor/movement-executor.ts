@@ -35,18 +35,35 @@ export class MovementExecutor {
         // and resets it to 1.0 at the start of each tick when the robot is outside.
         // The executor simply reads it — no timestamp checks needed.
         const slowMult = robot.speedMultiplier ?? 1.0;
+        const targetSpeed = this.MOVE_SPEED * slowMult;
+
+        if (actionCommand === "BACKUP") {
+            // If no forward direction recorded yet (robot hasn't moved), snapshot current rotation
+            // as the canonical forward direction before physics can corrupt it via atan2.
+            if (robot.facingDirection === undefined) {
+                robot.facingDirection = robot.rotation;
+            }
+            const dir = robot.facingDirection;
+            robot.velocity.x = -Math.cos(dir) * targetSpeed;
+            robot.velocity.y = -Math.sin(dir) * targetSpeed;
+            robot.isManualRotation = true;
+            return;
+        }
+
         const speedMultiplier = actionCommand === "MOVE_FAST" ? this.MOVE_FAST_MULTIPLIER : 1;
-        const directionMultiplier = actionCommand === "BACKUP" ? -1 : 1;
-        const speed = this.MOVE_SPEED * speedMultiplier * directionMultiplier * slowMult;
+        const speed = targetSpeed * speedMultiplier;
         const speedMagnitude = Math.hypot(robot.velocity.x, robot.velocity.y);
 
         if (robot.rotation === 0 && speedMagnitude < 0.001) {
             robot.velocity.x = speed;
             robot.velocity.y = 0;
+            robot.facingDirection = 0;
             return;
         }
 
         robot.velocity.x = Math.cos(robot.rotation) * speed;
         robot.velocity.y = Math.sin(robot.rotation) * speed;
+        // Record forward direction so BACKUP can always reverse from a stable angle
+        robot.facingDirection = robot.rotation;
     }
 }
