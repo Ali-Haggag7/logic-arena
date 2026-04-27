@@ -24,17 +24,18 @@ Successfully synchronized the Backend physics engine with the Frontend Canvas re
 
 ### Technical Scars and Resolutions
 
-- **Issue:** Fixed 'Array(0)' state issue by enforcing a **Singleton Pattern** using `@Global()` in `GameModule`, ensuring Gateway and Service share the same engine instance.
+* **Issue:** Fixed 'Array(0)' state issue by enforcing a **Singleton Pattern** using `@Global()` in `GameModule`, ensuring Gateway and Service share the same engine instance.
+
 * **Issue:** Resolved TypeScript compilation errors in Monorepo by fixing `isolatedModules` conflicts and correctly using `export type` for shared interfaces.
 * **Issue:** Fixed Frontend rendering lag by correcting object mapping (accessing `position.x` instead of `x`) and implementing `requestAnimationFrame` for smooth Canvas drawing.
 
 ### Key Technical Achievement
 
-- Established a stable **Full-Stack Event Pipeline**: GameLoop (Engine) -> Socket.io (Server) -> HTML5 Canvas (Client).
+* Established a stable **Full-Stack Event Pipeline**: GameLoop (Engine) -> Socket.io (Server) -> HTML5 Canvas (Client).
 
 ### Current Status
 
-- Neon robots are dynamically moving in the Arena with zero lag, fully synchronized with server-side physics.
+* Neon robots are dynamically moving in the Arena with zero lag, fully synchronized with server-side physics.
 
 ## [0.4.0] - The Combat Engine & Lethal Logic (2026-04-06)
 
@@ -42,19 +43,21 @@ Successfully transformed the visual simulation into a functional **Combat Engine
 
 ### Technical Scars and Resolutions
 
-- **Issue:** Resolved `data.robots is not iterable` error by implementing **Payload Guarding** in the Frontend to handle both legacy Arrays and new GameState Objects.
+* **Issue:** Resolved `data.robots is not iterable` error by implementing **Payload Guarding** in the Frontend to handle both legacy Arrays and new GameState Objects.
+
 * **Issue:** Fixed **Projectile Ghosting** (bullets disappearing instantly) by offsetting the spawn point (`ROBOT_RADIUS + 5`) to prevent self-collision on frame zero.
 * **Issue:** Overcame **Monorepo Build Path** hell by identifying the nested `dist` structure (`dist/apps/server/src/main.js`) and correcting the execution path.
 * **Issue:** Optimized **Rendering Layers** by reversing the draw order (Robots -> Projectiles) to ensure high-visibility neon sparks.
 
 ### Key Technical Achievement
 
-- Developed a **Bidirectional Combat Pipeline**: Server triggers `fire()` -> Engine calculates trajectory/collision -> Client renders dynamic Health Bars and Neon Sparks.
+* Developed a **Bidirectional Combat Pipeline**: Server triggers `fire()` -> Engine calculates trajectory/collision -> Client renders dynamic Health Bars and Neon Sparks.
+
 * Implemented **Elastic Robot-to-Robot Collisions** with overlap resolution to prevent physics "clipping".
 
 ### Current Status
 
-- The Arena is now a "Live Warzone". Robots fire synchronized projectiles, sustain damage, and enter a "Dead State" upon zero health. The foundation for the Logic Compiler is now 100% solid.
+* The Arena is now a "Live Warzone". Robots fire synchronized projectiles, sustain damage, and enter a "Dead State" upon zero health. The foundation for the Logic Compiler is now 100% solid.
 
 ## [0.5.0] - The Birth of AliScript (The Logic Compiler) - 2026-04-07
 
@@ -62,19 +65,21 @@ Successfully implemented a custom **Logic Parser** and **Execution Engine**, all
 
 ### Technical Scars and Resolutions
 
-- **Issue: The "Recursive Firing" Bug:** Fixed robots firing like machine guns by implementing an **Edge-Triggered Logic Latch** (Only trigger action when condition state changes from `false` to `true`).
+* **Issue: The "Recursive Firing" Bug:** Fixed robots firing like machine guns by implementing an **Edge-Triggered Logic Latch** (Only trigger action when condition state changes from `false` to `true`).
+
 * **Issue: Monorepo Path Resolution:** Overcame `MODULE_NOT_FOUND` errors by correctly mapping `@logic-arena/logic-parser` in `tsconfig.json` and ensuring the package is built into `/dist` before server execution.
 * **Issue: Socket.io Dependency Loop:** Resolved frontend lag and connection drops by stabilizing the `useEffect` hooks in `Arena.tsx`, ensuring the socket listener remains active without unnecessary re-renders.
 * **Issue: TypeScript Type Mismatch:** Fixed `number` vs `string` indexer errors in the `logicStates` Map by normalizing AST indices to string keys.
 
 ### Key Technical Achievement
 
-- **Custom Compiler Pipeline:** Created a full flow from **String Script** -> **Lexer/Parser** -> **AST** -> **Server-side Evaluation** -> **Real-time Execution**.
+* **Custom Compiler Pipeline:** Created a full flow from **String Script** -> **Lexer/Parser** -> **AST** -> **Server-side Evaluation** -> **Real-time Execution**.
+
 * **Visual Debugging Suite:** Integrated **Neon Tracer Lines** and **Live Logic Logs** to provide immediate feedback on script performance.
 
 ### Current Status
 
-- The Arena now has a "Brain". Robots are no longer puppets; they are autonomous agents responding to logical conditions. The system is ready for the next level: **Pathfinding & FOV (Field of View)**.
+* The Arena now has a "Brain". Robots are no longer puppets; they are autonomous agents responding to logical conditions. The system is ready for the next level: **Pathfinding & FOV (Field of View)**.
 
 ## [0.6.0] - The Stateful Mind & Predictive Prep - 2026-04-08
 
@@ -82,17 +87,18 @@ Elevated the **AliScript Engine** from reactive to stateful, enabling robots to 
 
 ### Technical Scars and Resolutions
 
-- **Issue: The Memory-less Robot:** Fixed the inability to track state changes by implementing a `Map`-based persistent memory per robot instance on the server.
+* **Issue: The Memory-less Robot:** Fixed the inability to track state changes by implementing a `Map`-based persistent memory per robot instance on the server.
+
 * **Issue: Static Targeting:** Added velocity identifiers (`target_vx`, `target_vy`) to lay the groundwork for Predictive Aiming algorithms.
 * **Issue: UI Bottleneck:** Resolved the single-robot control limitation by adding a Neon-styled Robot Switcher in the `CommandConsole`.
 
 ### Key Technical Achievement
 
-- **Stateful Logic Execution:** Successfully deployed scripts using `SET` variables that compare across execution frames (e.g., Counter-attack logic based on health delta).
+* **Stateful Logic Execution:** Successfully deployed scripts using `SET` variables that compare across execution frames (e.g., Counter-attack logic based on health delta).
 
 ### Current Status
 
-- Robots now possess **Persistent Intelligence**. They can remember, compare, and react to environmental changes over time. The bridge between raw physics and high-level strategy is officially built. Ready for: **The 3D Visual Overhaul & Predictive Aiming Challenges**.
+* Robots now possess **Persistent Intelligence**. They can remember, compare, and react to environmental changes over time. The bridge between raw physics and high-level strategy is officially built. Ready for: **The 3D Visual Overhaul & Predictive Aiming Challenges**.
 
 ## [0.7.0] - The Sensory Update & Visual Stability
 
@@ -100,18 +106,20 @@ Finalized the core user experience by merging high-performance visuals with a re
 
 ### Technical Scars and Resolutions
 
-- **Issue: Rendering Crash (External Assets):** Overcame fatal `Failed to fetch` errors from external GLB providers by implementing **Procedural Neon Models** built with native Three.js geometries, ensuring 100% offline stability.
+* **Issue: Rendering Crash (External Assets):** Overcame fatal `Failed to fetch` errors from external GLB providers by implementing **Procedural Neon Models** built with native Three.js geometries, ensuring 100% offline stability.
+
 * **Issue: Performance Lag (Bloom Overhead):** Resolved major FPS drops by transitioning to a **Stealth Matte Aesthetic**, removing heavy post-processing shaders while maintaining a premium Cyberpunk look.
 * **Issue: Silent Combat & Autoplay Policy:** Integrated a robust audio engine using `use-sound` and implemented an interaction-based unlock to bypass browser audio restrictions.
 
 ### Key Technical Achievement
 
-- **Unified Feedback Loop:** Successfully synchronized **Multi-Sensory Feedback** where a single logic event (e.g., `health < last_h`) triggers a simultaneous visual flash, particle burst, and spatial audio "hit" sound.
+* **Unified Feedback Loop:** Successfully synchronized **Multi-Sensory Feedback** where a single logic event (e.g., `health < last_h`) triggers a simultaneous visual flash, particle burst, and spatial audio "hit" sound.
+
 * **Procedural Asset Pipeline:** Engineered a lightweight, shader-based robot model system that responds dynamically to state changes (color, rotation, and hovering) without external dependencies.
 
 ### Current Status
 
-- The Arena is now **Fully Interactive & Battle-Ready**. Players receive instant visual and auditory confirmation for every logical event. The foundation is rock-solid for the next massive leap: **Advanced AI Tactics (v1.0.0 Pre-Alpha)**.
+* The Arena is now **Fully Interactive & Battle-Ready**. Players receive instant visual and auditory confirmation for every logical event. The foundation is rock-solid for the next massive leap: **Advanced AI Tactics (v1.0.0 Pre-Alpha)**.
 
 ## [0.8.0] - The Sentient Intelligence Update - 2026-04-09
 
@@ -119,69 +127,75 @@ A massive leap from reactive bots to intelligent autonomous agents with full sen
 
 ### Technical Scars and Resolutions
 
-- **Issue: The Parser Bottleneck:** Fixed a major bug where commands on the same line (e.g., `MOVE FIRE`) were ignored. Resolved by implementing mandatory line-break appending (`\n`).
+* **Issue: The Parser Bottleneck:** Fixed a major bug where commands on the same line (e.g., `MOVE FIRE`) were ignored. Resolved by implementing mandatory line-break appending (`\n`).
+
 * **Issue: Type Mismatch (TS2339):** Resolved TypeScript build errors by implementing proper type guards for `ActionStatements` and `SetStatements` on the server.
 * **Issue: Visual De-sync:** Fixed the "Static Vision" bug by binding the 3D Vision Cone and Robot Mesh directly to the `robot.rotation` state.
 * **Issue: UI Overflow:** Re-engineered the Command Library to use a **Drop-up** mechanism with hidden scrollbars for a cleaner "Hacker" aesthetic.
 
 ### Key Technical Achievement
 
-- **Turing-Complete-ish Control:** The AliScript engine now handles complex, stateful behaviors, making the robots 100% script-driven. No default movement; every twitch is commanded by logic.
+* **Turing-Complete-ish Control:** The AliScript engine now handles complex, stateful behaviors, making the robots 100% script-driven. No default movement; every twitch is commanded by logic.
 
 ### Current Status
 
-- The system is now a **Stable Tactical Simulator**. We have FOV, Logic, VFX, and Audio working in perfect harmony.
+* The system is now a **Stable Tactical Simulator**. We have FOV, Logic, VFX, and Audio working in perfect harmony.
+
 * Ready for: **v1.2.0 - Pathfinding & Obstacle Avoidance**.
 
 ## [1.0.0-beta] - The Trinity Refactor - 2026-04-10
 
 ### Major Structural Overhaul
 
-- **Client Atomization:** Dismantled the "God Files" into a hook-driven architecture.
+* **Client Atomization:** Dismantled the "God Files" into a hook-driven architecture.
+
 * **Engine Optimization:** Refactored core physics and collision logic for better maintainability.
 * **Logic-Parser Decoupling:** Separated the AliScript interpreter from the view layer. The parser now functions as a pure logical entity, making it ready for server-side integration.
 
 ### Technical Scars and Resolutions
 
-- **Issue: Parser-View Dependency:** Fixed a tight coupling where the `logic-parser` was too dependent on client-side state. Now uses a clean, event-driven interface.
+* **Issue: Parser-View Dependency:** Fixed a tight coupling where the `logic-parser` was too dependent on client-side state. Now uses a clean, event-driven interface.
+
 * **Issue: R3F Hook Deadlock:** Resolved the Canvas-context error by re-engineering the component tree.
 * **Issue: TS Type Fragmentation:** Unified types across the workspace.
 
 ### Current Status
 
-- The "Trinity" (Client, Engine, Parser) is now fully modular. Ready for Server Refactoring.
+* The "Trinity" (Client, Engine, Parser) is now fully modular. Ready for Server Refactoring.
 
 ## [1.0.1-beta] - The Physics & Combat Patch
 
 ### Bug Fixes
 
-- **Obstacle Adhesion Fix:** Resolved an issue where robots would permanently stick to red obstacles. Implemented a cooldown-based separation logic.
+* **Obstacle Adhesion Fix:** Resolved an issue where robots would permanently stick to red obstacles. Implemented a cooldown-based separation logic.
+
 * **Ghost Respawn Fix:** Fixed a major combat bug where respawned robots became "invincible" due to stale collision references in the physics engine.
 * **Physics Synchronization:** Improved projectile hit detection in `collision-projectiles.ts` to ensure 100% accuracy against newly spawned agents.
 
 ### Current Status
 
-- Combat is now stable. Robots can reliably take damage after respawning, and movement is no longer hindered by static obstacle "gluing".
+* Combat is now stable. Robots can reliably take damage after respawning, and movement is no longer hindered by static obstacle "gluing".
 
 ## [1.1.0-beta] - The Server Modularity & Monorepo Polish - 2026-04-11
 
 ### Major Structural Overhaul
 
-- **The Backend Decoupling:** Successfully dismantled the 600+ line "God Object" (`game.service.ts`) into a clean, domain-specific architecture (`logic-evaluator`, `action-executor`, `pathfinder`, and `combat-math`).
+* **The Backend Decoupling:** Successfully dismantled the 600+ line "God Object" (`game.service.ts`) into a clean, domain-specific architecture (`logic-evaluator`, `action-executor`, `pathfinder`, and `combat-math`).
 
 ### Technical Scars and Resolutions
 
-- **Issue: The Infinite Stun-Lock (Trap Loop):** Fixed a critical physics bug where robots were permanently stuck in traps. Resolved by removing the forced velocity reset and implementing a 1500ms "immunity window" post-stun so robots can step out of the hitbox.
+* **Issue: The Infinite Stun-Lock (Trap Loop):** Fixed a critical physics bug where robots were permanently stuck in traps. Resolved by removing the forced velocity reset and implementing a 1500ms "immunity window" post-stun so robots can step out of the hitbox.
+
 * **Issue: Terminal & UI Event Spam:** Resolved massive lag caused by the engine evaluating and broadcasting `MOVE` vs `FIRE` commands 60 times a second. Implemented a 250ms throttle/debounce on socket emissions.
 * **Issue: Monorepo Config Hell:** Overcame strict TypeScript 5+ compilation errors. Replaced legacy `baseUrl` with native path mapping, synced `module` and `moduleResolution` to `Node16`, and explicitly defined `rootDir` to bridge cross-package imports cleanly.
 
 ### Key Technical Achievement
 
-- **Domain-Driven Server Architecture:** The game server is now highly modular. Network sockets, AST logic evaluation, A* pathfinding, and physics execution are fully isolated, making the backend incredibly scalable and easy to debug.
+* **Domain-Driven Server Architecture:** The game server is now highly modular. Network sockets, AST logic evaluation, A* pathfinding, and physics execution are fully isolated, making the backend incredibly scalable and easy to debug.
 
 ### Current Status
 
-- The backend codebase is now just as clean and atomic as the frontend "Trinity" refactor. The TypeScript compiler is 100% happy, and the physics engine is handling traps and respawns flawlessly.
+* The backend codebase is now just as clean and atomic as the frontend "Trinity" refactor. The TypeScript compiler is 100% happy, and the physics engine is handling traps and respawns flawlessly.
 
 ## [1.2.0-beta] - The Rendering & UX Revolution
 
@@ -280,13 +294,13 @@ The Arena is now a fully connected, real-time battle environment. The 3D scene, 
 
 ### Key Technical Achievement
 
-- **Unified Real-Time Pipeline:** The full event chain is now live — `MatchEngine (Server)` → `WebSocket (NestJS Gateway)` → `useGameState (Client Hook)` → `gameStateRef (Zero Re-render)` → `3D Scene + TACTICAL_VIEW (R3F)`. Every component reads from a single source of truth with no prop drilling and no unnecessary re-renders.
+* **Unified Real-Time Pipeline:** The full event chain is now live — `MatchEngine (Server)` → `WebSocket (NestJS Gateway)` → `useGameState (Client Hook)` → `gameStateRef (Zero Re-render)` → `3D Scene + TACTICAL_VIEW (R3F)`. Every component reads from a single source of truth with no prop drilling and no unnecessary re-renders.
 
 * **Tactical HUD:** Introduced a `TACTICAL_VIEW` radar panel with real-time robot blips, directional triangles, mini health bars, and ID labels. Projectiles render as neon yellow dots on the radar, fully synchronized with the 3D scene.
 
 ### Current Status
 
-- The Arena is now a fully operational real-time battlefield. Players can write AliScript, deploy it to their bot, and watch it execute live in both the 3D scene and the tactical radar simultaneously. The architecture is clean, the pipeline is stable, and the system is ready for: **Pathfinding, FOV-based targeting, and multiplayer session management.**
+* The Arena is now a fully operational real-time battlefield. Players can write AliScript, deploy it to their bot, and watch it execute live in both the 3D scene and the tactical radar simultaneously. The architecture is clean, the pipeline is stable, and the system is ready for: **Pathfinding, FOV-based targeting, and multiplayer session management.**
 
 ## [1.5.0-beta] - Security Hardening & Logic Evolution - 2026-04-13
 
@@ -316,7 +330,7 @@ The project has migrated from a basic state-sync to a secure, physics-driven arc
 
 ### Current Status
 
-- The infrastructure is now enterprise-grade and secure. With JWT protection and the physics loop in place, the system is fully primed for: **Advanced Pathfinding, Fog-of-War implementation, and Multi-user competitive sessions.**
+* The infrastructure is now enterprise-grade and secure. With JWT protection and the physics loop in place, the system is fully primed for: **Advanced Pathfinding, Fog-of-War implementation, and Multi-user competitive sessions.**
 
 ## [1.6.0-beta] - The Competitive Arena Update - 2026-04-14
 
@@ -354,7 +368,7 @@ Transformed Logic Arena from a single-player sandbox into a fully competitive mu
 
 ### Current Status
 
-- Logic Arena is now a fully operational competitive platform. Players can register, write AliScript, deploy to the lobby, battle in real-time, and climb the global leaderboard. Ready for: **Fog of War, Match Replay System, and Tournament Mode.**
+* Logic Arena is now a fully operational competitive platform. Players can register, write AliScript, deploy to the lobby, battle in real-time, and climb the global leaderboard. Ready for: **Fog of War, Match Replay System, and Tournament Mode.**
 
 ## [1.7.0-beta] - The Tournament & Replay Evolution - 2026-04-15
 
@@ -364,19 +378,21 @@ Introduced the Tournament Bracket System, 2D Canvas Match Replay System, an inte
 
 ### Technical Scars and Resolutions
 
-- **Issue: Replay Rendering Leaks:** Fixed stale React closures and duplicate intervals during playback rendering to ensure the Canvas Replay Viewer maintains smooth interpolation and does not overload the client's memory.
+* **Issue: Replay Rendering Leaks:** Fixed stale React closures and duplicate intervals during playback rendering to ensure the Canvas Replay Viewer maintains smooth interpolation and does not overload the client's memory.
+
 * **Issue: Irregular Bracket Computations:** Fixed crash attempting to create a full tournament bracket for 2 players. Re-architected backend `start` logic to dynamically handle safe participant distribution for 2, 4, and 8-player formats without indexing errors.
 
 ### Key Technical Achievements
 
-- **Tournament Bracket System:** Engineered a comprehensive tournament system supporting CRUD, join mechanisms, automated 2/4/8-player visual bracket generation, automatic winner advancement, and a real-time SVG "Bracket Viewer.
+* **Tournament Bracket System:** Engineered a comprehensive tournament system supporting CRUD, join mechanisms, automated 2/4/8-player visual bracket generation, automatic winner advancement, and a real-time SVG "Bracket Viewer.
+
 * **Canvas Match Replay System:** Implemented a high-fidelity playback engine. Backends now serialize arena snapshots (robots & projectiles) every 10 ticks and save them to a new optional `replayData` field in Prisma. Features timeline scrubbing and playback speed controls.
 * **Interactive AliScript v1.0 Documentation:** Developed an interactive, hacker-themed documentation page featuring a live parse console, 15 actionable commands, 6 tactically filtered categories, and quick reference cards.
 * **Operator Profile & Navigation:** Shipped an Operator Profile page detailing gameplay stats and match history, combined with a unified cyberpunk Layout containing a sticky sidebar, 'DISCONNECT' command, active route highlighting, and smooth scanline overlays.
 
 ### Current Status
 
-- The platform is now a comprehensive competitive tactical suite, fully capable of autonomous replay recordings and structured e-sport tournament brackets. Fully modularized dashboard and documentation architecture further grounds the Logic Arena experience.
+* The platform is now a comprehensive competitive tactical suite, fully capable of autonomous replay recordings and structured e-sport tournament brackets. Fully modularized dashboard and documentation architecture further grounds the Logic Arena experience.
 
 ## [1.8.0-beta] - AliScript v2.0, Environment Stability & Dynamic Orchestration - 2026-04-16
 
@@ -400,7 +416,8 @@ Launched AliScript v2.0 with Fox-Mind optimization and a new Zen-IDE, stabilized
 
 ### Key Technical Achievements
 
-- **AliScript v2.0 & Zen-IDE:** Added full support for `WHILE` loops, `IF/ELSE`, math operators, and user-defined `FUNCTIONS`. Launched a new Zen-mode IDE featuring translucent glassmorphism, background Web Worker parsing, and neon syntax highlighting.
+* **AliScript v2.0 & Zen-IDE:** Added full support for `WHILE` loops, `IF/ELSE`, math operators, and user-defined `FUNCTIONS`. Launched a new Zen-mode IDE featuring translucent glassmorphism, background Web Worker parsing, and neon syntax highlighting.
+
 * **Engine Optimization & Networking:** Migrated from ES6 Maps to V8-optimized Record structures for 3x faster memory indexing. Implemented Delta-State diffing, reducing WebSocket payload size by ~80%.
 * **Arena Physics & Pathfinding:** Implemented a Weighted A* Cost Grid for TRAP/LAVA navigation and integrated SpatialGrid partitioning for O(1) collision performance. Defined a core 3-pillar obstacle system (SOLID, TRAP, LAVA) with unique physics and neon-pulsing visual models.
 * **Dynamic Mode Orchestration:** Deployed custom Cyberpunk UI for mode selection, fixed the "Sticky Mode" bug with aggressive server-side match reconstruction, and synced HUD badges securely via `serverConfirmedMode`.
@@ -408,7 +425,7 @@ Launched AliScript v2.0 with Fox-Mind optimization and a new Zen-IDE, stabilized
 
 ### Current Status
 
-- The ecosystem has reached a major milestone with a Turing-complete-ish v2.0 scripting language and a highly optimized O(1) physics engine capable of scaling dynamically across combat, racing, and solo training modes.
+* The ecosystem has reached a major milestone with a Turing-complete-ish v2.0 scripting language and a highly optimized O(1) physics engine capable of scaling dynamically across combat, racing, and solo training modes.
 
 ## [1.9.0-beta] - Secure Identity & Physics Decoupling - 2026-04-17
 
@@ -429,7 +446,8 @@ Implemented a full-scale **Cyberpunk Identity System** featuring Email OTP verif
 
 ### Key Technical Achievements
 
-- **Authentication Hardening (Zod & Helmet):** Integrated `zod` for strict schema enforcement (8+ chars, complex regex) and `helmet` for secure HTTP headers. Bumped password hashing to **Bcrypt Round 12**.
+* **Authentication Hardening (Zod & Helmet):** Integrated `zod` for strict schema enforcement (8+ chars, complex regex) and `helmet` for secure HTTP headers. Bumped password hashing to **Bcrypt Round 12**.
+
 * **Player Garage & Custom Loadouts:** Launched a 3D Garage UI with `OrbitControls` allowing users to persist custom chassis and hex-color tints directly to the Supabase/Prisma layer.
 * **Email Lifecycle (Nodemailer OTP):** Deployed a robust verification system using Gmail SMTP. New users are now intercepted by a `/verify-email` gate, requiring a 6-digit OTP stored with a secure TTL in the DB.
 * **Advanced UX Error Handling:** Replaced generic "400" errors with a granular, human-readable error chip system and a real-time **Password Strength Indicator** with a 5-stage visual feedback loop.
@@ -438,7 +456,7 @@ Implemented a full-scale **Cyberpunk Identity System** featuring Email OTP verif
 
 ### Current Status
 
-- The platform is now **Security-Hardened** and **UX-Optimized**. The bridge between server physics and client rendering is fully synchronized, and the development environment is 100% automated via `watch:all`.
+* The platform is now **Security-Hardened** and **UX-Optimized**. The bridge between server physics and client rendering is fully synchronized, and the development environment is 100% automated via `watch:all`.
 
 ## [2.0.0] - Global Deployment & Infrastructure Hardening - 2026-04-18
 
@@ -1326,3 +1344,353 @@ that required a full diagnosis cycle.
   without oscillating. The FOV cone fires when the enemy is inside it
   and only then. Ready for: **University Competition, Fog of War,
   and multiplayer stress testing.**
+
+## [2.5.0] - The Arena Mastery Update — Performance, Modes & Engine Hardening - 2026-04-27
+
+Shipped a complete performance overhaul eliminating every WebGL bottleneck
+and memory leak, transformed Training and Racing modes into legendary
+cyberpunk experiences, hardened the energy/STASIS system to professional
+grade, and discovered a server-melting ghost match exploit that was running
+dead matches at full CPU indefinitely.
+
+---
+
+### New Features
+
+* **Legendary Training Mode — Cyberpunk Proving Ground:**
+  Complete overhaul of TRAINING_SOLO into a high-tech underground robot
+  training facility. Added `TrainingEnvironment.tsx` as a lightweight
+  addon layer (no geometry duplication — unified level layout preserved).
+  Added `TrainingDummy.tsx`: holographic target dummies with rotating
+  octahedron core, team-color emissive glow, dynamic health ring
+  (green→yellow→red), float-up damage numbers with custom CSS keyframe
+  animation, and wireframe reassembly animation on respawn. Added
+  `TrainingHUD.tsx`: glassmorphism training dashboard tracking session
+  time, shots fired, accuracy%, damage dealt, energy consumed, and kills.
+  TARGET ELIMINATED toast on dummy destroy. ENERGY DEPLETED overlay during
+  STASIS. iPhone-style 2×2 square glass widget on mobile (top-left corner),
+  matching tactical radar dimensions exactly.
+
+* **Training Mode — Dummy Health & Respawn System:**
+  Dummies now have real health and can die properly. Removed server
+  auto-respawn loop — dummies stay dead until player manually respawns
+  them. Added `dummyKilled` socket event emitted once per death. Added
+  `respawnDummies` socket event — only heals `dummy-*` bots, never
+  triggers full match reset. RESPAWN DUMMIES button injected into
+  `MobileTopRightHUD` showing alive/total counter (e.g. 2/3), pulsing
+  red when all dummies are eliminated. Robot in training mode shows
+  energy bar only (yellow `#ffcc00`) — health bar hidden. Dummy health
+  bar rendered in blue (`#00bbff→#0055cc`) to differentiate from energy.
+
+* **Legendary Racing Mode — Full Time Trial Experience:**
+  Complete RACING_OBSTACLES circuit redesign with strategic obstacle
+  placement: One-Way Enforcer (SOLID block behind spawn forcing clockwise
+  direction), The Weave (SOLID pillars on top straight requiring dodge
+  logic), Mud Traps (TRAP zones with -60% velocity penalty), and Lava
+  Corners (LAVA on inside lines carrying health damage risk). Introduced
+  `FINISH_LINE` obstacle type to the core engine and client types. Finish
+  line rendered as a glowing neon-green scanner strip via `ObstacleModel.tsx`.
+  `checkWinCondition` triggers victory the instant the robot hull touches
+  the `FINISH_LINE`. Added `RacingHUD`: neon-yellow TIME TRIAL dashboard
+  tracking elapsed time, energy consumed, and penalties. Mobile: iPhone-style
+  2×2 glassmorphism grid widget (top-left) — time/energy/penalties/target —
+  perfect height match with tactical radar, zero arena obstruction.
+
+* **Legendary Operator Profile — Radar Chart & Combat Analytics:**
+  Added `combatStats Json` column to the `User` model in `schema.prisma`
+  (pushed to Supabase). Full-stack combat stat pipeline: `match.persistence.ts`
+  computes 5 dimensions from end-of-match robot data using a weighted rolling
+  average (35% new / 65% history) and persists to `User.combatStats`. Stats:
+  Efficiency (`damage/energy×100`), Aggression (`damage/200`), Defense
+  (final health%), Precision (`damage/energy/80`), Speed (`energy/sec/3`).
+  New profile components: `RadarChart.tsx` (pure SVG pentagon animated
+  0→value with cubic ease-out, colored vertex dots and glow filter),
+  `StatRing.tsx` (6 animated circular progress rings: win rate, wins, rank,
+  efficiency, aggression, precision), `OperatorBadge.tsx` (tier system:
+  Ghost→Circuit→Synaptic→Overdrive→Apex→Legendary). Full legendary profile
+  redesign: hex avatar, dominant stat label, hero section, analytics panel.
+
+* **GET_X() Query Functions — AliScript v2.3:**
+  Added `QueryStatement` AST node type to the logic-parser lexer and parser.
+  8 query functions: `GET_HEALTH()`, `GET_ENERGY()`, `GET_ENERGY_PCT()`,
+  `GET_DISTANCE()`, `GET_POSITION()`, `GET_ROTATION()`, `GET_FOV_DIR()`,
+  `GET_VISIBLE_COUNT()`. Executed as one-shot emit per script deployment.
+  Results appear in robot speech bubble for 2 seconds and in telemetry log
+  in cyan: `[QUERY] health = 80`. Dedicated `shouldEmitQuery` tracker in
+  `CooldownManager`. All 8 functions added to autocomplete with cyan query
+  badge. New QUERY FUNCTIONS section added to docs page.
+
+* **PvP Match Enforcement & Robot Model Sync:**
+  Default `bot-2` removed from arena when opponent connects — PvP matches
+  have exactly 2 real players. `isPvP` computed dynamically from absence of
+  bot participants. EXECUTE RESPAWN hidden in PvP for fair play. BotSelector
+  robot switcher hidden in PvP — each player locked to their own robot.
+  `selectedRobotId` fetched during matchmaking and passed to engine as `model`
+  property. `ArenaModels` maps `robot.model` ID to correct GLB file dynamically.
+  Players see their chosen robot and opponent's actual chosen robot. `useGameState`
+  initializes `selectedRobotId` to `currentUserId` — prevents both players
+  defaulting to creator's robot. `MatchLobbyManager` verifies `updateLogic`
+  and `manualCommand` payloads match authenticated user — prevents cross-player
+  robot hijacking.
+
+* **Smart Script Resolution on Challenge Accept:**
+  Rewrote `ArenaPage` loading phase to handle missing `scriptId` URL param.
+  Checks `localStorage` cache first, falls back to fetching user scripts and
+  auto-selecting the first one. Graceful error only when user has zero scripts.
+  Resolves the `CRITICAL_SYSTEM_ERROR` crash on direct challenge acceptance.
+
+---
+
+### Performance — Six Bottlenecks Eliminated
+
+After a comprehensive profiling audit revealed the platform was running at
+a fraction of its potential, six surgical performance fixes were applied
+in sequence.
+
+* **FIX 1 — Frontend State Thrashing (Obstacles in Tick Stream):**
+  Static obstacle arrays were included in every 10Hz WebSocket payload,
+  forcing `ArenaModels` to reconcile 15+ `ObstacleModel` components 10
+  times per second. Initialized `obstaclesRef` as a `useRef<ObstacleState[]>([])`.
+  The WebSocket listener populates the ref exactly once from the initial
+  payload and strips obstacles from all subsequent `setUiState` calls.
+  Result: 15+ heavy obstacle components never trigger React reconciliation again.
+
+* **FIX 2 — 3D Scene Re-renders from HUD Updates:**
+  `uiState` updates were forcing `ArenaPage` and the entire `Scene3D`
+  canvas to re-render up to 10 times per second. Wrapped `Scene3D` in
+  `React.memo` and passed `obstaclesRef.current` (stable reference) to
+  the scene instead of live `uiState`. Scene now reads from `gameStateRef`
+  inside `useFrame` — completely decoupled from React lifecycle.
+  Result: 3D canvas is fully insulated from HUD timer and stat updates.
+
+* **FIX 3 — WebGL Draw Call Explosion (Individual Obstacle Meshes):**
+  Every obstacle instantiated its own `THREE.BoxGeometry`,
+  `THREE.MeshStandardMaterial`, and draw call. Racing Mode with 20+
+  obstacles produced 20+ geometries, 20+ materials, and 20+ GPU draw
+  calls simultaneously. Rewrote `ObstacleModel.tsx` as `ObstaclesInstanced`
+  using `THREE.InstancedMesh`. Obstacles grouped by type (SOLID/TRAP/LAVA),
+  each group rendered as one instanced mesh with `setMatrixAt()` positioning.
+  Result: 30 draw calls → 4 draw calls. One geometry and one material per
+  obstacle type regardless of count.
+
+* **FIX 4 — useFrame Saturation (JS Animation Callbacks):**
+  Every LAVA and TRAP obstacle ran its own `useFrame` JS callback at 60fps
+  to calculate sinusoidal color pulsing. 10 lava blocks = 10 separate JS
+  callbacks per frame choking the main thread. Removed all individual
+  `useFrame` hooks from obstacles. Injected custom fragment shaders via
+  `onBeforeCompile` into each material. A single global `useFrame` updates
+  a shared `uTime` uniform. Pulse math (`sin(uTime * 1.8)`) runs entirely
+  on the GPU.
+  Result: 0 JS callbacks per frame for obstacle animations.
+
+* **FIX 5 — Server Memory Leak (Replay Snapshot OOM):**
+  `captureReplaySnapshot()` deep-cloned the entire game state every 50ms.
+  A 5-minute Racing match generated 6,000 deep-cloned objects stored
+  unboundedly in the Node.js V8 heap — a guaranteed `OutOfMemory` crash
+  under concurrent load. Added `MAX_REPLAY_SNAPSHOTS = 300` constant and
+  switched to 1fps capture (every 20th tick instead of every tick). Added
+  ring-buffer: `if (snapshots.length > MAX) snapshots.shift()`.
+  Result: V8 heap strictly bounded at 300 objects per match regardless of
+  match duration. OOM crashes eliminated.
+
+* **BONUS FIX — Static Data in Delta-Diff (Bandwidth Waste):**
+  The `obstacles` and `mapBoundaries` arrays were included in every delta
+  broadcast even though they never change mid-match, wasting bandwidth and
+  CPU on deep-diffing static geometry 20 times per second. Added
+  `STATIC_FIELDS = ['obstacles', 'mapBoundaries']` to `match.delta-diff.ts`.
+  These fields are sent once in the initial full payload and completely
+  excluded from all subsequent diffs.
+  Result: Measurable bandwidth reduction and eliminated unnecessary
+  serialization CPU cycles on every tick.
+
+---
+
+### Technical Scars and Resolutions
+
+* **Issue — "The Ghost Match Massacre" (Dead Matches Running Forever):**
+  The most catastrophic leak discovered in this release. When a player
+  pressed "Back" or closed the browser tab, their WebSocket disconnected
+  from the server — but the `MatchEngine` physics loop kept running at
+  full speed indefinitely. The AliScript evaluator kept processing commands,
+  the A* pathfinder kept computing paths, and the game loop kept broadcasting
+  state to a room with zero connected clients. In a busy hour of play,
+  hundreds of ghost matches would accumulate in memory, consuming 100% CPU
+  and eventually crashing the entire backend. The server terminal was
+  literally printing `MOVE_FAST` commands for players who had left minutes ago.
+
+  **Resolution:** Wired the `MatchGateway` WebSocket disconnect lifecycle
+  properly. On client disconnect: checks if the user was hosting a lobby
+  and deletes it. If `numClients === 0` after disconnect, immediately calls
+  `match.stop()` and destroys the engine instance from RAM. Match lifecycle
+  is now strictly tied to connected client count — the moment the last player
+  leaves, the match dies with them.
+
+* **Issue — "The Shader Identity Crisis" (uTime Undeclared Identifier):**
+  After moving obstacle pulse animations to GPU shaders via `onBeforeCompile`,
+  the WebGL compiler crashed every obstacle material with
+  `ERROR: 0:1656: 'uTime': undeclared identifier`. The `uTime` uniform was
+  correctly added to `shader.uniforms` but never declared inside the GLSL
+  source code before `void main()`. The GPU compiler saw a variable used
+  but never defined and detonated the entire shader program, crashing the
+  WebGL context on all obstacle types simultaneously.
+
+  **Resolution:** Injected `uniform float uTime;\n` directly into the
+  fragment shader source string before `void main() {` via
+  `shader.fragmentShader.replace('void main() {', 'uniform float uTime;\nvoid main() {')`.
+  The GLSL compiler can now resolve the uniform declaration before the
+  pulse calculation executes.
+
+* **Issue — "The Half-Circle Trap" (InstancedMesh Rotation Order):**
+  After migrating obstacles to `THREE.InstancedMesh`, circular TRAP zones
+  appeared as half-circles clipped through the arena floor. The Euler
+  rotation was applied as `dummy.rotation.set(-90°, obstacleRotation, 0)`.
+  Because Three.js applies rotations in X→Y→Z order, the -90° X tilt
+  happened first, then the Y-axis rotation was applied to an already-flat
+  object — causing the Y-axis to point forward/backward instead of up/down
+  and flipping half the geometry underground.
+
+  **Resolution:** Reversed the rotation application order:
+  `dummy.rotation.set(0, rotationY, 0)` first (heading), then
+  `dummy.rotateX(rotX)` second (tilt). With the correct order, the
+  Y-rotation orients the circle correctly in the horizontal plane before
+  it is laid flat on the ground.
+
+* **Issue — "The WebGL Context Massacre" (GPU Memory Bomb):**
+  Training Mode's `TrainingEnvironment.tsx` called `createCornerTexture()`
+  directly inside the React render cycle to create canvas textures for
+  corner markers. Because `useGameState` syncs game state from the socket
+  10 times per second, the component re-rendered 10 times per second.
+  With 4 corners, this was creating 40 new `<canvas>` DOM elements and
+  40 new GPU `THREE.CanvasTexture` objects every single second. Within
+  2 seconds, the browser's GPU memory panicked and killed the WebGL context,
+  leaving a completely blank white screen.
+
+  **Resolution:** Wrapped the texture creation in `useMemo(() => createCornerTexture(), [])`.
+  The canvas and GPU texture are now generated exactly once on mount and
+  reused for all 4 corners indefinitely. The WebGL context crash was
+  eliminated instantly. The corner markers were subsequently removed
+  entirely as they served no gameplay purpose.
+
+* **Issue — "The Bouncy Math Simulator" (Damage Number Animation):**
+  Training dummy damage numbers were implemented using Tailwind's
+  `animate-bounce` class instead of a custom float-up animation. Combined
+  with a broken `useEffect` cleanup, shooting the dummy rapidly spawned
+  hundreds of `-10` text nodes that bounced infinitely without despawning,
+  turning the arena into what could only be described as a bouncy castle
+  of mathematics.
+
+  **Resolution:** Wrote a custom `animate-float-up` CSS keyframe that
+  smoothly floats numbers upward while fading out. Fixed the `damageNumbers`
+  array cleanup so each hit entry expires after exactly 1 second via a
+  `setTimeout` with proper state cleanup. The spawning component no longer
+  returns `null` on dummy death (which was preventing the respawn animation
+  from playing), ensuring the wireframe reassembly effect runs to completion.
+
+* **Issue — "The Duplicate Speech Bubble" (Double Print Above Robot):**
+  After moving the robot speech bubble inside `RobotModel.tsx` to fix
+  the detachment issue (bubble trailing behind the moving robot), the
+  old `SceneOverlay.tsx` was still rendering an identical bubble using
+  the legacy 10Hz network tick coordinates. Players saw two speech bubbles
+  simultaneously — one tracking perfectly at 60fps and one lagging behind
+  at 10fps.
+
+  **Resolution:** Deleted `SceneOverlay.tsx` entirely and removed its
+  import from `SceneContent.tsx`. There is now exactly one speech bubble
+  per robot, permanently locked inside the robot's local coordinate system
+  at 60fps interpolation.
+
+* **Issue — "The Ghost Re-Print After Recharge" (STASIS Wake Noise):**
+  When the robot ran out of energy and entered STASIS, `resetRuntimeState()`
+  was wiping the `lastExecutedAction` memory as part of its cleanup. When
+  the robot recovered and re-executed the same command (e.g., `MOVE_FAST`),
+  the `CooldownManager` thought it was a brand-new command and printed it
+  again, creating a recurring speech bubble loop tied to the STASIS cycle.
+
+  **Resolution:** Added a `fullReset` flag to `resetRuntimeState()`.
+  STASIS exit now calls with `fullReset: false`, which clears variables
+  and cooldowns but explicitly preserves the UI print history in
+  `lastExecutedAction`. A command that was already printed before STASIS
+  will never be re-printed after waking unless the user genuinely changes
+  their script.
+
+* **Issue — "The Floating Speech Bubble" (Bubble Detached from Robot):**
+  The robot speech bubble was rendered inside `ArenaModels.tsx` at the
+  10Hz WebSocket update rate, while the robot's 3D model used a 60fps
+  interpolation system inside `RobotModel.tsx` to smoothly lerp between
+  server positions. The bubble snapped rigidly to network positions while
+  the robot glided smoothly ahead of it, leaving the text floating in empty
+  space where the robot used to be.
+
+  **Resolution:** Moved `<SpeechBubble>` directly inside the 3D model
+  group in `RobotModel.tsx`. The bubble is now a child of the robot's
+  local coordinate system. When the robot interpolates forward at 60fps,
+  the speech bubble glides with it at pixel-perfect lockstep.
+
+* **Issue — "The Rice Storm" (STASIS Spam Above Robot Head):**
+  Every tick the robot attempted and failed a movement command due to
+  insufficient energy, it emitted a STASIS notification above its head.
+  Every tick it recovered just enough energy to attempt one move, it emitted
+  the movement command. The robot was flip-flopping between STASIS and
+  MOVE_FAST every few milliseconds, producing a continuous cascade of speech
+  bubbles above the robot's head that looked like falling rice.
+
+  **Resolution:** Completely removed all STASIS log emissions from the
+  backend. The physics engine silently blocks movement and waits for energy
+  to regenerate — the visual color change and energy bar are the only
+  indicators. `CooldownManager.shouldEmitAction()` reduced to a single
+  strict line: emit only when `actionCommand !== lastExecutedAction.get(robotId)`.
+  Zero repeat prints for the same command, ever.
+
+* **Issue — "The Operator Precedence Disaster" (2 + 3 * 4 = 20):**
+  The AliScript expression parser evaluated all binary operators
+  left-to-right with equal precedence. The expression `2 + 3 * 4`
+  evaluated to `(2 + 3) * 4 = 20` instead of the mathematically correct
+  `2 + (3 * 4) = 14`. Every script relying on multiplication or division
+  inside addition/subtraction expressions was computing wrong values
+  silently — producing subtle, impossible-to-debug logical errors in
+  robot behavior.
+
+  **Resolution:** Split `parseBinaryExpression()` into two distinct
+  precedence levels: `parseAddition()` for `+` and `-`, and
+  `parseMultiply()` for `*`, `/`, and `%`. `parseMultiply` is called
+  as the operand resolver for `parseAddition`, establishing the correct
+  precedence tower: `OR → AND → comparison → addition → multiply → unary → primary`.
+  Verified: `2+3*4=14`, `(2+3)*4=20`, `10-2*3=4`, `10/2+3=8`.
+
+* **Issue — "The FOV Fire Hack" (FIRE Ignoring Vision Cone):**
+  `FIRE` and `BURST_FIRE` selected targets by searching all living robots
+  in the match, completely ignoring the FOV cone. A robot with its scanner
+  pointing East could `FIRE` at an enemy standing directly behind it to the
+  West. The FOV cone was purely cosmetic — it had zero effect on actual
+  targeting. `CAN_SEE_ENEMY` and `FIRE` were operating on completely
+  different datasets.
+
+  **Resolution:** Changed target selection in `combat-executor.ts` to
+  use `robot.visibleEntities.robots` exclusively. If no enemy is in the
+  FOV cone, `FIRE` returns immediately with zero energy cost and zero
+  cooldown consumed. Energy deduction moved inside the combat executor —
+  only charged after confirming a valid visible target. `FIRE` and
+  `CAN_SEE_ENEMY` now operate on the exact same FOV cone data.
+
+* **Issue — "The WebSocket Namespace Collision" (Presence Not Registering):**
+  The global socket hook was connecting to a `/api` namespace instead of
+  the root namespace, preventing `handleConnection` on the gateway from
+  firing and leaving all players permanently showing as "offline" on the
+  leaderboard regardless of their actual online status.
+
+  **Resolution:** Stripped the trailing `/api` from the dynamically
+  constructed WebSocket URL in `useGlobalSocket.ts`. Replaced the
+  hardcoded `http://localhost:3001` in `useGameState.ts` with the
+  `API_BASE_URL` utility for correct production routing.
+
+---
+
+### Current Status
+
+* Logic Arena is now running at peak performance with zero memory leaks,
+  zero ghost matches, zero WebGL context crashes, and a mathematically
+  correct AliScript expression engine. Training Mode is a fully featured
+  cyberpunk proving ground. Racing Mode is a brutal time-trial circuit.
+  The operator profile tracks real combat stats across matches. Ghost
+  matches are dead. The arena is ready for: **Fog of War, multiplayer
+  stress testing, and University Competition launch.**
