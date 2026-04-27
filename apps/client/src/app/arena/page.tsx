@@ -16,6 +16,7 @@ import { MobileControls } from './components/MobileControls';
 import { DesktopHUD } from './components/DesktopHUD';
 import { ArenaStyles } from './components/ArenaStyles';
 import { TrainingHUD } from './components/TrainingMode/TrainingHUD';
+import { RacingHUD } from './components/TrainingMode/RacingHUD';
 
 interface RobotScript {
   id: string;
@@ -203,6 +204,14 @@ const ArenaPageContent = () => {
           isMobile={isMobile}
           socket={socket}
           dummies={robots.filter(r => r.id.startsWith('dummy-'))}
+        />
+      )}
+
+      {displayMode === 'RACING' && (
+        <RacingHUD 
+          playerRobot={robots.find(r => r.id === currentUserId)}
+          startTime={trainingStats.startTime}
+          isMobile={isMobile}
         />
       )}
 

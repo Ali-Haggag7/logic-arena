@@ -49,6 +49,10 @@ export const ObstacleModel = memo(function ObstacleModel({ obstacle }: ObstacleM
                 return new THREE.CylinderGeometry(radius, radius * 1.15, 0.18, 6);
             }
 
+            case "FINISH_LINE":
+                // Flat rectangle marking the end
+                return new THREE.PlaneGeometry(w, h);
+
             default:
                 return new THREE.BoxGeometry(0.1, 0.1, 0.1);
         }
@@ -88,6 +92,19 @@ export const ObstacleModel = memo(function ObstacleModel({ obstacle }: ObstacleM
                     roughness: 0.2,
                 });
 
+            case "FINISH_LINE":
+                // Glowing green finish line
+                return new THREE.MeshStandardMaterial({
+                    color: "#00ff00",
+                    emissive: "#00ff00",
+                    emissiveIntensity: 0.8,
+                    metalness: 0.2,
+                    roughness: 0.8,
+                    transparent: true,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide,
+                });
+
             default:
                 return new THREE.MeshStandardMaterial({ color: "#333333" });
         }
@@ -124,6 +141,11 @@ export const ObstacleModel = memo(function ObstacleModel({ obstacle }: ObstacleM
                 // Neon Red: fast aggressive pulse (0.4 → 1.5)
                 mat.emissiveIntensity = 0.95 + 0.55 * Math.sin(t * 4.5);
                 break;
+                
+            case "FINISH_LINE":
+                // Steady pulsing green
+                mat.emissiveIntensity = 0.6 + 0.3 * Math.sin(t * 3);
+                break;
         }
     });
 
@@ -153,6 +175,15 @@ export const ObstacleModel = memo(function ObstacleModel({ obstacle }: ObstacleM
             <group ref={groupRef} position={[x, 0, z]} rotation={[0, rotationY, 0]}>
                 <mesh position={[0, 0.09, 0]} geometry={geometry} material={material} />
                 <pointLight position={[0, 0.6, 0]} color="#FF2200" intensity={2.8} distance={5} />
+            </group>
+        );
+    }
+
+    if (obstacle.type === "FINISH_LINE") {
+        return (
+            <group ref={groupRef} position={[x, 0.03, z]} rotation={[0, rotationY, 0]}>
+                <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} material={material} receiveShadow />
+                <pointLight position={[0, 0.5, 0]} color="#00ff00" intensity={2.0} distance={4.0} />
             </group>
         );
     }

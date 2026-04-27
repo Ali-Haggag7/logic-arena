@@ -40,7 +40,7 @@ export interface ProjectileState {
 // ---------------------------------------------------------------------------
 // Obstacle state
 // ---------------------------------------------------------------------------
-export type ObstacleType = 'SOLID' | 'TRAP' | 'LAVA';
+export type ObstacleType = 'SOLID' | 'TRAP' | 'LAVA' | 'FINISH_LINE';
 
 export interface ObstacleState {
   id:        string;

@@ -28,14 +28,39 @@ export const DEFAULT_OBSTACLES: Obstacle[] = [
 ];
 
 export const RACING_OBSTACLES: Obstacle[] = [
+  // Outer bounds
   { id: 'race-wall-1', type: 'SOLID', position: { x: 400, y: 50 }, width: 700, height: 20, rotation: 0 },
   { id: 'race-wall-2', type: 'SOLID', position: { x: 400, y: 550 }, width: 700, height: 20, rotation: 0 },
   { id: 'race-wall-3', type: 'SOLID', position: { x: 50, y: 300 }, width: 20, height: 500, rotation: 0 },
   { id: 'race-wall-4', type: 'SOLID', position: { x: 750, y: 300 }, width: 20, height: 500, rotation: 0 },
+  
+  // Inner bounds
   { id: 'race-inner-1', type: 'SOLID', position: { x: 400, y: 200 }, width: 400, height: 20, rotation: 0 },
   { id: 'race-inner-2', type: 'SOLID', position: { x: 400, y: 400 }, width: 400, height: 20, rotation: 0 },
   { id: 'race-inner-3', type: 'SOLID', position: { x: 200, y: 300 }, width: 20, height: 200, rotation: 0 },
   { id: 'race-inner-4', type: 'SOLID', position: { x: 600, y: 300 }, width: 20, height: 200, rotation: 0 },
+
+  // --- Legendary Obstacles ---
+  // Block going backwards: Force clockwise movement
+  { id: 'race-block-back', type: 'SOLID', position: { x: 125, y: 190 }, width: 150, height: 20, rotation: 0 },
+
+  // Top straight: Weave around pillars and avoid the mud
+  { id: 'race-pillar-1', type: 'SOLID', position: { x: 300, y: 150 }, width: 20, height: 80, rotation: 0 },
+  { id: 'race-pillar-2', type: 'SOLID', position: { x: 450, y: 100 }, width: 20, height: 80, rotation: 0 },
+  { id: 'race-mud-1', type: 'TRAP', position: { x: 375, y: 125 }, width: 100, height: 100, rotation: 0 },
+
+  // Right turn: Lava corner (take the inner line or get burned)
+  { id: 'race-lava-1', type: 'LAVA', position: { x: 675, y: 125 }, width: 100, height: 100, rotation: 0.785 }, 
+
+  // Bottom straight: A huge slowing trap with a safe narrow path
+  { id: 'race-mud-2', type: 'TRAP', position: { x: 400, y: 475 }, width: 200, height: 130, rotation: 0 },
+  { id: 'race-pillar-3', type: 'SOLID', position: { x: 400, y: 475 }, width: 20, height: 50, rotation: 0.5 },
+
+  // Left turn: Moving towards finish line, tight lava blocks
+  { id: 'race-lava-2', type: 'LAVA', position: { x: 125, y: 475 }, width: 60, height: 60, rotation: 0.3 },
+
+  // The Finish Line! Placed on the left straight
+  { id: 'race-finish', type: 'FINISH_LINE', position: { x: 125, y: 300 }, width: 150, height: 40, rotation: 0 },
 ];
 
 export const LAVA_DPS = 5; // HP per second deducted while inside a LAVA zone

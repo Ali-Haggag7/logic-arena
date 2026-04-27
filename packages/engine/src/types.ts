@@ -144,7 +144,7 @@ export interface Projectile {
  *  TRAP  — Slowdown zone. Reduces robot velocity by 60% while inside.
  *  LAVA  — Damage zone. Deducts 5 HP/sec while robot is inside.
  */
-export type ObstacleType = 'SOLID' | 'TRAP' | 'LAVA';
+export type ObstacleType = 'SOLID' | 'TRAP' | 'LAVA' | 'FINISH_LINE';
 
 export interface Obstacle {
   id: string;
