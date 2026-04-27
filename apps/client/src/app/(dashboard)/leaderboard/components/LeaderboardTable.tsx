@@ -64,11 +64,13 @@ export const LeaderboardTable = ({
   isLoading,
   currentUserId,
   onChallenge,
+  isGuest,
 }: {
   users: LeaderboardUser[];
   isLoading: boolean;
   currentUserId: string;
   onChallenge: (userId: string, username: string) => void;
+  isGuest?: boolean;
 }) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -142,10 +144,13 @@ export const LeaderboardTable = ({
                       <div className="w-[100px] flex justify-end shrink-0">
                         {user.isOnline && user.id !== currentUserId && (
                           <button
+                            type="button"
+                            aria-label="Challenge user"
                             onClick={() => onChallenge(user.id, user.username)}
-                            className="text-[10px] tracking-[0.15em] px-3 py-1 rounded border border-accent/30 bg-accent/5 hover:bg-accent/15 text-accent/70 hover:text-accent transition-all whitespace-nowrap"
+                            disabled={isGuest}
+                            className={`text-[10px] tracking-[0.15em] px-3 py-1 rounded border transition-all whitespace-nowrap ${isGuest ? 'border-accent/10 bg-transparent text-accent/20 cursor-not-allowed' : 'border-accent/30 bg-accent/5 hover:bg-accent/15 text-accent/70 hover:text-accent'}`}
                           >
-                            ⚔ CHALLENGE
+                            {isGuest ? "🔒 LOGIN TO CHALLENGE" : "⚔ CHALLENGE"}
                           </button>
                         )}
                       </div>
@@ -187,18 +192,24 @@ export const LeaderboardTable = ({
             </div>
             {/* Action Bar */}
             <div className="w-full">
-              {user.isOnline && user.id !== currentUserId ? (
-                <button
-                  onClick={() => onChallenge(user.id, user.username)}
-                  className="w-full h-[44px] flex items-center justify-center bg-transparent border border-accent text-accent font-bold tracking-[0.15em] text-[10px] rounded-lg transition-transform duration-150 active:scale-95 uppercase"
-                >
-                  ⚔ CHALLENGE OPERATOR
-                </button>
-              ) : (
-                <button disabled className="w-full h-[44px] flex items-center justify-center bg-transparent border border-accent/15 text-accent/30 font-bold tracking-[0.15em] text-[10px] rounded-lg cursor-not-allowed uppercase">
-                  OFFLINE / UNAVAILABLE
-                </button>
-              )}
+                {isGuest ? (
+                   <button type="button" aria-label="Challenge user" disabled className="w-full h-[44px] flex items-center justify-center bg-transparent border border-accent/10 text-accent/20 font-bold tracking-[0.15em] text-[10px] rounded-lg cursor-not-allowed uppercase">
+                    🔒 LOGIN TO CHALLENGE
+                  </button>
+                ) : user.isOnline && user.id !== currentUserId ? (
+                  <button
+                    type="button"
+                    aria-label="Challenge user"
+                    onClick={() => onChallenge(user.id, user.username)}
+                    className="w-full h-[44px] flex items-center justify-center bg-transparent border border-accent text-accent font-bold tracking-[0.15em] text-[10px] rounded-lg transition-transform duration-150 active:scale-95 uppercase"
+                  >
+                    ⚔ CHALLENGE OPERATOR
+                  </button>
+                ) : (
+                  <button type="button" aria-label="Challenge user" disabled className="w-full h-[44px] flex items-center justify-center bg-transparent border border-accent/15 text-accent/30 font-bold tracking-[0.15em] text-[10px] rounded-lg cursor-not-allowed uppercase">
+                    OFFLINE / UNAVAILABLE
+                  </button>
+                )}
             </div>
           </div>
         ))

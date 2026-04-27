@@ -8,9 +8,10 @@ interface CampaignDesktopLayoutProps {
   loading: boolean;
   currentLevel: LevelInfo | undefined;
   router: AppRouterInstance;
+  isGuest?: boolean;
 }
 
-export function CampaignDesktopLayout({ levels, loading, currentLevel, router }: CampaignDesktopLayoutProps) {
+export function CampaignDesktopLayout({ levels, loading, currentLevel, router, isGuest }: CampaignDesktopLayoutProps) {
   return (
     <div className="max-w-[860px] mx-auto px-6 pt-16 pb-[120px] drop-shadow-xl relative z-10 animate-[fadeIn_0.35s_ease]">
       {/* Header */}
@@ -55,10 +56,19 @@ export function CampaignDesktopLayout({ levels, loading, currentLevel, router }:
               </div>
             </div>
           ))
-          : levels.map((level, idx) => {
+          : levels.length === 0 && isGuest ? (
+              <div className="text-center py-20 border border-dashed border-accent/20 rounded-2xl bg-accent/[0.02]">
+                <div className="text-4xl mb-4 opacity-50">🔒</div>
+                <h3 className="text-accent font-black tracking-widest text-lg mb-2 uppercase">Neural Interface Required</h3>
+                <p className="text-accent/40 text-xs tracking-wide max-w-[400px] mx-auto uppercase">
+                  Operator authentication is mandatory to access the campaign node and record progression data.
+                </p>
+              </div>
+            ) : levels.map((level, idx) => {
             const isLeft = idx % 2 === 0;
-            const isCurrent = currentLevel?.id === level.id;
+            const isCurrent = !isGuest && currentLevel?.id === level.id;
             const dc = DIFF_COLORS[level.difficulty];
+            const lockedByGuest = isGuest;
 
             return (
               <div key={level.id} className="relative">
@@ -66,7 +76,7 @@ export function CampaignDesktopLayout({ levels, loading, currentLevel, router }:
                   <div
                     className={`absolute -translate-x-1/2 translate-x-0 ${isLeft ? "left-[135px]" : "left-auto right-[135px]"} bottom-0 translate-y-full w-[1px] h-10 z-0`}
                     style={{
-                      background: level.unlocked
+                      background: level.unlocked && !lockedByGuest
                         ? "linear-gradient(to bottom, rgba(var(--accent-rgb),0.6), rgba(var(--accent-rgb),0.15))"
                         : "rgba(var(--accent-rgb),0.15)",
                     }}
@@ -75,16 +85,16 @@ export function CampaignDesktopLayout({ levels, loading, currentLevel, router }:
 
                 <div className={`flex mb-10 justify-center ${isLeft ? "justify-start" : "justify-end"} relative z-10`}>
                   <button
-                    disabled={!level.unlocked}
-                    onClick={() => level.unlocked && router.push(`/campaign/${level.id}`)}
-                    className={`level-node w-[280px] max-w-none text-left p-5 rounded-xl border font-mono relative ${level.unlocked
+                    disabled={!level.unlocked || lockedByGuest}
+                    onClick={() => level.unlocked && !lockedByGuest && router.push(`/campaign/${level.id}`)}
+                    className={`level-node w-[280px] max-w-none text-left p-5 rounded-xl border font-mono relative ${level.unlocked && !lockedByGuest
                       ? "cursor-pointer"
                       : "cursor-not-allowed opacity-50 backdrop-blur-sm"
                       } ${isCurrent
                         ? "bg-accent/10 border-accent/60"
                         : level.completed
                           ? "bg-accent/[0.04] border-accent/20"
-                          : level.unlocked
+                          : level.unlocked && !lockedByGuest
                             ? "bg-bg-primary border-accent/25 hover:bg-accent/[0.06] hover:border-accent/50"
                             : "bg-bg-primary border-accent/10"
                       }`}
@@ -101,14 +111,14 @@ export function CampaignDesktopLayout({ levels, loading, currentLevel, router }:
                         LEVEL {String(level.id).padStart(2, "0")}
                       </span>
                       <span className="text-[14px]">
-                        {!level.unlocked ? "🔒" : level.completed ? "✓" : isCurrent ? "▶" : "◉"}
+                        {(!level.unlocked || lockedByGuest) ? "🔒" : level.completed ? "✓" : isCurrent ? "▶" : "◉"}
                       </span>
                     </div>
 
                     <div
                       className={`text-[13px] font-black tracking-[0.18em] mb-2 leading-tight ${level.completed ? "text-accent/50" : "text-accent"
                         }`}
-                      style={level.unlocked && !level.completed ? { textShadow: "0 0 8px rgba(var(--accent-rgb),0.5)" } : {}}
+                      style={level.unlocked && !level.completed && !lockedByGuest ? { textShadow: "0 0 8px rgba(var(--accent-rgb),0.5)" } : {}}
                     >
                       {level.name}
                     </div>
@@ -138,7 +148,7 @@ export function CampaignDesktopLayout({ levels, loading, currentLevel, router }:
           })}
       </div>
 
-      {!loading && levels.every((l) => l.completed) && (
+      {!loading && !isGuest && levels.length > 0 && levels.every((l) => l.completed) && (
         <div className="mt-6 text-center p-8 border border-accent/20 rounded-xl bg-accent/5">
           <div className="text-3xl mb-3">🏆</div>
           <p className="text-accent font-black tracking-[0.2em] text-[13px]">CAMPAIGN COMPLETE</p>

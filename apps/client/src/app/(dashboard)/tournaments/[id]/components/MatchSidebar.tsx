@@ -14,9 +14,11 @@ interface Props {
   simulating: string | null;
   onSimulateWin: (matchId: string) => void;
   isMobile?: boolean;
+  isGuest?: boolean;
+  onShowAuth: () => void;
 }
 
-export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulating, onSimulateWin, isMobile }: Props) {
+export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulating, onSimulateWin, isMobile, isGuest, onShowAuth }: Props) {
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
   const totalRounds = tournament.participants.length === 8 || tournament.matches.some((m) => m.round === 3) ? 3 : 2;
@@ -50,17 +52,28 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
             </div>
 
             <button
-                onClick={() => onSimulateWin(myMatch.id)}
-                disabled={simulating === myMatch.id}
-                onMouseEnter={() => setHoveredBtn("sim")}
+                onClick={isGuest ? undefined : () => onSimulateWin(myMatch.id)}
+                disabled={isGuest || simulating === myMatch.id}
+                onMouseEnter={() => !isGuest && setHoveredBtn("sim")}
                 onMouseLeave={() => setHoveredBtn(null)}
-                className={`w-full py-4 px-4 rounded-xl text-[10px] font-black tracking-[0.3em] font-mono transition-all duration-300 relative overflow-hidden group active:scale-[0.97] ${simulating === myMatch.id ? 'cursor-wait opacity-50' : 'cursor-pointer'
-                } ${hoveredBtn === "sim"
-                    ? "bg-emerald-500/20 border border-emerald-500/60 text-emerald-500 shadow-[0_0_20px_rgba(var(--color-emerald-500),0.15)]"
-                    : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500/50"
+                className={`w-full py-4 px-4 rounded-xl text-[10px] font-black tracking-[0.3em] font-mono transition-all duration-300 relative overflow-hidden group active:scale-[0.97] ${simulating === myMatch.id ? 'cursor-wait opacity-50' : isGuest ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                } ${isGuest 
+                    ? "bg-emerald-500/5 border border-emerald-500/10 text-emerald-500/20"
+                    : hoveredBtn === "sim"
+                        ? "bg-emerald-500/20 border border-emerald-500/60 text-emerald-500 shadow-[0_0_20px_rgba(var(--color-emerald-500),0.15)]"
+                        : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500/50"
                 }`}
             >
-                <span className="relative z-10">{simulating === myMatch.id ? "SIMULATING_NEURAL_VICTORY..." : "▶ OVERRIDE_VICTORY"}</span>
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                    {isGuest ? (
+                        <>
+                            <span className="text-[12px]">🔒</span>
+                            <span>LOGIN TO OVERRIDE</span>
+                        </>
+                    ) : (
+                        simulating === myMatch.id ? "SIMULATING_NEURAL_VICTORY..." : "▶ OVERRIDE_VICTORY"
+                    )}
+                </span>
             </button>
           </div>
         </div>

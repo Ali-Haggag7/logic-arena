@@ -7,9 +7,10 @@ interface ProtocolFormProps {
     isLoading: boolean;
     onSubmit: (e: React.FormEvent) => void;
     isMobile?: boolean;
+    isGuest?: boolean;
 }
 
-export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onSubmit, isMobile }: ProtocolFormProps) => {
+export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onSubmit, isMobile, isGuest }: ProtocolFormProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     if (isMobile) {
@@ -18,6 +19,8 @@ export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onS
                 <div className={`bg-card border border-accent/50 rounded-2xl overflow-hidden transition-all duration-300 ease-in-out shadow-lg ${isExpanded ? "max-h-[300px]" : "max-h-[60px]"}`}>
                     {!isExpanded ? (
                         <button
+                            type="button"
+                            aria-label="Initialize new protocol"
                             onClick={() => setIsExpanded(true)}
                             className="w-full h-[60px] flex items-center justify-between px-5 text-accent font-bold tracking-widest text-xs group"
                         >
@@ -31,7 +34,7 @@ export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onS
                         <div className="p-4 flex flex-col gap-4">
                             <div className="flex items-center justify-between mb-1">
                                 <span className="text-[10px] text-accent font-bold tracking-widest uppercase">Protocol Initialization</span>
-                                <button onClick={() => setIsExpanded(false)} className="p-1">
+                                <button type="button" aria-label="Close protocol initialization" onClick={() => setIsExpanded(false)} className="p-1 cursor-pointer">
                                     <ChevronDown size={16} className="text-text-secondary rotate-180 transition-transform duration-300" />
                                 </button>
                             </div>
@@ -47,10 +50,16 @@ export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onS
                                 />
                                 <button
                                     type="submit"
-                                    disabled={isLoading || !newScriptTitle.trim()}
-                                    className="w-full py-3 bg-accent/10 border border-accent/20 rounded-xl text-accent text-xs font-bold tracking-[0.2em] uppercase active:scale-[0.98] transition-all disabled:opacity-50"
+                                    disabled={isLoading || isGuest || !newScriptTitle.trim()}
+                                    className="w-full py-3 bg-accent/10 border border-accent/20 rounded-xl text-accent text-xs font-bold tracking-[0.2em] uppercase active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
-                                    {isLoading ? "INITIALIZING..." : "GENERATE SCRIPT"}
+                                    {isGuest ? (
+                                        <>🔒 LOGIN REQUIRED</>
+                                    ) : isLoading ? (
+                                        "INITIALIZING..."
+                                    ) : (
+                                        "GENERATE SCRIPT"
+                                    )}
                                 </button>
                             </form>
                         </div>
@@ -80,15 +89,21 @@ export const ProtocolForm = ({ newScriptTitle, setNewScriptTitle, isLoading, onS
                         value={newScriptTitle}
                         onChange={(e) => setNewScriptTitle(e.target.value)}
                         required
-                        disabled={isLoading}
+                        disabled={isLoading || isGuest}
                     />
                 </div>
                 <button
                     type="submit"
-                    disabled={isLoading || !newScriptTitle.trim()}
-                    className="w-full py-3 mt-1 sm:mt-2 bg-accent/10 border border-accent/40 text-accent font-bold text-[10px] sm:text-xs hover:bg-accent/20 hover:border-accent hover:text-text-primary transition-all rounded-lg uppercase tracking-[0.15em] shadow-[0_0_15px_rgba(var(--accent-rgb),0)] hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading || isGuest || !newScriptTitle.trim()}
+                    className="w-full py-3 mt-1 sm:mt-2 bg-accent/10 border border-accent/40 text-accent font-bold text-[10px] sm:text-xs hover:bg-accent/20 hover:border-accent hover:text-text-primary transition-all rounded-lg uppercase tracking-[0.15em] shadow-[0_0_15px_rgba(var(--accent-rgb),0)] hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    {isLoading ? "COMPILING..." : "GENERATE SCRIPT"}
+                    {isGuest ? (
+                        <>🔒 LOGIN REQUIRED</>
+                    ) : isLoading ? (
+                        "COMPILING..."
+                    ) : (
+                        "GENERATE SCRIPT"
+                    )}
                 </button>
             </form>
         </div>

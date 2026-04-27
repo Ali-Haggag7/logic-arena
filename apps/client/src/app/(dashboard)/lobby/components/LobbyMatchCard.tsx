@@ -12,9 +12,10 @@ interface Props {
   match: LobbyMatch;
   index: number;
   onJoin: (matchId: string) => void;
+  isGuest?: boolean;
 }
 
-export function LobbyMatchCard({ match, index, onJoin }: Props) {
+export function LobbyMatchCard({ match, index, onJoin, isGuest }: Props) {
   const [hoveredBtn, setHoveredBtn] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -33,15 +34,18 @@ export function LobbyMatchCard({ match, index, onJoin }: Props) {
       </div>
 
       <button
+        type="button"
+        aria-label="Join match"
         onClick={() => onJoin(match.matchId)}
-        onMouseEnter={() => setHoveredBtn(true)}
+        onMouseEnter={() => !isGuest && setHoveredBtn(true)}
         onMouseLeave={() => setHoveredBtn(false)}
-        className={`px-8 py-2.5 rounded-md text-[10px] font-black tracking-[0.18em] font-mono transition-all duration-200 cursor-pointer border ${hoveredBtn
+        disabled={isGuest}
+        className={`px-8 py-2.5 rounded-md text-[10px] font-black tracking-[0.18em] font-mono transition-all duration-200 border disabled:opacity-50 disabled:cursor-not-allowed ${hoveredBtn && !isGuest
           ? "bg-accent/20 border-accent/70 text-accent shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)]"
           : "bg-accent/5 border-accent/30 text-accent/70"
           }`}
       >
-        ⚡ JOIN
+        {isGuest ? "🔒 LOCKED" : "⚡ JOIN"}
       </button>
     </div>
   );
@@ -61,10 +65,13 @@ export function LobbyMatchCard({ match, index, onJoin }: Props) {
       </div>
       <div className="w-full mt-1 border-t border-accent/10 pt-3 pb-3">
         <button
+          type="button"
+          aria-label="Join match"
           onClick={() => onJoin(match.matchId)}
-          className="w-full h-[44px] flex items-center justify-center bg-accent/10 border border-accent/40 text-accent font-black tracking-[0.2em] text-[10px] rounded-lg transition-transform active:scale-95 shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase"
+          disabled={isGuest}
+          className="w-full h-[44px] flex items-center justify-center bg-accent/10 border border-accent/40 text-accent font-black tracking-[0.2em] text-[10px] rounded-lg transition-transform active:scale-95 shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          ⚡ JOIN MATCH
+          {isGuest ? "🔒 LOCKED" : "⚡ JOIN MATCH"}
         </button>
       </div>
     </div>

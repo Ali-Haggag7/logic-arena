@@ -40,24 +40,31 @@ export function SettingsInput({
   onChange,
   type = "text",
   placeholder,
+  disabled,
+  isGuest,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
   placeholder?: string;
+  disabled?: boolean;
+  isGuest?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[9px] tracking-[0.22em] text-accent/50 font-bold uppercase">
-        {label}
+        {label} {isGuest && "(GUEST LOCKED)"}
       </label>
       <input
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => !disabled && !isGuest && onChange(e.target.value)}
         placeholder={placeholder}
-        className="bg-bg-secondary border border-accent/10 rounded-lg px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors font-mono text-[12px] placeholder:text-text-secondary/40"
+        disabled={disabled || isGuest}
+        className={`bg-bg-secondary border border-accent/10 rounded-lg px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors font-mono text-[12px] placeholder:text-text-secondary/40 ${
+          disabled || isGuest ? "opacity-50 cursor-not-allowed" : ""
+        } ${isGuest ? "border-dashed" : ""}`}
       />
     </div>
   );
@@ -68,20 +75,31 @@ export function SaveButton({
   loading,
   feedback,
   label = "SAVE CHANGES",
+  disabled,
+  isGuest,
 }: {
   onClick: () => void;
   loading: boolean;
   feedback: FeedbackState;
   label?: string;
+  disabled?: boolean;
+  isGuest?: boolean;
 }) {
   return (
     <div className="flex items-center gap-3">
       <button
-        onClick={onClick}
-        disabled={loading}
-        className="bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 rounded-lg px-6 py-2 text-[10px] tracking-widest font-bold font-mono transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+        type="button"
+        onClick={() => !isGuest && onClick()}
+        disabled={loading || isGuest}
+        className={`rounded-lg px-6 py-2 text-[10px] tracking-widest font-bold font-mono transition-all duration-150 ${
+          loading ? "opacity-50 cursor-wait" : isGuest ? "cursor-not-allowed" : "cursor-pointer"
+        } ${
+          isGuest
+            ? "bg-accent/5 border border-accent/10 text-accent/40"
+            : "bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20"
+        } ${disabled || isGuest ? "opacity-40" : ""}`}
       >
-        {loading ? "PROCESSING..." : label}
+        {loading ? "PROCESSING..." : isGuest ? `[🔒] ${label}` : label}
       </button>
       {feedback.status === "success" && (
         <span className="text-[10px] text-green-400 tracking-[0.12em] animate-pulse">
@@ -101,28 +119,35 @@ export function Toggle({
   checked,
   onChange,
   id,
+  disabled,
+  isGuest,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   id: string;
+  disabled?: boolean;
+  isGuest?: boolean;
 }) {
   return (
     <label
       htmlFor={id}
-      className="relative inline-flex items-center cursor-pointer min-w-[44px] min-h-[44px] justify-center"
+      className={`relative inline-flex items-center min-w-[44px] min-h-[44px] justify-center ${
+        disabled || isGuest ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+      } ${isGuest ? "grayscale" : ""}`}
     >
       <input
         id={id}
         type="checkbox"
         className="sr-only"
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        onChange={(e) => !disabled && !isGuest && onChange(e.target.checked)}
+        disabled={disabled || isGuest}
       />
       <div
         className={`w-11 h-6 rounded-full border transition-all duration-200 relative ${checked
           ? "bg-accent/20 border-accent/60"
           : "bg-bg-secondary border-accent/10"
-          }`}
+          } ${isGuest ? "border-dashed opacity-40" : ""}`}
       >
         <div
           className={`absolute top-[3px] w-[18px] h-[18px] rounded-full transition-all duration-200 ${checked ? "left-[22px] bg-accent shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]" : "left-[3px] bg-text-secondary/30"

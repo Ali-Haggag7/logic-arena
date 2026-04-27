@@ -40,8 +40,9 @@ export function AppearanceSection() {
           return (
             <button
               key={id}
+              type="button"
               onClick={() => setTheme(id)}
-              className={`w-full text-left p-5 rounded-xl border transition-all duration-200 group ${isActive
+              className={`w-full text-left p-5 rounded-xl border transition-all duration-200 group cursor-pointer ${isActive
                 ? "border-accent bg-accent/[0.07] shadow-[0_0_20px_rgba(var(--accent-rgb),0.12),inset_0_0_30px_rgba(var(--accent-rgb),0.04)]"
                 : "border-accent/10 bg-bg-secondary hover:border-accent/30 hover:bg-accent/[0.03]"
                 }`}

@@ -51,6 +51,7 @@ export default function RobotDetailPage() {
   const robot = ROBOTS[robotId];
   const [color, setColor] = useState("DEFAULT");
   const [saving, setSaving] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
   // Hydrate color from saved loadout
@@ -59,7 +60,11 @@ export default function RobotDetailPage() {
       if (res.data.selectedRobotId === robotId) {
         setColor(res.data.selectedColor ?? "DEFAULT");
       }
-    }).catch(() => {/* silently ignore if not logged in */ });
+    }).catch((err) => {
+      if (err.response?.status === 401 || !localStorage.getItem("token")) {
+        setIsGuest(true);
+      }
+    });
   }, [robotId]);
 
   const showToast = useCallback((type: "success" | "error", message: string) => {
@@ -69,6 +74,10 @@ export default function RobotDetailPage() {
 
   const handleSave = async () => {
     if (saving) return;
+    if (isGuest) {
+      showToast("error", "OPERATOR ID REQUIRED FOR CONFIGURATION");
+      return;
+    }
     setSaving(true);
     try {
       await apiClient.patch("/users/profile", { robotId, color });
@@ -200,17 +209,21 @@ export default function RobotDetailPage() {
                   {/* Save button */}
                   <button
                     onClick={handleSave}
-                    disabled={saving}
-                    className="w-full py-4 rounded-xl border tracking-[0.22em] text-[12px] font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden active:scale-[0.98]"
+                    disabled={saving || isGuest}
+                    className={`w-full py-4 rounded-xl border tracking-[0.22em] text-[12px] font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden active:scale-[0.98] ${isGuest ? 'bg-accent/5 border-accent/10 text-accent/30' : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'}`}
                     style={{
-                      background: "rgba(var(--accent-rgb),0.10)",
-                      borderColor: "rgba(var(--accent-rgb),0.3)",
-                      color: "var(--accent)",
+                      background: isGuest ? "transparent" : "rgba(var(--accent-rgb),0.10)",
+                      borderColor: isGuest ? "rgba(var(--accent-rgb),0.1)" : "rgba(var(--accent-rgb),0.3)",
                     }}
                   >
-                    <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {saving ? "SYNCHRONIZING..." : "INITIATE_UPLOAD"}
+                    {!isGuest && <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                    {isGuest ? "🔒 CONFIGURATION LOCKED" : (saving ? "SYNCHRONIZING..." : "INITIATE_UPLOAD")}
                   </button>
+                  {isGuest && (
+                    <p className="text-[8px] text-accent/30 tracking-widest mt-2 uppercase text-center">
+                      Register to unlock customization
+                    </p>
+                  )}
                 </>
               )}
             </div>
@@ -222,10 +235,10 @@ export default function RobotDetailPage() {
           <div className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-bg-primary/80 backdrop-blur-xl border-t border-accent/10 z-[100] animate-in slide-in-from-bottom-full duration-300">
             <button
               onClick={handleSave}
-              disabled={saving}
-              className="w-full py-4 rounded-xl border tracking-[0.3em] text-[11px] font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-accent/20 border-accent/40 text-accent shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)] active:scale-[0.96]"
+              disabled={saving || isGuest}
+              className={`w-full py-4 rounded-xl border tracking-[0.3em] text-[11px] font-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)] active:scale-[0.96] ${isGuest ? 'bg-accent/5 border-accent/10 text-accent/30' : 'bg-accent/20 border-accent/40 text-accent'}`}
             >
-              {saving ? "UPLOADING..." : "SAVE_LOADOUT"}
+              {isGuest ? "🔒 LOCKED" : (saving ? "UPLOADING..." : "SAVE_LOADOUT")}
             </button>
           </div>
         )}

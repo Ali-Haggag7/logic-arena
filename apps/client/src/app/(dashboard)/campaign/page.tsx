@@ -8,17 +8,24 @@ import { LevelInfo } from "./types";
 import { CampaignStyles } from "./components/CampaignStyles";
 import { CampaignDesktopLayout } from "./components/CampaignDesktopLayout";
 import { CampaignMobileLayout } from "./components/CampaignMobileLayout";
+import { AuthModal } from "../../../components/AuthModal";
 
 export default function CampaignPage() {
   const router = useRouter();
   const [levels, setLevels] = useState<LevelInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     apiClient
       .get("/campaign/levels")
       .then((r) => setLevels(r.data))
-      .catch(() => { })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          setIsGuest(true);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -37,11 +44,18 @@ export default function CampaignPage() {
           }}
         />
         {isMobile ? (
-          <CampaignMobileLayout levels={levels} loading={loading} currentLevel={currentLevel} router={router} />
+          <CampaignMobileLayout levels={levels} loading={loading} currentLevel={currentLevel} router={router} isGuest={isGuest} />
         ) : (
-          <CampaignDesktopLayout levels={levels} loading={loading} currentLevel={currentLevel} router={router} />
+          <CampaignDesktopLayout levels={levels} loading={loading} currentLevel={currentLevel} router={router} isGuest={isGuest} />
         )}
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="RESTRICTED ZONE"
+        message="The Campaign Mode features a 10-level progressive storyline. You must initialize an operator account to track your progress, unlock rewards, and save your completion status."
+      />
     </>
   );
 }

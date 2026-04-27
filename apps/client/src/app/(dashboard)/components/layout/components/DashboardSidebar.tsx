@@ -40,9 +40,17 @@ export function DashboardSidebar({ username, onLogout }: DashboardSidebarProps) 
 
       {/* ── SYSTEM STATUS (Replaces Logo for more Nav room) ── */}
       <div className="p-[20px_14px_8px] relative z-10 w-full">
-        <div className="flex items-center gap-2.5 px-3 py-2 bg-emerald-500/5 border border-emerald-500/20 rounded-md shadow-[inset_0_0_10px_rgba(16,185,129,0.05)] text-[9px] tracking-[0.2em] font-bold text-emerald-500 uppercase overflow-hidden">
-          <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-          <span className="truncate">UPLINK_SECURE</span>
+        <div className={`flex items-center gap-2.5 px-3 py-2 rounded-md shadow-[inset_0_0_10px_rgba(var(--accent-rgb),0.05)] text-[9px] tracking-[0.2em] font-bold uppercase overflow-hidden border ${
+          username 
+            ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-500" 
+            : "bg-yellow-500/5 border-yellow-500/20 text-yellow-500/70"
+        }`}>
+          <span className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+            username 
+              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" 
+              : "bg-yellow-500 shadow-[0_0_8px_rgba(var(--color-yellow-500),0.6)]"
+          }`} />
+          <span className="truncate">{username ? "UPLINK_SECURE" : "ANONYMOUS_UPLINK"}</span>
         </div>
       </div>
 
@@ -71,7 +79,7 @@ export function DashboardSidebar({ username, onLogout }: DashboardSidebarProps) 
           <div className="overflow-hidden">
             <div className="text-[9px] text-accent/35 tracking-[0.18em] mb-[2px]">OPERATOR</div>
             <div className="text-[10px] text-accent/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
-              {username ?? "UNKNOWN"}
+              {username || "GUEST_OPERATOR"}
             </div>
           </div>
         </div>

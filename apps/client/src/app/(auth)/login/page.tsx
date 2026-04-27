@@ -23,6 +23,13 @@ export default function LoginPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  // Auto-redirect to dashboard if a token exists
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('token')) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -116,6 +123,15 @@ export default function LoginPage() {
             >
               [ Lost_Key?_Reset ]
             </button>
+            <div className="mt-2 pt-2 border-t border-accent/10 w-full max-w-[200px] mx-auto">
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="text-accent/40 hover:text-accent/80 text-[10px] uppercase tracking-[0.25em] font-bold transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.3)]"
+              >
+                [ Continue_as_Guest ]
+              </button>
+            </div>
           </div>
         </div>
       </form>

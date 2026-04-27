@@ -8,6 +8,7 @@ import { TournamentHeader } from "./components/TournamentHeader";
 import { BracketSVG } from "./components/BracketSVG";
 import { MatchSidebar } from "./components/MatchSidebar";
 import { useMediaQuery } from "../../../../hooks/useMediaQuery";
+import { AuthModal } from "../../../../components/AuthModal";
 
 export default function TournamentBracketPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,8 @@ export default function TournamentBracketPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
   useEffect(() => {
@@ -25,8 +28,11 @@ export default function TournamentBracketPage() {
     try {
       const res = await apiClient.get(`/tournaments/${id}`);
       setTournament(res.data);
-    } catch {
-      /* silent */
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError.response?.status === 401) {
+        setIsGuest(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -39,6 +45,10 @@ export default function TournamentBracketPage() {
   }, [fetchTournament]);
 
   const handleStart = async () => {
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
+    }
     try {
       await apiClient.post(`/tournaments/${id}/start`);
       fetchTournament();
@@ -48,6 +58,10 @@ export default function TournamentBracketPage() {
   };
 
   const handleSimulateWin = async (matchId: string) => {
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
+    }
     if (!userId) return;
     setSimulating(matchId);
     try {
@@ -124,6 +138,8 @@ export default function TournamentBracketPage() {
             userId={userId} 
             onStart={handleStart} 
             isMobile={isMobile}
+            isGuest={isGuest}
+            onShowAuth={() => setShowAuthModal(true)}
           />
 
           {/* MAIN CONTENT: Bracket + Sidebar */}
@@ -145,10 +161,19 @@ export default function TournamentBracketPage() {
               simulating={simulating} 
               onSimulateWin={handleSimulateWin} 
               isMobile={isMobile}
+              isGuest={isGuest}
+              onShowAuth={() => setShowAuthModal(true)}
             />
           </div>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="GUEST ACCESS DETECTED"
+        message="You must initialize an operator account to participate in tournaments. Register now to compete and override battle outcomes."
+      />
     </>
   );
 }

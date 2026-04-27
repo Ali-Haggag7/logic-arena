@@ -1,6 +1,7 @@
 'use client';
 import React, { memo, useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { Html, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import {
@@ -88,7 +89,7 @@ const RobotModelInner = memo(({
   const stasisBlue = useRef(new THREE.Color('#4488ff'));
 
   const clonedScene = useMemo(() => {
-    const clone = scene.clone(true);
+    const clone = SkeletonUtils.clone(scene);
     clone.traverse(child => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;

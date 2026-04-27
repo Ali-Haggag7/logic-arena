@@ -60,8 +60,9 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.handshake?.headers?.authorization;
 
     if (!token) {
-      client.emit('error', { message: 'Unauthorized: No token provided' });
-      client.disconnect(true);
+      client.userId = `guest_${client.id}`;
+      client.isGuest = true;
+      client.emit('authenticated', { userId: client.userId, isGuest: true });
       return;
     }
 
@@ -72,8 +73,9 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.redisService.set(`user:online:${client.userId}`, '1', 300);
       client.emit('authenticated', { userId: client.userId });
     } catch {
-      client.emit('error', { message: 'Unauthorized: Invalid token' });
-      client.disconnect(true);
+      client.userId = `guest_${client.id}`;
+      client.isGuest = true;
+      client.emit('authenticated', { userId: client.userId, isGuest: true });
     }
   }
 

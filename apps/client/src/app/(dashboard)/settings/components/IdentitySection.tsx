@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { apiClient } from "../../../../lib/api-client";
 import { FeedbackState, SectionHeader, SettingsInput, SaveButton } from "./Shared";
 
-export function IdentitySection() {
+export function IdentitySection({ isGuest = false }: { isGuest?: boolean }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [initials, setInitials] = useState("?");
@@ -43,6 +43,9 @@ export function IdentitySection() {
   );
 
   const saveUsername = async () => {
+    if (isGuest) {
+      return;
+    }
     setLoadingUsername(true);
     try {
       await apiClient.put("/users/identity", { username });
@@ -55,6 +58,9 @@ export function IdentitySection() {
   };
 
   const saveEmail = async () => {
+    if (isGuest) {
+      return;
+    }
     setLoadingEmail(true);
     try {
       await apiClient.put("/users/identity", { email });
@@ -83,14 +89,14 @@ export function IdentitySection() {
 
       {/* Display name */}
       <div className="flex flex-col gap-3">
-        <SettingsInput label="Display Name" value={username} onChange={setUsername} placeholder="Enter username" />
-        <SaveButton onClick={saveUsername} loading={loadingUsername} feedback={usernameFb} />
+        <SettingsInput label="Display Name" value={username} onChange={setUsername} placeholder="Enter username" disabled={isGuest} isGuest={isGuest} />
+        <SaveButton onClick={saveUsername} loading={loadingUsername} feedback={usernameFb} isGuest={isGuest} />
       </div>
 
       {/* Email */}
       <div className="flex flex-col gap-3">
-        <SettingsInput label="Email Address" value={email} onChange={setEmail} type="email" placeholder="Enter email" />
-        <SaveButton onClick={saveEmail} loading={loadingEmail} feedback={emailFb} />
+        <SettingsInput label="Email Address" value={email} onChange={setEmail} type="email" placeholder="Enter email" disabled={isGuest} isGuest={isGuest} />
+        <SaveButton onClick={saveEmail} loading={loadingEmail} feedback={emailFb} isGuest={isGuest} />
       </div>
 
       {/* Connected accounts */}

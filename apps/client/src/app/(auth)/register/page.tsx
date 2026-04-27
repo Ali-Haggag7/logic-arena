@@ -25,6 +25,13 @@ export default function RegisterPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const router = useRouter();
 
+  // Auto-redirect to dashboard if a token exists
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('token')) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   // ── Password strength ────────────────────────────────────────────────────
   const checks = useMemo(() => ({
     length: password.length >= 8,
@@ -144,6 +151,15 @@ export default function RegisterPage() {
             >
               [ Enter_Verification_Code ]
             </button>
+            <div className="mt-2 pt-2 border-t border-accent/10 w-full max-w-[200px] mx-auto">
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="text-accent/40 hover:text-accent/80 text-[10px] uppercase tracking-[0.25em] font-bold transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.3)]"
+              >
+                [ Continue_as_Guest ]
+              </button>
+            </div>
           </div>
         </div>
       </form>

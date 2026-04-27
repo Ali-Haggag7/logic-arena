@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "../../../../lib/api-client";
 import { FeedbackState, SectionHeader, SettingsInput, SaveButton, PasswordStrength } from "./Shared";
 
-export function SecuritySection() {
+export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
   const router = useRouter();
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -35,6 +35,9 @@ export function SecuritySection() {
   );
 
   const changePassword = async () => {
+    if (isGuest) {
+      return;
+    }
     if (!currentPw || !newPw || !confirmPw) {
       return flash(setPwFb, "error", "ALL FIELDS REQUIRED");
     }
@@ -75,15 +78,15 @@ export function SecuritySection() {
 
       {/* Password change */}
       <div className="flex flex-col gap-4">
-        <SettingsInput label="Current Password" value={currentPw} onChange={setCurrentPw} type="password" placeholder="••••••••" />
-        <SettingsInput label="New Password" value={newPw} onChange={setNewPw} type="password" placeholder="••••••••" />
+        <SettingsInput label="Current Password" value={currentPw} onChange={setCurrentPw} type="password" placeholder="••••••••" disabled={isGuest} isGuest={isGuest} />
+        <SettingsInput label="New Password" value={newPw} onChange={setNewPw} type="password" placeholder="••••••••" disabled={isGuest} isGuest={isGuest} />
         <PasswordStrength password={newPw} />
-        <SettingsInput label="Confirm New Password" value={confirmPw} onChange={setConfirmPw} type="password" placeholder="••••••••" />
-        <SaveButton onClick={changePassword} loading={loadingPw} feedback={pwFb} label="UPDATE CREDENTIALS" />
+        <SettingsInput label="Confirm New Password" value={confirmPw} onChange={setConfirmPw} type="password" placeholder="••••••••" disabled={isGuest} isGuest={isGuest} />
+        <SaveButton onClick={changePassword} loading={loadingPw} feedback={pwFb} label="UPDATE CREDENTIALS" isGuest={isGuest} />
       </div>
 
       {/* Danger zone */}
-      <div className="mt-4 p-5 border border-red-500/30 rounded-xl bg-red-500/[0.03] relative overflow-hidden">
+      <div className={`mt-4 p-5 border border-red-500/30 rounded-xl bg-red-500/[0.03] relative overflow-hidden ${isGuest ? "grayscale-[0.8]" : ""}`}>
         <div
           className="absolute inset-y-0 left-0 w-[3px] rounded-l-xl"
           style={{ background: "rgba(239,68,68,0.6)" }}
@@ -95,10 +98,11 @@ export function SecuritySection() {
           Permanently deletes your account and all associated data. This action cannot be undone.
         </p>
         <button
-          onClick={() => setShowDeleteModal(true)}
-          className="ml-2 px-5 py-2 bg-red-500/10 border border-red-500/40 text-red-400 hover:bg-red-500/20 hover:border-red-500/70 rounded-lg text-[10px] font-bold tracking-[0.2em] font-mono transition-all duration-150"
+          type="button"
+          onClick={() => !isGuest && setShowDeleteModal(true)}
+          className={`ml-2 px-5 py-2 bg-red-500/10 border border-red-500/40 text-red-400 rounded-lg text-[10px] font-bold tracking-[0.2em] font-mono transition-all duration-150 ${isGuest ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-red-500/20 hover:border-red-500/70"}`}
         >
-          TERMINATE ACCOUNT
+          {isGuest ? "[🔒] TERMINATE ACCOUNT" : "TERMINATE ACCOUNT"}
         </button>
       </div>
 
@@ -131,6 +135,7 @@ export function SecuritySection() {
             )}
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={deleteAccount}
                 disabled={loadingDelete}
                 className="flex-1 py-2.5 text-[10px] tracking-[0.18em] font-bold border border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-all disabled:opacity-40"
@@ -138,6 +143,7 @@ export function SecuritySection() {
                 {loadingDelete ? "TERMINATING..." : "CONFIRM DELETE"}
               </button>
               <button
+                type="button"
                 onClick={() => { setShowDeleteModal(false); setDeleteConfirm(""); }}
                 className="flex-1 py-2.5 text-[10px] tracking-[0.18em] font-bold border border-accent/20 bg-accent/5 text-accent/60 hover:bg-accent/10 rounded-lg transition-all"
               >

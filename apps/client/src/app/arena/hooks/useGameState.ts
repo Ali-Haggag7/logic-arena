@@ -29,6 +29,7 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
   const [firedTracer, setFiredTracer] = useState<FiredTracer | null>(null);
   const [speechBubble, setSpeechBubble] = useState<SpeechBubbleState | null>(null);
   const [selectedRobotId, setSelectedRobotId] = useState<string>('');
+  const [socketUserId, setSocketUserId] = useState<string | null>(null);
   
   const [trainingStats, setTrainingStats] = useState({
     shotsFired: 0,
@@ -72,8 +73,11 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
       setServerConfirmedMode(data.mode);
     };
 
-    const handleAuthenticated = (data: unknown) => {
+    const handleAuthenticated = (data: { userId?: string; isGuest?: boolean }) => {
       console.log('[Socket] Authenticated:', data);
+      if (data.userId) {
+        setSocketUserId(data.userId);
+      }
     };
 
     const handleError = (error: unknown) => {
@@ -133,13 +137,13 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
       if (now - lastUiUpdateRef.current > 100) {
         lastUiUpdateRef.current = now;
         setUiState({ ...parsed, obstacles: [] });
-        const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+        const activeUserId = (typeof window !== 'undefined' ? localStorage.getItem('userId') : null) || socketUserId;
         setSelectedRobotId(prev => {
-          const hasUser = currentUserId && parsed.robots.some(r => r.id === currentUserId);
+          const hasUser = activeUserId && parsed.robots.some(r => r.id === activeUserId);
           const hasPrev = prev && parsed.robots.some(r => r.id === prev);
           
           if (!hasPrev && parsed.robots.length > 0) {
-            return hasUser ? currentUserId : parsed.robots[0].id;
+            return hasUser ? activeUserId : parsed.robots[0].id;
           }
           return prev;
         });
@@ -151,10 +155,10 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
     };
 
     const handleLogicExecuted = (data: { robotId: string; action: string; message?: string }) => {
-      const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+      const activeUserId = (typeof window !== 'undefined' ? localStorage.getItem('userId') : null) || socketUserId;
 
       if (data.action === 'FIRE') {
-        if (data.robotId === currentUserId) {
+        if (data.robotId === activeUserId) {
           setTrainingStats(prev => ({ ...prev, shotsFired: prev.shotsFired + 1 }));
         }
 
@@ -240,5 +244,6 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
     // FOG toggle
     fogEnabled,
     setFogEnabled,
+    socketUserId,
   };
 };

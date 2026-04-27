@@ -16,6 +16,18 @@ const EMPTY_STATS: CombatStats = {
   efficiency: 0, aggression: 0, defense: 0, precision: 0, speed: 0,
 };
 
+const ANONYMOUS_PROFILE: ProfileData = {
+  username: "GUEST_OPERATOR",
+  rank: 9999,
+  memberSince: new Date().toISOString(),
+  totalMatches: 0,
+  wins: 0,
+  losses: 0,
+  winRate: 0,
+  combatStats: EMPTY_STATS,
+  matchHistory: []
+};
+
 // ─── Skeleton shimmer block ──────────────────────────────────────────────────
 function Shimmer({ className }: { className?: string }) {
   return (
@@ -131,6 +143,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -142,7 +155,8 @@ export default function ProfilePage() {
       } catch (err: unknown) {
         const e = err as { response?: { status?: number }; message?: string };
         if (e.response?.status === 401) {
-          router.push("/login");
+          setIsGuest(true);
+          setProfile(ANONYMOUS_PROFILE);
         } else {
           setError(e.message ?? "Unknown error");
         }
@@ -396,6 +410,7 @@ export default function ProfilePage() {
         loading={loading}
         history={profile?.matchHistory ?? []}
         isMobile={isMobile}
+        isGuest={isGuest}
       />
     </div>
   );
@@ -480,6 +495,7 @@ export default function ProfilePage() {
               {HistorySection}
             </>
           )}
+
         </div>
       </div>
     </>

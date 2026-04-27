@@ -6,27 +6,34 @@ import { TournamentSkeleton } from "./components/TournamentSkeleton";
 import { TournamentCard, Tournament } from "./components/TournamentCard";
 import { CreateTournamentForm } from "./components/CreateTournamentForm";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { AuthModal } from "../../../components/AuthModal";
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     setUserId(localStorage.getItem("userId"));
+    setIsGuest(!localStorage.getItem("token"));
   }, []);
 
   const fetchTournaments = useCallback(async () => {
     try {
       const res = await apiClient.get("/tournaments");
       setTournaments(res.data);
-    } catch {
-      /* silent */
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError.response?.status === 401) {
+        setIsGuest(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -39,6 +46,10 @@ export default function TournamentsPage() {
   }, [fetchTournaments]);
 
   const handleCreate = async (name: string) => {
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
+    }
     setCreating(true);
     try {
       await apiClient.post("/tournaments/create", { name });
@@ -52,6 +63,10 @@ export default function TournamentsPage() {
   };
 
   const handleJoin = async (tournamentId: string) => {
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
+    }
     setJoining(tournamentId);
     try {
       await apiClient.post(`/tournaments/${tournamentId}/join`);
@@ -63,6 +78,14 @@ export default function TournamentsPage() {
     }
   };
 
+  const handleCreateClick = () => {
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
+    }
+    setShowCreate(true);
+  };
+
   return (
     <>
       <style>{`
@@ -72,7 +95,6 @@ export default function TournamentsPage() {
         }
       `}</style>
       <div className="min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden">
-        {/* Grid bg */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
@@ -82,7 +104,6 @@ export default function TournamentsPage() {
         />
 
         <div className={`max-w-[1100px] mx-auto ${isMobile ? "px-4 pt-6" : "px-6 pt-12"} pb-[100px] relative z-10 animate-[fadeIn_0.35s_ease]`}>
-          {/* HERO */}
           <div className={`border-b border-accent/10 ${isMobile ? "pb-6 mb-6" : "pb-9 mb-10"} flex justify-between items-end flex-wrap gap-5`}>
             <div>
               <p className="text-[10px] tracking-[0.4em] text-accent/30 mb-2.5 uppercase font-bold">
@@ -96,25 +117,27 @@ export default function TournamentsPage() {
               </h1>
             </div>
 
-            {/* CREATE button */}
             {!showCreate && (
               <button
-                onMouseEnter={() => setHoveredBtn("create")}
+                type="button"
+                title={isGuest ? "LOGIN REQUIRED" : "Create Tournament"}
+                onMouseEnter={() => !isGuest && setHoveredBtn("create")}
                 onMouseLeave={() => setHoveredBtn(null)}
-                onClick={() => setShowCreate(true)}
-                className={`group relative overflow-hidden px-7 py-3 rounded-lg text-[10px] font-black tracking-[0.28em] font-mono cursor-pointer transition-all duration-200 border ${isMobile ? "w-full" : ""} ${hoveredBtn === "create"
-                  ? "bg-accent/20 border-accent/70 text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.6)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)]"
-                  : "bg-accent/10 border-accent/30 text-accent/70"
+                onClick={handleCreateClick}
+                disabled={isGuest}
+                className={`px-7 py-3 rounded-md text-[10px] font-black tracking-[0.25em] font-mono transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${isMobile ? "w-full" : ""} ${isGuest
+                  ? "bg-accent/10 border border-accent/30 text-accent/70 opacity-60 cursor-not-allowed"
+                  : hoveredBtn === "create"
+                    ? "bg-accent/20 border border-accent/70 text-accent shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)] cursor-pointer"
+                    : "bg-accent/10 border border-accent/30 text-accent/70 cursor-pointer"
                   }`}
               >
-                <span className="relative z-10">[+] DEPLOY_BRACKET</span>
-                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {isGuest ? "🔒 LOGIN TO DEPLOY" : "[+] DEPLOY_BRACKET"}
               </button>
             )}
           </div>
 
-          {/* CREATE FORM */}
-          {showCreate && (
+          {showCreate && !isGuest && (
             <CreateTournamentForm
               onClose={() => setShowCreate(false)}
               onCreate={handleCreate}
@@ -123,7 +146,6 @@ export default function TournamentsPage() {
             />
           )}
 
-          {/* STATUS BADGES ROW */}
           <div className={`flex gap-2 mb-7 flex-wrap ${isMobile ? "justify-center" : ""}`}>
             {[
               { label: "ALL_UNITS", value: tournaments.length },
@@ -140,12 +162,15 @@ export default function TournamentsPage() {
             ))}
           </div>
 
-          {/* TOURNAMENT GRID */}
           {loading ? (
             <TournamentSkeleton />
           ) : tournaments.length === 0 ? (
-            <div className="text-center p-[80px_24px] text-accent/20 text-[10px] tracking-[0.2em] border border-dashed border-accent/10 rounded-xl bg-card/10 backdrop-blur-md uppercase font-bold">
-              NO ACTIVE TOURNAMENT FREQUENCIES DETECTED.
+            <div className="text-center py-20 border border-dashed border-accent/20 rounded-2xl bg-accent/[0.02] backdrop-blur-sm">
+              <div className="text-accent/30 mb-4 font-mono text-[10px] tracking-[0.3em]">NO_ACTIVE_SIGNALS</div>
+              <h3 className="text-accent font-black tracking-widest text-lg mb-2 uppercase">Awaiting Deployments</h3>
+              <p className="text-accent/40 text-[10px] tracking-[0.15em] max-w-[440px] mx-auto uppercase leading-relaxed px-6">
+                The tournament network is currently quiet. Initialize a new bracket to challenge global operators.
+              </p>
             </div>
           ) : (
             <div className={`grid ${isMobile ? "grid-cols-1 gap-4" : "grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5"}`}>
@@ -158,12 +183,20 @@ export default function TournamentsPage() {
                   joining={joining}
                   onJoin={handleJoin}
                   isMobile={isMobile}
+                  isGuest={isGuest}
                 />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="GUEST ACCESS DETECTED"
+        message="You must initialize an operator account to create or join tournament brackets. Register now to compete in the arena."
+      />
     </>
   );
 }

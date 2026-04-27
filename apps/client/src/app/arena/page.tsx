@@ -50,6 +50,7 @@ const ArenaPageContent = () => {
     selectedRobotId, setSelectedRobotId, availableRobots,
     matchResult, serverConfirmedMode, trainingStats,
     fogEnabled, setFogEnabled,
+    socketUserId,
     firedTracer, speechBubble,
   } = useGameState(resolvedScriptId, urlMode);
 
@@ -71,8 +72,6 @@ const ArenaPageContent = () => {
   }, []);
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) { router.push('/login'); return; }
-
     let isMounted = true;
 
     const resolveAndFetch = async () => {
@@ -98,7 +97,21 @@ const ArenaPageContent = () => {
               }
               return;
             }
-          } catch (err) {
+          } catch (err: unknown) {
+            const axiosError = err as { response?: { status?: number } };
+            if (axiosError.response?.status === 401 || !localStorage.getItem('token')) {
+              if (isMounted) {
+                setResolvedScriptId('guest-script');
+                setScript({
+                  id: 'guest-script',
+                  title: 'GUEST_OVERRIDE',
+                  content: '// Guest Mode active\n// You can write temporary logic here'
+                } as RobotScript);
+                setLoading(false);
+              }
+              return;
+            }
+
             if (isMounted) {
               setError('Failed to fetch fallback scripts.');
               setLoading(false);
@@ -116,6 +129,22 @@ const ArenaPageContent = () => {
           setLoading(false);
         }
       } catch (err: unknown) {
+        const axiosError = err as { response?: { status?: number, data?: { message?: string } }, message?: string };
+        
+        // GUEST MODE: If unauthorized or script not found, provide a default training script
+        if (axiosError.response?.status === 401 || !localStorage.getItem('token')) {
+          if (isMounted) {
+            setResolvedScriptId('guest-script');
+            setScript({
+              id: 'guest-script',
+              title: 'GUEST_OVERRIDE',
+              content: '// Guest Mode active\n// You can write temporary logic here'
+            });
+            setLoading(false);
+          }
+          return;
+        }
+
         // Self-healing: If the script is invalid (e.g. shared localStorage across accounts),
         // clear the invalid cache and fallback to the user's first available script.
         localStorage.removeItem('selectedScriptId');
@@ -136,7 +165,7 @@ const ArenaPageContent = () => {
           }
         } catch (fallbackErr) {
           if (isMounted) {
-            const e = err as { response?: { data?: { message?: string } }; message?: string };
+            const e = fallbackErr as { response?: { data?: { message?: string } }; message?: string };
             setError(e.response?.data?.message || e.message || 'Unknown error');
             setLoading(false);
           }
@@ -156,15 +185,15 @@ const ArenaPageContent = () => {
   const obstacles = obstaclesRef.current || [];
   const projectiles = gameStateRef.current?.projectiles || [];
   const isConnected = !!socket?.connected;
-  const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+  const activeUserId = (typeof window !== 'undefined' ? localStorage.getItem('userId') : null) || socketUserId;
   const matchId = searchParams.get('matchId') || 'default-match';
 
   // Determine if this is a PvP match
   const isPvP = availableRobots.length >= 2 && !availableRobots.some(id => id.toLowerCase().includes('bot'));
   
   // If PvP, lock the user to their own robot so they cannot switch to the opponent
-  const filteredAvailableRobots = isPvP && currentUserId && availableRobots.includes(currentUserId)
-    ? [currentUserId]
+  const filteredAvailableRobots = isPvP && activeUserId && availableRobots.includes(activeUserId)
+    ? [activeUserId]
     : availableRobots;
 
   return (
@@ -176,7 +205,7 @@ const ArenaPageContent = () => {
       {matchResult && (
         <WinnerScreen
           matchResult={matchResult}
-          currentUserId={currentUserId}
+          currentUserId={activeUserId}
           socket={socket}
           matchId={matchId}
         />
@@ -197,7 +226,7 @@ const ArenaPageContent = () => {
 
       {displayMode === 'TRAINING_SOLO' && (
         <TrainingHUD 
-          playerRobot={robots.find(r => r.id === currentUserId)}
+          playerRobot={robots.find(r => r.id === activeUserId)}
           shotsFired={trainingStats.shotsFired}
           dummiesDestroyed={trainingStats.dummiesDestroyed}
           startTime={trainingStats.startTime}
@@ -209,7 +238,7 @@ const ArenaPageContent = () => {
 
       {displayMode === 'RACING' && (
         <RacingHUD 
-          playerRobot={robots.find(r => r.id === currentUserId)}
+          playerRobot={robots.find(r => r.id === activeUserId)}
           startTime={trainingStats.startTime}
           isMobile={isMobile}
         />

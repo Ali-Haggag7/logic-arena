@@ -48,9 +48,10 @@ interface Props {
   joining: string | null;
   onJoin: (id: string) => void;
   isMobile?: boolean;
+  isGuest?: boolean;
 }
 
-export function TournamentCard({ tournament: t, index, userId, joining, onJoin, isMobile }: Props) {
+export function TournamentCard({ tournament: t, index, userId, joining, onJoin, isMobile, isGuest }: Props) {
   const router = useRouter();
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
@@ -127,13 +128,18 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
             disabled={joining === t.id}
             onMouseEnter={() => setHoveredBtn("join")}
             onMouseLeave={() => setHoveredBtn(null)}
-            className={`flex-1 px-4 py-3 rounded-lg text-[10px] font-black tracking-[0.25em] font-mono transition-all duration-200 border relative overflow-hidden group active:scale-[0.95] ${joining === t.id ? 'opacity-50 cursor-wait' : 'cursor-pointer'
-              } ${hoveredBtn === "join"
-                ? "bg-yellow-500/15 border-yellow-500/60 text-yellow-500 shadow-[0_0_15px_rgba(var(--color-yellow-500),0.15)]"
-                : "bg-yellow-500/5 border-yellow-500/20 text-yellow-500/60"
+            className={`flex-1 px-4 py-3 rounded-lg text-[10px] font-black tracking-[0.25em] font-mono transition-all duration-200 border relative overflow-hidden group active:scale-[0.95] cursor-pointer ${
+              joining === t.id ? 'opacity-50 cursor-wait' : ''
+              } ${isGuest
+                ? "bg-yellow-500/5 border-yellow-500/20 text-yellow-500/40"
+                : hoveredBtn === "join"
+                  ? "bg-yellow-500/15 border-yellow-500/60 text-yellow-500 shadow-[0_0_15px_rgba(var(--color-yellow-500),0.15)]"
+                  : "bg-yellow-500/5 border-yellow-500/20 text-yellow-500/60"
               }`}
           >
-            <span className="relative z-10">{joining === t.id ? "SYNCING..." : "▶ JOIN"}</span>
+            <span className="relative z-10">
+              {isGuest ? "[🔒] JOIN" : joining === t.id ? "SYNCING..." : "▶ JOIN"}
+            </span>
           </button>
         )}
         <button

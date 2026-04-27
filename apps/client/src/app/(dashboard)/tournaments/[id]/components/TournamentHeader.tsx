@@ -6,9 +6,11 @@ interface Props {
   userId: string | null;
   onStart: () => void;
   isMobile?: boolean;
+  isGuest?: boolean;
+  onShowAuth: () => void;
 }
 
-export function TournamentHeader({ tournament, userId, onStart, isMobile }: Props) {
+export function TournamentHeader({ tournament, userId, onStart, isMobile, isGuest, onShowAuth }: Props) {
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
   const isCreator = userId === tournament.creatorId;
@@ -47,15 +49,27 @@ export function TournamentHeader({ tournament, userId, onStart, isMobile }: Prop
 
       {isCreator && tournament.status === "WAITING" && (
         <button
-          onClick={onStart}
-          onMouseEnter={() => setHoveredBtn("start")}
+          onClick={isGuest ? undefined : onStart}
+          disabled={isGuest}
+          onMouseEnter={() => !isGuest && setHoveredBtn("start")}
           onMouseLeave={() => setHoveredBtn(null)}
-          className={`${isMobile ? "w-full py-4" : "px-8 py-3"} rounded-lg text-[11px] font-black tracking-[0.25em] font-mono cursor-pointer transition-all duration-200 border relative overflow-hidden group ${hoveredBtn === "start"
-              ? "bg-emerald-500/20 border-emerald-500/70 text-emerald-500 drop-shadow-[0_0_12px_rgba(var(--color-emerald-500),0.5)]"
-              : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500/70"
+          className={`${isMobile ? "w-full py-4" : "px-8 py-3"} rounded-lg text-[11px] font-black tracking-[0.25em] font-mono transition-all duration-200 border relative overflow-hidden group ${isGuest 
+              ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-500/20 cursor-not-allowed opacity-50"
+              : hoveredBtn === "start"
+                ? "bg-emerald-500/20 border-emerald-500/70 text-emerald-500 drop-shadow-[0_0_12px_rgba(var(--color-emerald-500),0.5)] cursor-pointer"
+                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500/70 cursor-pointer"
             }`}
         >
-          <span className="relative z-10">▶ START_TOURNAMENT_SEQUENCE</span>
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {isGuest ? (
+              <>
+                <span className="text-[12px]">🔒</span>
+                <span>LOGIN TO START</span>
+              </>
+            ) : (
+              "▶ START_TOURNAMENT_SEQUENCE"
+            )}
+          </span>
         </button>
       )}
     </div>

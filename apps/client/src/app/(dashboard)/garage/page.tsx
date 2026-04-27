@@ -4,10 +4,15 @@ import React, { useState, useEffect } from "react";
 import { RobotCard } from "./components/RobotCard";
 import { apiClient } from "../../../lib/api-client";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { AuthModal } from "../../../components/AuthModal";
 
 const ROBOTS = [
   { robotId: "unit-01", name: "UNIT-01", file: "/robot.glb", scale: 2.5 },
   { robotId: "unit-02", name: "UNIT-02", file: "/robot2.glb", scale: 1.2 },
+];
+
+const GUEST_ROBOT = [
+  { robotId: "guest-unit", name: "GUEST_UNIT", file: "/robot.glb", scale: 2.5 }
 ];
 
 export default function GaragePage() {
@@ -15,11 +20,20 @@ export default function GaragePage() {
   const [activeColor, setActiveColor] = useState("DEFAULT");
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  const [isGuest, setIsGuest] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   useEffect(() => {
     apiClient.get("/users/profile").then((res) => {
       if (res.data.selectedRobotId) setActiveRobotId(res.data.selectedRobotId);
       if (res.data.selectedColor) setActiveColor(res.data.selectedColor);
-    }).catch(() => { });
+    }).catch((err) => {
+      if (err.response?.status === 401 || !localStorage.getItem("token")) {
+        setIsGuest(true);
+        setActiveRobotId("guest-unit");
+        setActiveColor("#22d3ee");
+      }
+    });
   }, []);
 
   return (
@@ -65,7 +79,7 @@ export default function GaragePage() {
 
           {/* ── Robot Grid ── */}
           <div className={`grid grid-cols-1 ${isMobile ? "gap-4" : "sm:grid-cols-2 gap-6"}`}>
-            {ROBOTS.map(({ robotId, name, file, scale }) => {
+            {(isGuest ? GUEST_ROBOT : ROBOTS).map(({ robotId, name, file, scale }) => {
               const isActive = robotId === activeRobotId;
               return (
                 <div key={robotId} className="relative">
@@ -96,6 +110,10 @@ export default function GaragePage() {
                     scale={scale}
                     color={isActive ? activeColor : "DEFAULT"}
                     isMobile={isMobile}
+                    isGuest={isGuest}
+                    onClick={() => {
+                      if (isGuest) setShowAuthModal(true);
+                    }}
                   />
                 </div>
               );
@@ -111,6 +129,13 @@ export default function GaragePage() {
           </p>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="CHASSIS LOCKED"
+        message="Robot customization is restricted for guests. Initialize an operator account to unlock new chassis types, apply custom paint jobs, and upgrade your battle bot."
+      />
     </>
   );
 }

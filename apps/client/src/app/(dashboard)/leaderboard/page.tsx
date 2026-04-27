@@ -11,9 +11,12 @@ const LeaderboardPage = () => {
     const [users, setUsers] = useState<LeaderboardUser[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<string>("");
+    const [isGuest, setIsGuest] = useState(false);
     const { sendChallenge } = useSocket();
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        setIsGuest(!token);
         setCurrentUserId(localStorage.getItem('userId') ?? '');
 
         const fetchLeaderboard = async () => {
@@ -56,6 +59,7 @@ const LeaderboardPage = () => {
                 isLoading={isLoading}
                 currentUserId={currentUserId}
                 onChallenge={sendChallenge}
+                isGuest={isGuest}
             />
 
             {/* Footer Decor */}
@@ -86,6 +90,7 @@ const LeaderboardPage = () => {
                 isLoading={isLoading}
                 currentUserId={currentUserId}
                 onChallenge={sendChallenge}
+                isGuest={isGuest}
             />
         </div>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { SectionId, SECTIONS } from "./Shared";
 
@@ -8,6 +8,7 @@ interface SettingsLayoutProps {
   activeSection: SectionId | null;
   onSectionChange: (section: SectionId | null) => void;
   isMobile: boolean;
+  isGuest: boolean;
   children: React.ReactNode;
 }
 
@@ -15,8 +16,10 @@ export function SettingsLayout({
   activeSection,
   onSectionChange,
   isMobile,
+  isGuest,
   children,
 }: SettingsLayoutProps) {
+  const router = useRouter();
   return (
     <>
       <style>{`
@@ -49,6 +52,33 @@ export function SettingsLayout({
               System Configuration | Neural Parameters
             </h2>
           </div>
+
+          {isGuest && (
+            <div className={`mt-6 p-6 border border-dashed border-accent/20 rounded-2xl bg-accent/[0.02] backdrop-blur-sm animate-[fadeIn_0.35s_ease] flex flex-col items-center text-center`}>
+              <div className="text-3xl mb-3 opacity-50">🔒</div>
+              <h3 className="text-accent font-black tracking-widest text-[14px] mb-1.5 uppercase">Neural Interface Required</h3>
+              <p className="text-accent/40 text-[10px] tracking-[0.12em] max-w-[480px] uppercase leading-relaxed">
+                Settings synchronization and identity management require a verified operator account. 
+                Authentication is mandatory to persist neural configuration data.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push("/register")}
+                  className="px-6 py-3 bg-accent/10 border border-accent/30 rounded-lg text-[10px] font-black tracking-widest text-accent hover:bg-accent/20 transition-all cursor-pointer shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]"
+                >
+                  [+] REGISTER NEW NODE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/login")}
+                  className="px-6 py-3 bg-bg-secondary/50 border border-accent/20 rounded-lg text-[10px] font-black tracking-widest text-accent/70 hover:bg-accent/5 hover:text-accent transition-all cursor-pointer"
+                >
+                  LOGIN
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {isMobile ? (
@@ -67,6 +97,7 @@ export function SettingsLayout({
                   style={isOpen ? { boxShadow: "inset 3px 0 0 var(--accent), 0 0 20px rgba(var(--accent-rgb),0.08)" } : {}}
                 >
                   <button
+                    type="button"
                     onClick={() => onSectionChange(isOpen ? null : section.id)}
                     className="w-full flex items-center justify-between px-5 py-4 bg-bg-secondary min-h-[56px]"
                   >
@@ -102,6 +133,7 @@ export function SettingsLayout({
                 return (
                   <button
                     key={section.id}
+                    type="button"
                     onClick={() => onSectionChange(section.id)}
                     className={`w-full text-left px-4 py-3 text-[10px] font-bold tracking-[0.18em] transition-all duration-150 border-l-[3px] ${
                       isActive

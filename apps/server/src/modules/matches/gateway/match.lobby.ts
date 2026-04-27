@@ -25,18 +25,31 @@ export class MatchLobbyManager {
       return;
     }
 
-    const script = await this.prisma.robotScript.findUnique({
-      where: { id: data.scriptId, userId: client.userId },
-    });
-    if (!script) {
-      client.emit('error', { message: 'Script not found or unauthorized.' });
-      return;
-    }
+    let scriptContent = '';
+    let selectedColor = '#22d3ee';
+    let selectedRobotId = 'unit-01';
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: client.userId },
-      select: { selectedColor: true, selectedRobotId: true },
-    });
+    if (client.isGuest) {
+      scriptContent = '// Guest Mode active\n// You can write temporary logic here';
+    } else {
+      const script = await this.prisma.robotScript.findUnique({
+        where: { id: data.scriptId, userId: client.userId },
+      });
+      if (!script) {
+        client.emit('error', { message: 'Script not found or unauthorized.' });
+        return;
+      }
+      scriptContent = script.content;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: client.userId },
+        select: { selectedColor: true, selectedRobotId: true },
+      });
+      if (user) {
+        selectedColor = user.selectedColor ?? '#22d3ee';
+        selectedRobotId = user.selectedRobotId ?? 'unit-01';
+      }
+    }
 
     let match = this.state.matches.get(data.matchId);
     const currentMode = this.state.matchModes.get(data.matchId);
@@ -52,9 +65,9 @@ export class MatchLobbyManager {
     if (!match) {
       const playerToken = {
         id: client.userId,
-        script: script.content,
-        color: user?.selectedColor ?? '#22d3ee',
-        model: user?.selectedRobotId ?? 'unit-01',
+        script: scriptContent,
+        color: selectedColor,
+        model: selectedRobotId,
       };
 
       const initialPlayers =
@@ -98,7 +111,7 @@ export class MatchLobbyManager {
     } else {
       if (this.state.lobbyMatches.has(data.matchId)) {
         match.removePlayer('bot-2');
-        match.addPlayer({ id: client.userId!, script: script.content, color: user?.selectedColor ?? '#22d3ee' });
+        match.addPlayer({ id: client.userId!, script: scriptContent, color: selectedColor, model: selectedRobotId });
         this.state.lobbyMatches.delete(data.matchId);
         this.server.emit('lobbyUpdated', Array.from(this.state.lobbyMatches.values()));
       } else {
@@ -108,8 +121,8 @@ export class MatchLobbyManager {
         } else {
           match.removePlayer(client.userId!);
         }
-        match.addPlayer({ id: client.userId!, script: script.content, color: user?.selectedColor ?? '#22d3ee', model: user?.selectedRobotId ?? 'unit-01' });
-        match.updateInitialPlayer(client.userId!, script.content);
+        match.addPlayer({ id: client.userId!, script: scriptContent, color: selectedColor, model: selectedRobotId });
+        match.updateInitialPlayer(client.userId!, scriptContent);
       }
     }
 

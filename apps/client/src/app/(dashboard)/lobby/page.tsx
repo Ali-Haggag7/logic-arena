@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LobbyMatchCard } from "./components/LobbyMatchCard";
 import { LobbySkeleton } from "./components/LobbySkeleton";
@@ -16,11 +16,17 @@ export default function LobbyPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [hoveredBtn, setHoveredBtn] = useState(false);
   const [showScriptWarning, setShowScriptWarning] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+
+  useEffect(() => {
+    setIsGuest(!localStorage.getItem("token"));
+  }, []);
 
   const { matches, connectionStatus, setRetryKey, socket } = useLobbySocket();
   const { handleDeployMatch } = useDeployMatch({ socket, onNoScript: () => setShowScriptWarning(true) });
 
   const handleJoinMatch = (matchId: string) => {
+    if (isGuest) return;
     const scriptId = localStorage.getItem("selectedScriptId");
     if (scriptId) router.push(`/arena?scriptId=${scriptId}&matchId=${matchId}`);
     else setShowScriptWarning(true);
@@ -41,12 +47,13 @@ export default function LobbyPage() {
           onClick={handleDeployMatch}
           onMouseEnter={() => setHoveredBtn(true)}
           onMouseLeave={() => setHoveredBtn(false)}
-          className={`px-7 py-3 rounded-md text-[10px] font-black tracking-[0.25em] font-mono cursor-pointer transition-all duration-200 ${hoveredBtn
+          disabled={isGuest}
+          className={`px-7 py-3 rounded-md text-[10px] font-black tracking-[0.25em] font-mono transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${hoveredBtn && !isGuest
             ? "bg-accent/20 border border-accent/70 text-accent shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)]"
             : "bg-accent/10 border border-accent/30 text-accent/70"
             }`}
         >
-          [+] DEPLOY MATCH
+          {isGuest ? "🔒 LOGIN TO DEPLOY" : "[+] DEPLOY MATCH"}
         </button>
       </div>
       <div className="flex flex-col gap-4">
@@ -55,7 +62,7 @@ export default function LobbyPage() {
             NO ACTIVE MATCHES FOUND.<br />
             <span className="text-[10px] text-accent/15 mt-2 block">DEPLOY A NEW MATCH TO CHALLENGE OTHER OPERATORS.</span>
           </div>
-        ) : matches.map((match, idx) => <LobbyMatchCard key={match.matchId} match={match} index={idx} onJoin={handleJoinMatch} />)}
+        ) : matches.map((match, idx) => <LobbyMatchCard key={match.matchId} match={match} index={idx} onJoin={handleJoinMatch} isGuest={isGuest} />)}
       </div>
     </div>
   );
@@ -66,8 +73,8 @@ export default function LobbyPage() {
         <p className="text-[9px] tracking-[0.4em] text-accent/70 mb-1.5 uppercase">// GLOBAL_NETWORK</p>
         <h1 className="m-0 text-2xl font-black tracking-[0.2em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.8)] leading-tight">LOBBY</h1>
         <ConnectionStatusBar connectionStatus={connectionStatus} isMobile={true} />
-        <button onClick={handleDeployMatch} className="mt-5 w-full h-[44px] rounded-lg text-[10px] font-black tracking-[0.25em] font-mono cursor-pointer transition-transform active:scale-95 bg-accent/10 border border-accent/40 text-accent shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase flex items-center justify-center">
-          [+] DEPLOY MATCH
+        <button disabled={isGuest} onClick={handleDeployMatch} className="mt-5 w-full h-[44px] rounded-lg text-[10px] font-black tracking-[0.25em] font-mono transition-transform active:scale-95 bg-accent/10 border border-accent/40 text-accent shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+          {isGuest ? "🔒 LOGIN TO DEPLOY" : "[+] DEPLOY MATCH"}
         </button>
       </div>
       <div className="flex flex-col gap-3 flex-1">
@@ -77,7 +84,7 @@ export default function LobbyPage() {
           <div className="text-center p-8 text-accent/30 text-[10px] tracking-[0.2em] border border-accent/10 rounded-xl bg-accent/5 uppercase">
             No active matches.<br />Deploy a new match to begin.
           </div>
-        ) : matches.map((match, idx) => <LobbyMatchCard key={match.matchId} match={match} index={idx} onJoin={handleJoinMatch} />)}
+        ) : matches.map((match, idx) => <LobbyMatchCard key={match.matchId} match={match} index={idx} onJoin={handleJoinMatch} isGuest={isGuest} />)}
       </div>
     </div>
   );

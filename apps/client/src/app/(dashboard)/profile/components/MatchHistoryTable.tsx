@@ -18,27 +18,29 @@ function SkeletonRow() {
 
 interface ReplayButtonProps {
   id: string;
+  isGuest?: boolean;
 }
 
-function ReplayButton({ id }: ReplayButtonProps) {
+function ReplayButton({ id, isGuest }: ReplayButtonProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
 
   return (
     <button
       type="button"
-      onClick={() => router.push(`/replay/${id}`)}
-      className="inline-flex items-center gap-[5px] p-[4px_10px] rounded text-[9px] font-bold tracking-[0.14em] cursor-pointer font-mono whitespace-nowrap transition-all duration-200"
+      onClick={() => !isGuest && router.push(`/replay/${id}`)}
+      disabled={isGuest}
+      className={`inline-flex items-center gap-[5px] p-[4px_10px] rounded text-[9px] font-bold tracking-[0.14em] font-mono whitespace-nowrap transition-all duration-200 ${isGuest ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
       style={{
-        border: `1px solid ${hovered ? "rgba(var(--accent-rgb),0.7)" : "rgba(var(--accent-rgb),0.3)"}`,
-        background: hovered ? "rgba(var(--accent-rgb),0.16)" : "rgba(var(--accent-rgb),0.06)",
+        border: `1px solid ${hovered && !isGuest ? "rgba(var(--accent-rgb),0.7)" : "rgba(var(--accent-rgb),0.3)"}`,
+        background: hovered && !isGuest ? "rgba(var(--accent-rgb),0.16)" : "rgba(var(--accent-rgb),0.06)",
         color: "var(--accent)",
-        boxShadow: hovered ? "0 0 8px rgba(var(--accent-rgb),0.25)" : "none",
+        boxShadow: hovered && !isGuest ? "0 0 8px rgba(var(--accent-rgb),0.25)" : "none",
       }}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => !isGuest && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      ▶ REPLAY
+      {isGuest ? "🔒 LOCKED" : "▶ REPLAY"}
     </button>
   );
 }
@@ -46,9 +48,10 @@ function ReplayButton({ id }: ReplayButtonProps) {
 interface TableRowProps {
   m: MatchEntry;
   isLast: boolean;
+  isGuest?: boolean;
 }
 
-function MatchRow({ m, isLast }: TableRowProps) {
+function MatchRow({ m, isLast, isGuest }: TableRowProps) {
   const [hovered, setHovered] = useState(false);
   const isWin = m.result === "WIN";
 
@@ -85,7 +88,7 @@ function MatchRow({ m, isLast }: TableRowProps) {
       </td>
       <td className="hidden lg:table-cell px-4 py-3 sm:p-[12px_16px] text-accent/45">{fmtDuration(m.duration)}</td>
       <td className="px-3 sm:px-4 py-3 sm:p-[12px_16px] text-right">
-        <ReplayButton id={m.id} />
+        <ReplayButton id={m.id} isGuest={isGuest} />
       </td>
     </tr>
   );
@@ -95,9 +98,10 @@ interface Props {
   loading: boolean;
   history: MatchEntry[];
   isMobile: boolean;
+  isGuest?: boolean;
 }
 
-export function MatchHistoryTable({ loading, history, isMobile }: Props) {
+export function MatchHistoryTable({ loading, history, isMobile, isGuest }: Props) {
 
   const DesktopTable = (
     <div className="rounded-[10px] border border-accent/10 overflow-hidden bg-card/50 backdrop-blur-md">
@@ -152,7 +156,7 @@ export function MatchHistoryTable({ loading, history, isMobile }: Props) {
                   </td>
                   <td className="p-[12px_16px] text-accent/45">{fmtDuration(m.duration)}</td>
                   <td className="p-[12px_16px] text-right">
-                    <ReplayButton id={m.id} />
+                    <ReplayButton id={m.id} isGuest={isGuest} />
                   </td>
                 </tr>
               )
@@ -203,10 +207,11 @@ export function MatchHistoryTable({ loading, history, isMobile }: Props) {
               <div className="w-full mt-2 border-t border-accent/10 pt-3">
                 <button
                   type="button"
-                  onClick={() => router.push(`/replay/${m.id}`)}
-                  className="w-full h-[44px] flex items-center justify-center bg-accent/10 border border-accent/40 text-accent font-bold tracking-[0.2em] text-[10px] rounded-lg transition-transform active:scale-95 shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase"
+                  onClick={() => !isGuest && router.push(`/replay/${m.id}`)}
+                  disabled={isGuest}
+                  className={`w-full h-[44px] flex items-center justify-center border font-bold tracking-[0.2em] text-[10px] rounded-lg transition-transform active:scale-95 shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase ${isGuest ? 'bg-accent/5 border-accent/10 text-accent/20 cursor-not-allowed' : 'bg-accent/10 border-accent/40 text-accent'}`}
                 >
-                  ▶ WATCH REPLAY
+                  {isGuest ? "🔒 REPLAY LOCKED" : "▶ WATCH REPLAY"}
                 </button>
               </div>
             </div>

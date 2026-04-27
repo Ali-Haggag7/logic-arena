@@ -10,14 +10,15 @@ import { SecuritySection } from "./components/SecuritySection";
 import { AppearanceSection } from "./components/AppearanceSection";
 import { PreferencesSection } from "./components/PreferencesSection";
 import { NotificationsSection } from "./components/NotificationsSection";
+import { apiClient } from "../../../lib/api-client";
 
-function renderSection(id: SectionId | null) {
+function renderSection(id: SectionId | null, isGuest: boolean) {
   switch (id) {
-    case "identity": return <IdentitySection />;
-    case "security": return <SecuritySection />;
+    case "identity": return <IdentitySection isGuest={isGuest} />;
+    case "security": return <SecuritySection isGuest={isGuest} />;
     case "appearance": return <AppearanceSection />;
-    case "arena": return <PreferencesSection />;
-    case "notifications": return <NotificationsSection />;
+    case "arena": return <PreferencesSection isGuest={isGuest} />;
+    case "notifications": return <NotificationsSection isGuest={isGuest} />;
     default: return null;
   }
 }
@@ -25,14 +26,25 @@ function renderSection(id: SectionId | null) {
 export default function SettingsPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [activeSection, setActiveSection] = useState<SectionId | null>("identity");
+  const [isGuest, setIsGuest] = useState(false);
+
+  React.useEffect(() => {
+    apiClient.get("/users/profile").catch((err: unknown) => {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError.response?.status === 401) {
+        setIsGuest(true);
+      }
+    });
+  }, []);
 
   return (
     <SettingsLayout
       activeSection={activeSection}
       onSectionChange={setActiveSection}
       isMobile={isMobile}
+      isGuest={isGuest}
     >
-      {renderSection(activeSection)}
+      {renderSection(activeSection, isGuest)}
     </SettingsLayout>
   );
 }

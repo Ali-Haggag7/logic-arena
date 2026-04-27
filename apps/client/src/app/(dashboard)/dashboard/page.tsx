@@ -10,8 +10,17 @@ import { ScriptCard, RobotScript } from "./components/ScriptCard";
 import { ProtocolForm } from "./components/ProtocolForm";
 import { EditScriptModal } from "./components/EditScriptModal";
 import { Terminal, Box } from "lucide-react";
+import { AuthModal } from "../../../components/AuthModal";
 
 type GameMode = "COMBAT" | "RACING" | "TRAINING_SOLO";
+
+const GUEST_SCRIPT: RobotScript = {
+    id: "guest-script",
+    title: "DEFAULT_GUEST_PROTOCOL",
+    content: "// Standard operating logic\n// Register to edit this script!\nSCAN;\nMOVE_FAST;",
+    version: 1,
+    createdAt: new Date().toISOString()
+};
 
 const DashboardPage = () => {
     const [scripts, setScripts] = useState<RobotScript[]>([]);
@@ -21,6 +30,8 @@ const DashboardPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedMode, setSelectedMode] = useState<GameMode>("COMBAT");
     const [editingScript, setEditingScript] = useState<RobotScript | null>(null);
+    const [isGuest, setIsGuest] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -32,7 +43,8 @@ const DashboardPage = () => {
                 const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
                 console.error("Failed to fetch scripts:", axiosError.response?.data?.message ?? axiosError.message);
                 if (axiosError.response?.status === 401) {
-                    router.push("/login");
+                    setIsGuest(true);
+                    setScripts([GUEST_SCRIPT]);
                 }
             } finally {
                 setInitialLoad(false);
@@ -43,6 +55,12 @@ const DashboardPage = () => {
 
     const handleCreateScript = async (e: React.FormEvent) => {
         if (e) e.preventDefault();
+        
+        if (isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
+
         if (!newScriptTitle.trim()) return;
 
         setIsLoading(true);
@@ -55,10 +73,13 @@ const DashboardPage = () => {
             setStatus({ message: "[SYS] NEW SCRIPT PROTOCOL INITIALIZED.", type: "success" });
             setTimeout(() => setStatus({ message: "", type: null }), 3000);
         } catch (error: unknown) {
-            const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
-            console.error("Failed to create script:", axiosError.response?.data?.message ?? axiosError.message);
+            const axiosError = error as { response?: { status?: number, data?: { message?: string } }; message?: string };
+            const errMsg = axiosError.response?.status === 401 
+                ? "Unauthorized. Please log in to initialize protocols." 
+                : (axiosError.response?.data?.message ?? "An unexpected error occurred.");
+            console.error("Failed to create script:", errMsg);
             setStatus({
-                message: `[ERR] COMPILATION FAILED: ${axiosError.response?.data?.message ?? axiosError.message}`,
+                message: `[ERR] COMPILATION FAILED: ${errMsg}`,
                 type: "error"
             });
         } finally {
@@ -76,9 +97,13 @@ const DashboardPage = () => {
     };
 
     const handleEditScript = useCallback((id: string) => {
+        if (isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         const found = scripts.find((s) => s.id === id) ?? null;
         setEditingScript(found);
-    }, [scripts]);
+    }, [scripts, isGuest]);
 
     const handleOptimisticUpdate = useCallback((updated: RobotScript) => {
         setScripts((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
@@ -89,6 +114,10 @@ const DashboardPage = () => {
     }, []);
 
     const handleDeleteScript = useCallback(async (id: string) => {
+        if (isGuest) {
+            setShowAuthModal(true);
+            return;
+        }
         // Optimistic removal
         const snapshot = scripts.find((s) => s.id === id);
         setScripts((prev) => prev.filter((s) => s.id !== id));
@@ -98,8 +127,11 @@ const DashboardPage = () => {
         try {
             await apiClient.delete(`/scripts/${id}`);
         } catch (error: unknown) {
-            const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
-            console.error("Failed to delete script:", axiosError.response?.data?.message ?? axiosError.message);
+            const axiosError = error as { response?: { status?: number, data?: { message?: string } }; message?: string };
+            const errMsg = axiosError.response?.status === 401 
+                ? "Unauthorized. Please log in to delete protocols." 
+                : (axiosError.response?.data?.message ?? "An unexpected error occurred.");
+            console.error("Failed to delete script:", errMsg);
             // Restore on failure
             if (snapshot) {
                 setScripts((prev) => {
@@ -107,7 +139,7 @@ const DashboardPage = () => {
                     return exists ? prev : [...prev, snapshot];
                 });
             }
-            setStatus({ message: `[ERR] DELETE FAILED: ${axiosError.response?.data?.message ?? axiosError.message}`, type: "error" });
+            setStatus({ message: `[ERR] TERMINATION FAILED: ${errMsg}`, type: "error" });
             setTimeout(() => setStatus({ message: "", type: null }), 3000);
         }
     }, [scripts]);
@@ -170,6 +202,7 @@ const DashboardPage = () => {
                                     onDeployToArena={handleGoToArena}
                                     onDelete={handleDeleteScript}
                                     isMobile={isMobile}
+                                    isGuest={isGuest}
                                 />
                             ))}
                         </div>
@@ -183,6 +216,7 @@ const DashboardPage = () => {
                         isLoading={isLoading}
                         onSubmit={handleCreateScript}
                         isMobile={isMobile}
+                        isGuest={isGuest}
                     />
                 </div>
             </div>
@@ -208,6 +242,7 @@ const DashboardPage = () => {
                 isLoading={isLoading}
                 onSubmit={handleCreateScript}
                 isMobile={true}
+                isGuest={isGuest}
             />
 
             {/* Filter & Stats Row */}
@@ -265,6 +300,7 @@ const DashboardPage = () => {
                                 onDeployToArena={handleGoToArena}
                                 onDelete={handleDeleteScript}
                                 isMobile={true}
+                                isGuest={isGuest}
                             />
                         ))}
                     </div>
@@ -289,6 +325,13 @@ const DashboardPage = () => {
                     onRevert={handleRevert}
                 />
             )}
+
+            <AuthModal
+                isOpen={showAuthModal}
+                onClose={() => setShowAuthModal(false)}
+                title="GUEST ACCESS DETECTED"
+                message="You must initialize an operator account to save custom neural scripts. Register now to permanently store your logic."
+            />
         </div>
     );
 };

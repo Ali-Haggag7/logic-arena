@@ -8,7 +8,25 @@ import * as THREE from "three";
 import { useTheme } from "next-themes";
 
 /* ─── Spinning robot model ─────────────────────────────────────── */
-function RobotModel({ file, color, scale, onLoad }: { file: string; color: string; scale?: number; onLoad?: () => void }) {
+function GuestSphere({ color, scale, onLoad }: { color: string; scale?: number; onLoad?: () => void }) {
+  const groupRef = useRef<THREE.Group>(null!);
+  useEffect(() => { onLoad?.(); }, [onLoad]);
+
+  useFrame((_, delta) => {
+    if (groupRef.current) groupRef.current.rotation.y += delta * 0.6;
+  });
+
+  return (
+    <group ref={groupRef}>
+      <mesh position={[0, 0, 0]} scale={scale ?? 1.2}>
+        <sphereGeometry args={[0.5, 32, 32]} />
+        <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} emissive={color} emissiveIntensity={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+function GLTFModel({ file, color, scale, onLoad }: { file: string; color: string; scale?: number; onLoad?: () => void }) {
   const { scene } = useGLTF(file);
   const groupRef = useRef<THREE.Group>(null!);
   const originalMaterials = useRef(new Map());
@@ -19,6 +37,7 @@ function RobotModel({ file, color, scale, onLoad }: { file: string; color: strin
 
   // Apply tint colour to all meshes
   useEffect(() => {
+    if (!scene) return;
     if (originalMaterials.current.size === 0) {
       scene.traverse((obj) => {
         if ((obj as THREE.Mesh).isMesh) {
@@ -70,6 +89,13 @@ function RobotModel({ file, color, scale, onLoad }: { file: string; color: strin
   );
 }
 
+function RobotModel({ file, color, scale, onLoad }: { file: string; color: string; scale?: number; onLoad?: () => void }) {
+  if (file === "GUEST_SPHERE") {
+    return <GuestSphere color={color} scale={scale} onLoad={onLoad} />;
+  }
+  return <GLTFModel file={file} color={color} scale={scale} onLoad={onLoad} />;
+}
+
 /* ─── Loading fallback ──────────────────────────────────────────── */
 function CanvasFallback() {
   return (
@@ -89,9 +115,11 @@ interface RobotCardProps {
   scale?: number;
   color?: string;
   isMobile?: boolean;
+  isGuest?: boolean;
+  onClick?: () => void;
 }
 
-export function RobotCard({ robotId, name, file, scale, color, isMobile }: RobotCardProps) {
+export function RobotCard({ robotId, name, file, scale, color, isMobile, isGuest, onClick }: RobotCardProps) {
   const router = useRouter();
   const { theme } = useTheme();
 
@@ -107,8 +135,9 @@ export function RobotCard({ robotId, name, file, scale, color, isMobile }: Robot
 
   return (
     <button
-      onClick={() => router.push(`/garage/${robotId}`)}
-      className={`group relative flex flex-col rounded-xl overflow-hidden border border-accent/10 bg-card/60 backdrop-blur-sm transition-all duration-300 hover:border-accent/40 cursor-pointer text-left w-full active:scale-[0.98] ${isMobile ? "shadow-[inset_3px_0_0_0_var(--accent)]" : "hover:shadow-[0_8px_32px_rgba(var(--accent-rgb),0.15)]"}`}
+      onClick={() => onClick ? onClick() : router.push(`/garage/${robotId}`)}
+      disabled={isGuest}
+      className={`group relative flex flex-col rounded-xl overflow-hidden border transition-all duration-300 backdrop-blur-sm text-left w-full active:scale-[0.98] ${isGuest ? 'border-accent/5 bg-accent/[0.02] cursor-not-allowed opacity-80' : 'border-accent/10 bg-card/60 hover:border-accent/40 cursor-pointer'} ${isMobile ? "shadow-[inset_3px_0_0_0_var(--accent)]" : "hover:shadow-[0_8px_32px_rgba(var(--accent-rgb),0.15)]"}`}
       style={{ animation: "fadeIn 0.35s ease" }}
     >
       {/* Scanline overlay */}
@@ -159,9 +188,9 @@ export function RobotCard({ robotId, name, file, scale, color, isMobile }: Robot
         </div>
         <div className="flex items-center gap-2">
           <span className={`${isMobile ? "text-[8px]" : "text-[10px]"} tracking-[0.2em] text-accent/70 group-hover:text-accent font-black transition-colors duration-200 uppercase`}>
-            INSPECT
+            {isGuest ? "🔒 LOCKED" : "INSPECT"}
           </span>
-          <span className="text-accent/30 tracking-tight group-hover:translate-x-1 transition-transform duration-200">→</span>
+          {!isGuest && <span className="text-accent/30 tracking-tight group-hover:translate-x-1 transition-transform duration-200">→</span>}
         </div>
       </div>
     </button>

@@ -18,6 +18,7 @@ interface ScriptCardProps {
     onDeployToArena: (id: string) => void;
     onDelete: (id: string) => void;
     isMobile?: boolean;
+    isGuest?: boolean;
 }
 
 const CONFIRM_TIMEOUT_MS = 3000;
@@ -29,6 +30,7 @@ export const ScriptCard = ({
     onDeployToArena,
     onDelete,
     isMobile,
+    isGuest,
 }: ScriptCardProps) => {
     const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -83,19 +85,21 @@ export const ScriptCard = ({
                 <>
                     <button
                         type="button"
-                        title="Edit"
+                        title={isGuest ? "LOCKED" : "Edit"}
                         aria-label="Edit script"
-                        onClick={() => onEditBrain(script.id)}
-                        className={`${iconBtnBase} ${iconBtnSize} bg-accent/10 border-accent/30 text-accent hover:bg-accent/20`}
+                        onClick={() => !isGuest && onEditBrain(script.id)}
+                        disabled={isGuest}
+                        className={`${iconBtnBase} ${iconBtnSize} ${isGuest ? 'bg-accent/5 border-accent/10 text-accent/20 cursor-not-allowed' : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'}`}
                     >
                         <Pencil size={16} />
                     </button>
                     <button
                         type="button"
-                        title="Lobby"
+                        title={isGuest ? "LOCKED" : "Lobby"}
                         aria-label="Deploy to lobby"
-                        onClick={() => onDeployToLobby(script.id)}
-                        className={`${iconBtnBase} ${iconBtnSize} bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20`}
+                        onClick={() => !isGuest && onDeployToLobby(script.id)}
+                        disabled={isGuest}
+                        className={`${iconBtnBase} ${iconBtnSize} ${isGuest ? 'bg-purple-500/5 border-purple-500/10 text-purple-400/20 cursor-not-allowed' : 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20'}`}
                     >
                         <Swords size={16} />
                     </button>
@@ -110,10 +114,11 @@ export const ScriptCard = ({
                     </button>
                     <button
                         type="button"
-                        title="Delete"
+                        title={isGuest ? "LOCKED" : "Delete"}
                         aria-label="Delete script"
-                        onClick={startConfirm}
-                        className={`${iconBtnBase} ${iconBtnSize} bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20`}
+                        onClick={() => !isGuest && startConfirm()}
+                        disabled={isGuest}
+                        className={`${iconBtnBase} ${iconBtnSize} ${isGuest ? 'bg-red-500/5 border-red-500/10 text-red-400/20 cursor-not-allowed' : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'}`}
                     >
                         <Trash2 size={16} />
                     </button>

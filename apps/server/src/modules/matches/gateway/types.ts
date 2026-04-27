@@ -3,6 +3,7 @@ import { Socket } from 'socket.io';
 export type AuthenticatedSocket = Socket & {
   userId?: string;
   matchId?: string;
+  isGuest?: boolean;
 };
 
 export const TRACKED_ROBOT_PROPS = [
