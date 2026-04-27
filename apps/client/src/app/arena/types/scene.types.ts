@@ -69,9 +69,9 @@ export interface RobotModelProps {
   // FOV additions
   fov?:          { angle: number; range: number };
   fovDirection?: number;
-  /** Optional GLB file path — e.g. "/robot.glb" or "/robot2.glb" */
   modelFile?:    string;
   hideHealthBar?: boolean;
+  speechBubble?: string | null;
 }
 
 // ---------------------------------------------------------------------------

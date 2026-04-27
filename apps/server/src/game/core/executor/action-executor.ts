@@ -93,17 +93,6 @@ export class ActionExecutor {
     if (!isCombatCommand) {
       const allowed = this.energyManager.deduct(robot, actionCommand);
       if (!allowed) {
-        // Robot is in stasis and this command is blocked — emit STASIS hint once
-        if (this.cooldowns.shouldEmitAction(robotId, 'STASIS')) {
-          if (this.onEvent) {
-            this.onEvent('logicExecuted', {
-              robotId,
-              action: 'STASIS',
-              message: `[STASIS] ${robotId} is recharging...`,
-            });
-          }
-          this.cooldowns.markEmitted(robotId, 'STASIS');
-        }
         return;
       }
     }
@@ -147,7 +136,7 @@ export class ActionExecutor {
     }
   }
 
-  clearState(robotId: string): void {
-    this.cooldowns.clearState(robotId);
+  clearState(robotId: string, fullReset: boolean = true): void {
+    this.cooldowns.clearState(robotId, fullReset);
   }
 }

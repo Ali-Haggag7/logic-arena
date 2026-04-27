@@ -2,6 +2,7 @@ export class CooldownManager {
     private lastFireTime: Map<string, number> = new Map();
     private lastExecutedAction: Map<string, string> = new Map();
     private lastLogicEmitTime: Map<string, number> = new Map();
+    private lastStasisEmitTime: Map<string, number> = new Map();
     private actionCooldowns: Map<string, Map<string, number>> = new Map();
     private queryEmits: Set<string> = new Set();
 
@@ -31,10 +32,7 @@ export class CooldownManager {
     }
 
     shouldEmitAction(robotId: string, actionCommand: string): boolean {
-        const now = Date.now();
-        const actionChanged = actionCommand !== this.lastExecutedAction.get(robotId);
-        const throttleOk = now - (this.lastLogicEmitTime.get(robotId) ?? 0) > 250;
-        return actionChanged && throttleOk;
+        return actionCommand !== this.lastExecutedAction.get(robotId);
     }
 
     shouldEmitQuery(robotId: string, queryName: string): boolean {
@@ -59,8 +57,10 @@ export class CooldownManager {
         this.lastExecutedAction.set(robotId, actionCommand);
     }
 
-    clearState(robotId: string): void {
-        this.lastExecutedAction.delete(robotId);
+    clearState(robotId: string, fullReset: boolean = true): void {
+        if (fullReset) {
+            this.lastExecutedAction.delete(robotId);
+        }
         this.lastLogicEmitTime.delete(robotId);
         this.actionCooldowns.set(robotId, new Map());
         for (const key of this.queryEmits) {

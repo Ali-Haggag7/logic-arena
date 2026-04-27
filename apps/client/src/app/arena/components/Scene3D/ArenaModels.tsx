@@ -12,7 +12,6 @@ import { RobotModel, RobotErrorBoundary, FallbackRobot } from './models/RobotMod
 import { ObstaclesInstanced } from './models/ObstacleModel';
 import { LaserModel } from './models/ProjectileModel';
 import { LaserBeam } from './models/LaserBeam';
-import { SpeechBubble } from './models/SpeechBubble';
 import { HitParticles } from './effects/HitBurstEffect';
 import { BoundaryLine } from './models/BoundaryLine';
 import { FovCone } from './models/FovCone';
@@ -167,6 +166,7 @@ export const ArenaModels = ({
                       modelFile={
                         robot.model ? ROBOT_FILES[robot.model] ?? '/robot.glb' : '/robot.glb'
                       }
+                      speechBubble={speechBubble?.robotId === robot.id ? speechBubble.message : null}
                     />
                   </group>
                 </RobotErrorBoundary>
@@ -182,13 +182,6 @@ export const ArenaModels = ({
         const start: [number, number, number] = [toSceneX(robot.position.x), 0.375, toSceneZ(robot.position.y)];
         const end: [number, number, number] = [toSceneX(firedTracer.targetPosition.x), 0.375, toSceneZ(firedTracer.targetPosition.y)];
         return <LaserBeam key={`tracer-${robot.id}`} start={start} end={end} />;
-      })}
-
-      {/* Speech bubbles */}
-      {speechBubble && robots.map(robot => {
-        if (robot.id !== speechBubble.robotId) return null;
-        const pos: [number, number, number] = [toSceneX(robot.position.x), 0.375, toSceneZ(robot.position.y)];
-        return <SpeechBubble key={`bubble-${robot.id}`} position={pos} message={speechBubble.message} />;
       })}
 
       {/* Projectiles */}

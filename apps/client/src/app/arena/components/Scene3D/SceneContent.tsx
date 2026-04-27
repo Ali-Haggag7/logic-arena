@@ -3,7 +3,6 @@ import React, { useMemo } from "react";
 import { useSceneSetup } from "../../hooks/useSceneSetup";
 import { SceneLighting } from "./SceneLighting";
 import { ArenaModels } from "./ArenaModels";
-import { SceneOverlay } from "./SceneOverlay";
 import { Scene3DComponentProps } from "../../types/scene.types";
 import * as THREE from "three";
 import { BoundaryLine } from "./models/BoundaryLine";
@@ -47,10 +46,6 @@ export const SceneContent = (props: Scene3DComponentProps) => {
         localRobotFile={props.localRobotFile}
         localRobotColor={props.localRobotColor}
         displayMode={props.displayMode}
-      />
-      <SceneOverlay
-        speechBubble={props.speechBubble ?? null}
-        robots={props.gameStateRef.current?.robots ?? []}
       />
 
       {/* UNIFIED DYNAMIC ARENA LAYOUT */}

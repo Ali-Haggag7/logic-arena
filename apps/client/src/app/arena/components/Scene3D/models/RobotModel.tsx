@@ -9,6 +9,7 @@ import {
 } from '../../../types';
 import { HIT_FLASH_DURATION } from '../sceneConstants';
 import { EnergyBarSprite } from './EnergyBar';
+import { SpeechBubble } from './SpeechBubble';
 
 /* ── Error boundary ─────────────────────────────────────────────────────── */
 
@@ -77,7 +78,7 @@ export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
 const RobotModelInner = memo(({
   scene, color, position, health, velocity, rotation, hitTimestamp, spotted,
   energy = 1000, maxEnergy = 1000, inStasis = false, fovDirection,
-  scale = 2, hideHealthBar = false
+  scale = 2, hideHealthBar = false, speechBubble
 }: RobotModelProps & { scene: THREE.Group; scale?: number }) => {
   const groupRef = useRef<THREE.Group>(null);
   const targetPosition = useRef(new THREE.Vector3(...position));
@@ -218,6 +219,11 @@ const RobotModelInner = memo(({
         <Html distanceFactor={10} position={[0, 1.25, 0]} center>
           <div style={{ fontSize: '14px', color: '#FF3B3B', fontWeight: 700, textShadow: '0 0 6px rgba(255,59,59,0.8)' }}>!</div>
         </Html>
+      )}
+
+      {/* Dynamic Speech Bubble tracking the robot */}
+      {speechBubble && (
+        <SpeechBubble position={[0, 1.25, 0]} message={speechBubble} />
       )}
 
       {/* HUD billboard: health + energy bars */}

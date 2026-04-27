@@ -16,7 +16,7 @@ export class LogicRegistry {
   setLogic(robotId: string, ast: Program): void {
     this.robotLogic.set(robotId, ast);
     this.memories.initialize(robotId);
-    this.actionExecutor.clearState(robotId);
+    this.actionExecutor.clearState(robotId, true);
 
     const funcs = new Map<string, FunctionDeclaration>();
     ast.body.forEach((stmt) => {
@@ -49,6 +49,6 @@ export class LogicRegistry {
    */
   resetRuntimeState(robotId: string): void {
     this.memories.initialize(robotId);
-    this.actionExecutor.clearState(robotId);
+    this.actionExecutor.clearState(robotId, false);
   }
 }
