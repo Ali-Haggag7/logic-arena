@@ -8,20 +8,20 @@ const THEME_CARDS = [
   {
     id: "cyberpunk",
     label: "CYBERPUNK",
-    palette: ["#0a0f1e", "#00e5ff", "#e2e8f0"],
+    palette: ["#030712", "#22d3ee", "#f8fafc"],
     desc: "Dark neon — the default operative environment",
   },
   {
     id: "light",
-    label: "LIGHT",
-    palette: ["#f8fafc", "#0ea5e9", "#0f172a"],
-    desc: "High-visibility tactical interface",
+    label: "VIOLET SOVEREIGN",
+    palette: ["#f0f2fa", "#5b21b6", "#0b0d1a"],
+    desc: "Premium light — cool slate canvas, deep violet command",
   },
   {
     id: "desert",
-    label: "DESERT",
-    palette: ["#1a1208", "#f59e0b", "#fde68a"],
-    desc: "Amber warmth for extended operations",
+    label: "OBSIDIAN EMBER",
+    palette: ["#0e0a04", "#f59e0b", "#fcd34d"],
+    desc: "Volcanic darkness forged in liquid gold fire",
   },
 ] as const;
 

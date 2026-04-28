@@ -62,9 +62,8 @@ export function SettingsInput({
         onChange={(e) => !disabled && !isGuest && onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled || isGuest}
-        className={`bg-bg-secondary border border-accent/10 rounded-lg px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors font-mono text-[12px] placeholder:text-text-secondary/40 ${
-          disabled || isGuest ? "opacity-50 cursor-not-allowed" : ""
-        } ${isGuest ? "border-dashed" : ""}`}
+        className={`bg-bg-secondary border border-accent/10 rounded-lg px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors font-mono text-[12px] placeholder:text-text-secondary/40 ${disabled || isGuest ? "opacity-50 cursor-not-allowed" : ""
+          } ${isGuest ? "border-dashed" : ""}`}
       />
     </div>
   );
@@ -91,13 +90,11 @@ export function SaveButton({
         type="button"
         onClick={() => !isGuest && onClick()}
         disabled={loading || isGuest}
-        className={`rounded-lg px-6 py-2 text-[10px] tracking-widest font-bold font-mono transition-all duration-150 ${
-          loading ? "opacity-50 cursor-wait" : isGuest ? "cursor-not-allowed" : "cursor-pointer"
-        } ${
-          isGuest
+        className={`rounded-lg px-6 py-2 text-[10px] tracking-widest font-bold font-mono transition-all duration-150 ${loading ? "opacity-50 cursor-wait" : isGuest ? "cursor-not-allowed" : "cursor-pointer"
+          } ${isGuest
             ? "bg-accent/5 border border-accent/10 text-accent/40"
             : "bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20"
-        } ${disabled || isGuest ? "opacity-40" : ""}`}
+          } ${disabled || isGuest ? "opacity-40" : ""}`}
       >
         {loading ? "PROCESSING..." : isGuest ? `[🔒] ${label}` : label}
       </button>
@@ -131,11 +128,11 @@ export function Toggle({
   return (
     <label
       htmlFor={id}
-      className={`relative inline-flex items-center min-w-[44px] min-h-[44px] justify-center ${
-        disabled || isGuest ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-      } ${isGuest ? "grayscale" : ""}`}
+      className={`relative inline-flex items-center min-w-[44px] min-h-[44px] justify-center ${disabled || isGuest ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+        } ${isGuest ? "grayscale" : ""}`}
     >
       <input
+        aria-label={id}
         id={id}
         type="checkbox"
         className="sr-only"

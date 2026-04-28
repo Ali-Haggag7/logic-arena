@@ -255,7 +255,7 @@ export function RadarChart({ stats, size = 280 }: Props) {
                 fontSize={10}
                 fontFamily="monospace"
                 fontWeight={900}
-                fill="white"
+                fill="var(--accent)"
                 opacity={0.85}
               >
                 {val}
