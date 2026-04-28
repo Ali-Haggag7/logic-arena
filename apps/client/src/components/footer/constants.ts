@@ -18,7 +18,7 @@ export const ARENA_LINKS = [
 
 export const SOCIAL_LINKS = [
   { label: "LinkedIn", target: "_blank", href: "https://www.linkedin.com/in/ali-haggag7" },
-  { label: "GitHub", target: "_blank", href: "https://github.com/Ali-Haggag7" },
+  { label: "GitHub", target: "_blank", href: "https://github.com/Ali-Haggag7/logic-arena" },
   { label: "Portfolio", target: "_blank", href: "https://alihaggag.me" },
 ];
 

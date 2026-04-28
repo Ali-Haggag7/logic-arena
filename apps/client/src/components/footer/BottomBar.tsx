@@ -35,13 +35,15 @@ export function BottomBar({ isMobile }: { isMobile: boolean }) {
           </div>
           <div className="flex items-center gap-3">
             {[
-              { label: "GitHub", el: <GitHubIcon size={18} /> },
-              { label: "LinkedIn", el: <LinkedinIcon size={18} /> },
-              { label: "Portfolio", el: <PortfolioIcon size={18} /> },
-            ].map(({ label, el }) => (
+              { label: "GitHub", href: "https://github.com/Ali-Haggag7/logic-arena", el: <GitHubIcon size={18} /> },
+              { label: "LinkedIn", href: "https://www.linkedin.com/in/ali-haggag7", el: <LinkedinIcon size={18} /> },
+              { label: "Portfolio", href: "https://alihaggag.me", el: <PortfolioIcon size={18} /> },
+            ].map(({ label, href, el }) => (
               <a
                 key={label}
-                href="#"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={label}
                 className="text-text-secondary hover:text-accent transition-colors duration-150"
                 onMouseEnter={(e) => (e.currentTarget.style.filter = "drop-shadow(0 0 6px var(--accent))")}

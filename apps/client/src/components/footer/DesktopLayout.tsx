@@ -32,16 +32,18 @@ function FooterLink({ target, href, children }: { target?: string; href: string;
 
 function DesktopSocialIcons() {
   const icons = [
-    { label: "GitHub", el: <GitHubIcon size={18} /> },
-    { label: "LinkedIn", el: <LinkedinIcon size={18} /> },
-    { label: "Portfolio", el: <PortfolioIcon size={18} /> },
+    { label: "GitHub", href: "https://github.com/Ali-Haggag7/logic-arena", el: <GitHubIcon size={18} /> },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/ali-haggag7", el: <LinkedinIcon size={18} /> },
+    { label: "Portfolio", href: "https://alihaggag.me", el: <PortfolioIcon size={18} /> },
   ];
   return (
     <div className="flex items-center gap-3 mt-4">
-      {icons.map(({ label, el }) => (
+      {icons.map(({ label, href, el }) => (
         <a
           key={label}
-          href="#"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label={label}
           className="flex items-center justify-center w-9 h-9 rounded-lg border border-accent/30 hover:border-accent/60 bg-bg-secondary/50 hover:bg-accent/10 text-accent/60 hover:text-accent transition-all duration-300"
           onMouseEnter={(e) => (e.currentTarget.style.filter = "drop-shadow(0 0 8px rgba(var(--accent-rgb),0.6))")}
