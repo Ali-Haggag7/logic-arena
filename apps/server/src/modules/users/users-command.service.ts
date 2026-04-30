@@ -39,7 +39,7 @@ export class UsersCommandService {
         data,
       });
       await this.redis.del(profileKey(userId), loadoutKey(userId));
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
         err.code === PRISMA_UNIQUE_VIOLATION

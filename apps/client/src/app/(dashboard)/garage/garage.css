@@ -1,0 +1,43 @@
+/* Garage-wide keyframe animations — imported once in each garage page */
+
+@keyframes garageSlideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes garageFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes garageGlowPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.2); }
+  50%      { box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.45); }
+}
+
+@keyframes garageBeaconPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+
+@keyframes robotFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes scanLine {
+  0%   { top: -4px; opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { top: calc(100% + 4px); opacity: 0; }
+}
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar styles for garage panels */
+.garage-scrollbar::-webkit-scrollbar        { width: 4px; }
+.garage-scrollbar::-webkit-scrollbar-track  { background: transparent; }
+.garage-scrollbar::-webkit-scrollbar-thumb  { background: rgba(var(--accent-rgb), 0.2); border-radius: 2px; }

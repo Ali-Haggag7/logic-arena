@@ -18,6 +18,11 @@ import { AuthGuard }     from '../../common/auth.guard';
 import { UsersQueryService }  from './users-query.service';
 import { UsersCommandService }  from './users-command.service';
 
+/** Typed request shape produced by AuthGuard JWT strategy */
+interface AuthenticatedRequest {
+  user: { sub: string };
+}
+
 @SkipThrottle({ auth: true })
 @Controller('users')
 export class UsersController {
@@ -55,7 +60,7 @@ export class UsersController {
   // ── My Profile (auth-gated, Redis-first via service) ─────────────────────
   @UseGuards(AuthGuard)
   @Get('profile')
-  async getProfile(@Req() req: any) {
+  async getProfile(@Req() req: AuthenticatedRequest) {
     const userId: string = req.user.sub;
     const profile = await this.queryService.getProfile(userId);
 
@@ -70,14 +75,15 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Patch('profile')
   async updateProfile(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() body: { robotId: string; color: string },
   ) {
     try {
       await this.commandService.updateLoadout(req.user.sub, body.robotId, body.color);
       return { success: true };
-    } catch (err: any) {
-      throw new BadRequestException(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Update failed';
+      throw new BadRequestException(message);
     }
   }
 
@@ -97,14 +103,15 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Put('identity')
   async updateIdentity(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() body: { username?: string; email?: string },
   ) {
     try {
       await this.commandService.updateIdentity(req.user.sub, body);
       return { success: true };
-    } catch (err: any) {
-      throw new BadRequestException(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Update failed';
+      throw new BadRequestException(message);
     }
   }
 
@@ -112,7 +119,7 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Put('password')
   async updatePassword(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() body: { currentPassword: string; newPassword: string },
   ) {
     try {
@@ -122,20 +129,22 @@ export class UsersController {
         body.newPassword,
       );
       return { success: true };
-    } catch (err: any) {
-      throw new BadRequestException(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Update failed';
+      throw new BadRequestException(message);
     }
   }
 
   // ── Delete Account (auth-gated) ─────────────────────────────────────────
   @UseGuards(AuthGuard)
   @Delete('account')
-  async deleteAccount(@Req() req: any) {
+  async deleteAccount(@Req() req: AuthenticatedRequest) {
     try {
       await this.commandService.deleteAccount(req.user.sub);
       return { success: true };
-    } catch (err: any) {
-      throw new BadRequestException(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Delete failed';
+      throw new BadRequestException(message);
     }
   }
 }
