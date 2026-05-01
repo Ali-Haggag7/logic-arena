@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Lock } from "lucide-react";
+import { ChevronDown, Lock, User, Shield, Palette, Settings, Bell } from "lucide-react";
 import { SectionId, SECTIONS } from "./Shared";
 
 interface SettingsLayoutProps {
@@ -9,37 +10,27 @@ interface SettingsLayoutProps {
   onSectionChange: (section: SectionId | null) => void;
   isMobile: boolean;
   isGuest: boolean;
-  children: React.ReactNode;
+  renderSection: (id: SectionId) => React.ReactNode;
 }
+
+const SECTION_ICONS: Record<SectionId, React.ElementType> = {
+  identity: User,
+  security: Shield,
+  appearance: Palette,
+  arena: Settings,
+  notifications: Bell,
+};
 
 export function SettingsLayout({
   activeSection,
   onSectionChange,
   isMobile,
   isGuest,
-  children,
+  renderSection,
 }: SettingsLayoutProps) {
   const router = useRouter();
   return (
     <>
-      <style>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        .accordion-content {
-          display: grid;
-          grid-template-rows: 0fr;
-          transition: grid-template-rows 0.3s ease;
-        }
-        .accordion-content.open {
-          grid-template-rows: 1fr;
-        }
-        .accordion-inner {
-          overflow: hidden;
-        }
-      `}</style>
-
       <div className="min-h-screen bg-bg-primary font-mono">
         {/* Page title — matches other dashboard pages (inline, not a second header bar) */}
         <div className={`${isMobile ? "px-4 pt-4 pb-3" : "max-w-5xl mx-auto pt-16 px-6"}`}>
@@ -93,7 +84,6 @@ export function SettingsLayout({
                       ? "border-accent/40 shadow-[inset_3px_0_0_var(--accent),0_0_20px_rgba(var(--accent-rgb),0.08)]"
                       : "border-accent/10"
                   }`}
-                  style={isOpen ? { boxShadow: "inset 3px 0 0 var(--accent), 0 0 20px rgba(var(--accent-rgb),0.08)" } : {}}
                 >
                   <button
                     type="button"
@@ -108,10 +98,10 @@ export function SettingsLayout({
                       className={`text-accent/60 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                     />
                   </button>
-                  <div className={`accordion-content ${isOpen ? "open" : ""}`}>
-                    <div className="accordion-inner">
+                  <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                    <div className="overflow-hidden">
                       <div className="p-5 bg-bg-primary border-t border-accent/10">
-                        {isOpen && children}
+                        {isOpen && renderSection(section.id)}
                       </div>
                     </div>
                   </div>
@@ -129,17 +119,19 @@ export function SettingsLayout({
               </div>
               {SECTIONS.map((section) => {
                 const isActive = activeSection === section.id;
+                const Icon = SECTION_ICONS[section.id];
                 return (
                   <button
                     key={section.id}
                     type="button"
                     onClick={() => onSectionChange(section.id)}
-                    className={`w-full text-left px-4 py-3 text-[10px] font-bold tracking-[0.18em] transition-all duration-150 border-l-[3px] ${
+                    className={`w-full flex items-center gap-3 text-left px-4 py-3 text-[10px] font-bold tracking-[0.18em] transition-all duration-150 border-l-[3px] ${
                       isActive
                         ? "border-accent bg-accent/[0.05] text-accent [text-shadow:0_0_8px_rgba(var(--accent-rgb),0.5)]"
                         : "border-transparent text-text-secondary hover:text-text-primary hover:bg-accent/[0.02] hover:border-accent/20"
                     }`}
                   >
+                    <Icon size={14} className={isActive ? "text-accent drop-shadow-[0_0_4px_rgba(var(--accent-rgb),0.6)]" : "text-text-secondary/60"} />
                     {section.shortLabel}
                   </button>
                 );
@@ -148,7 +140,7 @@ export function SettingsLayout({
 
             {/* Right panel */}
             <main className="flex-1 px-8 py-8 max-w-2xl">
-              {children}
+              {activeSection && renderSection(activeSection)}
             </main>
           </div>
         )}

@@ -126,6 +126,12 @@ export class UsersController {
     @Req() req: AuthenticatedRequest,
     @Body() body: { username?: string; email?: string },
   ) {
+    if (body.username !== undefined && body.username.trim().length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters');
+    }
+    if (body.email !== undefined && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+      throw new BadRequestException('Invalid email format');
+    }
     try {
       await this.commandService.updateIdentity(req.user.sub, body);
       return { success: true };
@@ -142,6 +148,9 @@ export class UsersController {
     @Req() req: AuthenticatedRequest,
     @Body() body: { currentPassword: string; newPassword: string },
   ) {
+    if (!body.newPassword || body.newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters');
+    }
     try {
       await this.commandService.updatePassword(
         req.user.sub,
@@ -158,9 +167,15 @@ export class UsersController {
   // ── Delete Account (auth-gated) ─────────────────────────────────────────
   @UseGuards(AuthGuard)
   @Delete('account')
-  async deleteAccount(@Req() req: AuthenticatedRequest) {
+  async deleteAccount(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { confirmation?: string },
+  ) {
+    if (!body?.confirmation) {
+      throw new BadRequestException('Confirmation required to delete account');
+    }
     try {
-      await this.commandService.deleteAccount(req.user.sub);
+      await this.commandService.deleteAccount(req.user.sub, body.confirmation);
       return { success: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Delete failed';

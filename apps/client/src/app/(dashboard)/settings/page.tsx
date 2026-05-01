@@ -29,12 +29,10 @@ export default function SettingsPage() {
   const [isGuest, setIsGuest] = useState(false);
 
   React.useEffect(() => {
-    apiClient.get("/users/profile").catch((err: unknown) => {
-      const axiosError = err as { response?: { status?: number } };
-      if (axiosError.response?.status === 401) {
-        setIsGuest(true);
-      }
-    });
+    const token = localStorage.getItem("token") || localStorage.getItem("jwtToken");
+    if (!token) {
+      setIsGuest(true);
+    }
   }, []);
 
   return (
@@ -43,8 +41,7 @@ export default function SettingsPage() {
       onSectionChange={setActiveSection}
       isMobile={isMobile}
       isGuest={isGuest}
-    >
-      {renderSection(activeSection, isGuest)}
-    </SettingsLayout>
+      renderSection={(id) => renderSection(id, isGuest)}
+    />
   );
 }

@@ -75,7 +75,20 @@ export class UsersCommandService {
     });
   }
 
-  async deleteAccount(userId: string): Promise<void> {
+  async deleteAccount(userId: string, confirmation: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true }
+    });
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    
+    if (user.username !== confirmation) {
+      throw new UnauthorizedException('Confirmation mismatch');
+    }
+
     await this.prisma.user.delete({ where: { id: userId } });
     await this.redis.del(profileKey(userId), loadoutKey(userId));
   }

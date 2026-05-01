@@ -3,71 +3,61 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../../../lib/api-client";
-import { FeedbackState, SectionHeader, SettingsInput, SaveButton, PasswordStrength } from "./Shared";
+import { AlertTriangle } from "lucide-react";
+import { useFeedback, SectionHeader, SettingsInput, SaveButton, PasswordStrength } from "./Shared";
 
 export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
   const router = useRouter();
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
-  const [pwFb, setPwFb] = useState<FeedbackState>({ status: "idle" });
+  const { state: pwFb, flash: flashPw } = useFeedback();
   const [loadingPw, setLoadingPw] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [storedUsername, setStoredUsername] = useState("");
-  const [deleteFb, setDeleteFb] = useState<FeedbackState>({ status: "idle" });
+  const { state: deleteFb, flash: flashDelete } = useFeedback();
   const [loadingDelete, setLoadingDelete] = useState(false);
 
   useEffect(() => {
     setStoredUsername(localStorage.getItem("username") ?? "");
-  }, []);
-
-  const flash = useCallback(
-    (
-      setter: React.Dispatch<React.SetStateAction<FeedbackState>>,
-      status: "success" | "error",
-      message?: string
-    ) => {
-      setter({ status, message });
-      setTimeout(() => setter({ status: "idle" }), 2500);
-    }, []
-  );
+  }, [showDeleteModal]);
 
   const changePassword = async () => {
-    if (isGuest) {
-      return;
-    }
+    if (isGuest) return;
     if (!currentPw || !newPw || !confirmPw) {
-      return flash(setPwFb, "error", "ALL FIELDS REQUIRED");
+      return flashPw("error", "ALL FIELDS REQUIRED");
     }
     if (newPw !== confirmPw) {
-      return flash(setPwFb, "error", "PASSWORDS DO NOT MATCH");
+      return flashPw("error", "PASSWORDS DO NOT MATCH");
     }
     if (newPw.length < 8) {
-      return flash(setPwFb, "error", "MIN 8 CHARACTERS");
+      return flashPw("error", "MIN 8 CHARACTERS");
     }
     setLoadingPw(true);
     try {
       await apiClient.put("/users/password", { currentPassword: currentPw, newPassword: newPw });
       setCurrentPw(""); setNewPw(""); setConfirmPw("");
-      flash(setPwFb, "success", "CREDENTIALS UPDATED");
-    } catch (e: any) {
-      flash(setPwFb, "error", e?.response?.data?.message ?? "FAILED");
+      flashPw("success", "CREDENTIALS UPDATED");
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      flashPw("error", e?.response?.data?.message ?? "FAILED");
     } finally { setLoadingPw(false); }
   };
 
   const deleteAccount = async () => {
     if (deleteConfirm !== storedUsername) {
-      return flash(setDeleteFb, "error", "USERNAME MISMATCH");
+      return flashDelete("error", "USERNAME MISMATCH");
     }
     setLoadingDelete(true);
     try {
-      await apiClient.delete("/users/account");
+      await apiClient.delete("/users/account", { data: { confirmation: deleteConfirm } });
       ["token", "jwtToken", "userId", "username"].forEach((k) => localStorage.removeItem(k));
       router.push("/login");
-    } catch (e: any) {
-      flash(setDeleteFb, "error", e?.response?.data?.message ?? "FAILED");
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      flashDelete("error", e?.response?.data?.message ?? "FAILED");
       setLoadingDelete(false);
     }
   };
@@ -82,7 +72,7 @@ export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
         <SettingsInput label="New Password" value={newPw} onChange={setNewPw} type="password" placeholder="••••••••" disabled={isGuest} isGuest={isGuest} />
         <PasswordStrength password={newPw} />
         <SettingsInput label="Confirm New Password" value={confirmPw} onChange={setConfirmPw} type="password" placeholder="••••••••" disabled={isGuest} isGuest={isGuest} />
-        <SaveButton onClick={changePassword} loading={loadingPw} feedback={pwFb} label="UPDATE CREDENTIALS" isGuest={isGuest} />
+        <SaveButton onClick={changePassword} loading={loadingPw} feedback={pwFb} label="UPDATE CREDENTIALS" isGuest={isGuest} disabled={!currentPw || !newPw || !confirmPw} />
       </div>
 
       {/* Danger zone */}
@@ -91,8 +81,8 @@ export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
           className="absolute inset-y-0 left-0 w-[3px] rounded-l-xl"
           style={{ background: "rgba(239,68,68,0.6)" }}
         />
-        <div className="text-[10px] font-black tracking-[0.3em] uppercase text-red-400 mb-2 ml-2">
-          ⚠ DANGER ZONE
+        <div className="text-[10px] font-black tracking-[0.3em] uppercase text-red-400 mb-2 ml-2 flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5" /> DANGER ZONE
         </div>
         <p className="text-[11px] text-text-secondary/70 ml-2 mb-4 tracking-[0.05em]">
           Permanently deletes your account and all associated data. This action cannot be undone.
@@ -102,7 +92,7 @@ export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
           onClick={() => !isGuest && setShowDeleteModal(true)}
           className={`ml-2 px-5 py-2 bg-red-500/10 border border-red-500/40 text-red-400 rounded-lg text-[10px] font-bold tracking-[0.2em] font-mono transition-all duration-150 ${isGuest ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-red-500/20 hover:border-red-500/70"}`}
         >
-          {isGuest ? "DELETE ACCOUNT" : "DELETE ACCOUNT"}
+          {isGuest ? "SIGN IN TO DELETE" : "DELETE ACCOUNT"}
         </button>
       </div>
 
@@ -137,8 +127,8 @@ export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
               <button
                 type="button"
                 onClick={deleteAccount}
-                disabled={loadingDelete}
-                className="flex-1 py-2.5 text-[10px] tracking-[0.18em] font-bold border border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-all disabled:opacity-40"
+                disabled={loadingDelete || deleteConfirm !== storedUsername}
+                className="flex-1 py-2.5 text-[10px] tracking-[0.18em] font-bold border border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loadingDelete ? "TERMINATING..." : "CONFIRM DELETE"}
               </button>

@@ -29,7 +29,16 @@ export function AppearanceSection() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  if (!mounted) return (
+    <div className="flex flex-col gap-6 opacity-50">
+      <SectionHeader>APPEARANCE</SectionHeader>
+      <div className="grid grid-cols-1 gap-3">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="w-full h-[92px] rounded-xl border border-accent/10 bg-bg-secondary"></div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6">

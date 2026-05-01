@@ -4,6 +4,11 @@ import React, { useEffect, useState } from "react";
 import { Bot, Lock } from 'lucide-react';
 import { SectionHeader, Toggle } from "./Shared";
 
+const ROBOTS = [
+  { id: "unit-01", label: "UNIT-01", desc: "Standard assault frame" },
+  { id: "unit-02", label: "UNIT-02", desc: "Heavy armor variant" },
+] as const;
+
 export function PreferencesSection({ isGuest = false }: { isGuest?: boolean }) {
   const [defaultRobot, setDefaultRobot] = useState("unit-01");
   const [soundFx, setSoundFx] = useState(true);
@@ -16,11 +21,6 @@ export function PreferencesSection({ isGuest = false }: { isGuest?: boolean }) {
   }, []);
 
   const save = (key: string, value: string) => localStorage.setItem(key, value);
-
-  const ROBOTS = [
-    { id: "unit-01", label: "UNIT-01", desc: "Standard assault frame" },
-    { id: "unit-02", label: "UNIT-02", desc: "Heavy armor variant" },
-  ] as const;
 
   return (
     <div className="flex flex-col gap-6">

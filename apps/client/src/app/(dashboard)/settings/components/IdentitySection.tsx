@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { apiClient } from "../../../../lib/api-client";
-import { FeedbackState, SectionHeader, SettingsInput, SaveButton } from "./Shared";
+import { useFeedback, SectionHeader, SettingsInput, SaveButton } from "./Shared";
 
 export function IdentitySection({ isGuest = false }: { isGuest?: boolean }) {
   const [username, setUsername] = useState("");
@@ -11,8 +11,11 @@ export function IdentitySection({ isGuest = false }: { isGuest?: boolean }) {
   const [hasGoogle, setHasGoogle] = useState(false);
   const [hasGithub, setHasGithub] = useState(false);
 
-  const [usernameFb, setUsernameFb] = useState<FeedbackState>({ status: "idle" });
-  const [emailFb, setEmailFb] = useState<FeedbackState>({ status: "idle" });
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [originalEmail, setOriginalEmail] = useState("");
+
+  const { state: usernameFb, flash: flashUsername } = useFeedback();
+  const { state: emailFb, flash: flashEmail } = useFeedback();
   const [loadingUsername, setLoadingUsername] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
 
@@ -23,50 +26,57 @@ export function IdentitySection({ isGuest = false }: { isGuest?: boolean }) {
 
     apiClient.get("/users/profile").then((res) => {
       setEmail(res.data.email ?? "");
+      setOriginalEmail(res.data.email ?? "");
       setHasGoogle(res.data.hasGoogle ?? false);
       setHasGithub(res.data.hasGithub ?? false);
       setUsername(res.data.username ?? storedUsername);
+      setOriginalUsername(res.data.username ?? storedUsername);
       setInitials((res.data.username ?? storedUsername)?.[0]?.toUpperCase() ?? "?");
     }).catch(() => { });
   }, []);
 
-  const flash = useCallback(
-    (
-      setter: React.Dispatch<React.SetStateAction<FeedbackState>>,
-      status: "success" | "error",
-      message?: string
-    ) => {
-      setter({ status, message });
-      setTimeout(() => setter({ status: "idle" }), 2500);
-    },
-    []
-  );
-
   const saveUsername = async () => {
-    if (isGuest) {
-      return;
+    if (isGuest) return;
+    const newUsername = username.trim();
+    if (!newUsername) {
+      return flashUsername("error", "USERNAME CANNOT BE EMPTY");
     }
+    if (newUsername.length < 3) {
+      return flashUsername("error", "MIN 3 CHARACTERS");
+    }
+
     setLoadingUsername(true);
     try {
-      await apiClient.put("/users/identity", { username });
-      localStorage.setItem("username", username);
-      setInitials(username[0]?.toUpperCase() ?? "?");
-      flash(setUsernameFb, "success");
-    } catch (e: any) {
-      flash(setUsernameFb, "error", e?.response?.data?.message ?? "FAILED");
+      await apiClient.put("/users/identity", { username: newUsername });
+      localStorage.setItem("username", newUsername);
+      setOriginalUsername(newUsername);
+      setUsername(newUsername);
+      setInitials(newUsername[0]?.toUpperCase() ?? "?");
+      flashUsername("success");
+    } catch (err: unknown) {
+      setUsername(originalUsername);
+      const e = err as { response?: { data?: { message?: string } } };
+      flashUsername("error", e?.response?.data?.message ?? "FAILED");
     } finally { setLoadingUsername(false); }
   };
 
   const saveEmail = async () => {
-    if (isGuest) {
-      return;
+    if (isGuest) return;
+    const newEmail = email.trim();
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      return flashEmail("error", "INVALID EMAIL FORMAT");
     }
+
     setLoadingEmail(true);
     try {
-      await apiClient.put("/users/identity", { email });
-      flash(setEmailFb, "success");
-    } catch (e: any) {
-      flash(setEmailFb, "error", e?.response?.data?.message ?? "FAILED");
+      await apiClient.put("/users/identity", { email: newEmail });
+      setOriginalEmail(newEmail);
+      setEmail(newEmail);
+      flashEmail("success");
+    } catch (err: unknown) {
+      setEmail(originalEmail);
+      const e = err as { response?: { data?: { message?: string } } };
+      flashEmail("error", e?.response?.data?.message ?? "FAILED");
     } finally { setLoadingEmail(false); }
   };
 
@@ -90,13 +100,13 @@ export function IdentitySection({ isGuest = false }: { isGuest?: boolean }) {
       {/* Display name */}
       <div className="flex flex-col gap-3">
         <SettingsInput label="Display Name" value={username} onChange={setUsername} placeholder="Enter username" disabled={isGuest} isGuest={isGuest} />
-        <SaveButton onClick={saveUsername} loading={loadingUsername} feedback={usernameFb} isGuest={isGuest} />
+        <SaveButton onClick={saveUsername} loading={loadingUsername} feedback={usernameFb} isGuest={isGuest} disabled={username === originalUsername || !username.trim()} />
       </div>
 
       {/* Email */}
       <div className="flex flex-col gap-3">
         <SettingsInput label="Email Address" value={email} onChange={setEmail} type="email" placeholder="Enter email" disabled={isGuest} isGuest={isGuest} />
-        <SaveButton onClick={saveEmail} loading={loadingEmail} feedback={emailFb} isGuest={isGuest} />
+        <SaveButton onClick={saveEmail} loading={loadingEmail} feedback={emailFb} isGuest={isGuest} disabled={email === originalEmail || !email.trim()} />
       </div>
 
       {/* Connected accounts */}
