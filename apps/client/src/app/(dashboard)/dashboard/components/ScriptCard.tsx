@@ -17,22 +17,25 @@ interface ScriptCardProps {
     onDeployToLobby: (id: string) => void;
     onDeployToArena: (id: string) => void;
     onDelete: (id: string) => void;
-    isMobile?: boolean;
     isGuest?: boolean;
 }
 
 const CONFIRM_TIMEOUT_MS = 3000;
 
-export const ScriptCard = ({
+export const ScriptCard = React.memo(({
     script,
     onEditBrain,
     onDeployToLobby,
     onDeployToArena,
     onDelete,
-    isMobile,
     isGuest,
 }: ScriptCardProps) => {
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const startConfirm = useCallback(() => {
         setConfirmDelete(true);
@@ -47,92 +50,127 @@ export const ScriptCard = ({
         onDelete(script.id);
     }, [onDelete, script.id]);
 
-    // Auto-cancel confirmation after timeout
     useEffect(() => {
         if (!confirmDelete) return;
         const timer = setTimeout(cancelConfirm, CONFIRM_TIMEOUT_MS);
         return () => clearTimeout(timer);
     }, [confirmDelete, cancelConfirm]);
 
-    const iconBtnBase = "flex items-center justify-center rounded-lg border transition-colors duration-150 cursor-pointer";
-    const iconBtnSize = isMobile ? "w-12 h-12" : "w-10 h-10";
+    interface ActionButtonProps {
+        icon: React.ReactNode;
+        tooltip: string;
+        onClick: () => void;
+        disabled?: boolean;
+        colorClass: string;
+        glowColor: string;
+        borderColor: string;
+    }
 
-    const ActionRow = (
-        <div className="flex gap-2 justify-end pt-3 border-t border-border/30 mt-3">
+    const ActionButton = ({ icon, tooltip, onClick, disabled, colorClass, glowColor, borderColor }: ActionButtonProps) => (
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            className={`group/btn relative flex items-center justify-center w-12 h-12 md:w-10 md:h-10 rounded-xl transition-all duration-300 outline-none ${disabled ? 'opacity-30 cursor-not-allowed grayscale' : `cursor-pointer ${colorClass}`}`}
+        >
+            <div className="relative z-10 transition-transform duration-300 group-hover/btn:scale-110 group-active/btn:scale-90">
+                {icon}
+            </div>
+            
+            {/* Soft background glow on hover */}
+            {!disabled && (
+                <div 
+                    className="absolute inset-0 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 blur-md pointer-events-none"
+                    style={{ background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)` }}
+                />
+            )}
+
+            {/* Premium Tooltip */}
+            <span className={`absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-bg-secondary/90 backdrop-blur-xl border ${borderColor} text-text-primary text-[9px] font-bold tracking-widest rounded-lg opacity-0 group-hover/btn:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-20 shadow-2xl translate-y-2 group-hover/btn:translate-y-0 hidden md:block`}>
+                {tooltip}
+                {/* Arrow */}
+                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-bg-secondary/90 border-b border-r ${borderColor} rotate-45`}></span>
+            </span>
+        </button>
+    );
+
+    const getActionRow = () => (
+        <div className="mt-4 flex justify-end">
             {confirmDelete ? (
-                <div className="flex items-center gap-2 w-full animate-in fade-in duration-150">
-                    <span className="text-red-400 text-[10px] font-bold tracking-[0.15em] uppercase flex-1">
+                <div className="flex items-center gap-3 w-full animate-in fade-in zoom-in-95 duration-200">
+                    <span className="text-red-400 text-[10px] md:text-xs font-black tracking-[0.15em] uppercase flex-1 text-right mr-1 md:mr-2">
                         CONFIRM DELETE?
                     </span>
-                    <button
-                        type="button"
-                        aria-label="Confirm delete"
-                        onClick={confirmAndDelete}
-                        className={`${iconBtnBase} ${iconBtnSize} bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30 text-[10px] font-black tracking-wider px-3`}
-                    >
-                        YES
-                    </button>
-                    <button
-                        type="button"
-                        aria-label="Cancel delete"
-                        onClick={cancelConfirm}
-                        className={`${iconBtnBase} ${iconBtnSize} bg-bg-secondary border-border text-text-secondary hover:bg-border text-[10px] font-black tracking-wider px-3`}
-                    >
-                        NO
-                    </button>
+                    <div className="flex items-center p-1 bg-red-950/20 backdrop-blur-xl rounded-2xl border border-red-500/20 shadow-[inset_0_1px_1px_rgba(var(--accent-rgb),0.05)]">
+                        <button
+                            type="button"
+                            aria-label="Confirm delete"
+                            onClick={confirmAndDelete}
+                            className="flex items-center justify-center px-5 py-2 md:py-2.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/40 text-[10px] md:text-xs font-black tracking-widest transition-all active:scale-95"
+                        >
+                            YES
+                        </button>
+                        <div className="w-[1px] h-5 bg-red-500/20 mx-1"></div>
+                        <button
+                            type="button"
+                            aria-label="Cancel delete"
+                            onClick={cancelConfirm}
+                            className="flex items-center justify-center px-5 py-2 md:py-2.5 rounded-xl text-text-secondary hover:bg-accent/10 hover:text-text-primary text-[10px] md:text-xs font-black tracking-widest transition-all active:scale-95"
+                        >
+                            NO
+                        </button>
+                    </div>
                 </div>
             ) : (
-                <>
-                    <button
-                        type="button"
-                        title={isGuest ? "LOCKED" : "Edit"}
-                        aria-label="Edit script"
+                <div className="flex items-center p-1 bg-card/60 backdrop-blur-2xl rounded-2xl border border-accent/10 shadow-[inset_0_1px_1px_rgba(var(--accent-rgb),0.05),0_8px_32px_rgba(0,0,0,0.1)]">
+                    <ActionButton
+                        icon={<Pencil size={18} strokeWidth={2} />}
+                        tooltip={isGuest ? "LOCKED" : "EDIT SCRIPT"}
                         onClick={() => !isGuest && onEditBrain(script.id)}
                         disabled={isGuest}
-                        className={`${iconBtnBase} ${iconBtnSize} ${isGuest ? 'bg-accent/5 border-accent/10 text-accent/20 cursor-not-allowed' : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'}`}
-                    >
-                        <Pencil size={16} />
-                    </button>
-                    <button
-                        type="button"
-                        title={isGuest ? "LOCKED" : "Lobby"}
-                        aria-label="Deploy to lobby"
+                        colorClass="text-accent hover:text-accent hover:bg-accent/10"
+                        glowColor="rgba(var(--accent-rgb), 0.4)"
+                        borderColor="border-accent/30"
+                    />
+                    <div className="w-[1px] h-6 bg-accent/10 mx-0.5"></div>
+                    <ActionButton
+                        icon={<Swords size={18} strokeWidth={2} />}
+                        tooltip={isGuest ? "LOCKED" : "DEPLOY TO LOBBY"}
                         onClick={() => !isGuest && onDeployToLobby(script.id)}
                         disabled={isGuest}
-                        className={`${iconBtnBase} ${iconBtnSize} ${isGuest ? 'bg-purple-500/5 border-purple-500/10 text-purple-400/20 cursor-not-allowed' : 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20'}`}
-                    >
-                        <Swords size={16} />
-                    </button>
-                    <button
-                        type="button"
-                        title="Arena"
-                        aria-label="Deploy to arena"
+                        colorClass="text-purple-400 hover:text-purple-500 hover:bg-purple-500/10"
+                        glowColor="rgba(168,85,247, 0.4)"
+                        borderColor="border-purple-500/30"
+                    />
+                    <div className="w-[1px] h-6 bg-accent/10 mx-0.5"></div>
+                    <ActionButton
+                        icon={<Trophy size={18} strokeWidth={2} />}
+                        tooltip="DEPLOY TO ARENA"
                         onClick={() => onDeployToArena(script.id)}
-                        className={`${iconBtnBase} ${iconBtnSize} bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20`}
-                    >
-                        <Trophy size={16} />
-                    </button>
-                    <button
-                        type="button"
-                        title={isGuest ? "LOCKED" : "Delete"}
-                        aria-label="Delete script"
+                        disabled={false}
+                        colorClass="text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                        glowColor="rgba(34,197,94, 0.4)"
+                        borderColor="border-green-500/30"
+                    />
+                    <div className="w-[1px] h-6 bg-accent/10 mx-0.5"></div>
+                    <ActionButton
+                        icon={<Trash2 size={18} strokeWidth={2} />}
+                        tooltip={isGuest ? "LOCKED" : "DELETE SCRIPT"}
                         onClick={() => !isGuest && startConfirm()}
                         disabled={isGuest}
-                        className={`${iconBtnBase} ${iconBtnSize} ${isGuest ? 'bg-red-500/5 border-red-500/10 text-red-400/20 cursor-not-allowed' : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'}`}
-                    >
-                        <Trash2 size={16} />
-                    </button>
-                </>
+                        colorClass="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                        glowColor="rgba(239,68,68, 0.4)"
+                        borderColor="border-red-500/30"
+                    />
+                </div>
             )}
         </div>
     );
 
-    if (isMobile) {
-        return (
-            <div
-                className="group relative flex flex-col w-full bg-card border border-accent/50 rounded-2xl overflow-hidden transition-all duration-200"
-                style={{ boxShadow: "inset 3px 0 0 var(--accent), 0 1px 3px rgba(0,0,0,0.2)" }}
-            >
+    return (
+        <>
+            {/* Mobile Card */}
+            <div className="md:hidden group relative flex flex-col w-full bg-card border border-accent/50 rounded-2xl overflow-hidden transition-all duration-200" style={{ boxShadow: "inset 3px 0 0 var(--accent), 0 1px 3px rgba(0,0,0,0.2)" }}>
                 <div className="p-5 flex flex-col gap-1">
                     <h3 className="text-base font-bold text-accent tracking-wide group-active:text-accent/80">
                         {script.title}
@@ -141,35 +179,29 @@ export const ScriptCard = ({
                         <span>v{script.version}</span>
                         <span className="opacity-30">·</span>
                         <span>
-                            {new Date(script.createdAt).toLocaleDateString(undefined, {
-                                month: "short",
-                                day: "numeric",
-                                year: "2-digit",
-                            })}
+                            {mounted ? new Date(script.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "2-digit" }) : ""}
                         </span>
                     </div>
-                    {ActionRow}
+                    {getActionRow()}
                 </div>
             </div>
-        );
-    }
 
-    return (
-        <div
-            className="flex flex-col bg-card/60 backdrop-blur-md p-4 sm:p-5 rounded-xl border border-accent/20 hover:border-accent/50 hover:bg-accent/5 transition-colors duration-150 group"
-            style={{ boxShadow: "var(--card-shadow)" }}
-        >
-            <div className="flex flex-col gap-1">
-                <h3 className="text-base sm:text-lg font-bold text-accent tracking-wider group-hover:text-accent transition-colors wrap-break-word">
-                    {script.title}
-                </h3>
-                <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] text-text-secondary tracking-widest font-bold">
-                    <span>V.{script.version}</span>
-                    <span className="hidden sm:inline">|</span>
-                    <span>INIT: {new Date(script.createdAt).toLocaleDateString()}</span>
+            {/* Desktop Card */}
+            <div className="hidden md:flex flex-col bg-card/60 backdrop-blur-md p-5 rounded-xl border border-accent/20 hover:border-accent/50 hover:bg-accent/5 transition-colors duration-150 group shadow-[var(--card-shadow)]">
+                <div className="flex flex-col gap-1">
+                    <h3 className="text-lg font-bold text-accent tracking-wider group-hover:text-accent transition-colors wrap-break-word">
+                        {script.title}
+                    </h3>
+                    <div className="flex flex-wrap gap-4 text-[10px] text-text-secondary tracking-widest font-bold">
+                        <span>V.{script.version}</span>
+                        <span className="hidden sm:inline">|</span>
+                        <span>INIT: {mounted ? new Date(script.createdAt).toLocaleDateString() : ""}</span>
+                    </div>
                 </div>
+                {getActionRow()}
             </div>
-            {ActionRow}
-        </div>
+        </>
     );
-};
+});
+
+ScriptCard.displayName = "ScriptCard";

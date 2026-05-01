@@ -63,7 +63,7 @@ export class ScriptsService {
             throw new NotFoundException("Script not found or unauthorized.");
         }
 
-        const updateData: any = { content, version: script.version + 1 };
+        const updateData: { content: string; version: number; title?: string } = { content, version: script.version + 1 };
         if (title) {
             updateData.title = title;
         }
