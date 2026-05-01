@@ -2,8 +2,9 @@ export const ALLOWED_ROBOT_IDS = ['unit-01', 'unit-02'];
 export const COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
 export const PROFILE_TTL = 600; // 10 minutes
 
-export const profileKey = (id: string) => `user:profile:${id}`;
-export const loadoutKey = (id: string) => `user:loadout:${id}`;
+export const profileKey     = (id: string) => `user:profile:${id}`;
+export const loadoutKey     = (id: string) => `user:loadout:${id}`;
+export const preferencesKey = (id: string) => `user:preferences:${id}`;
 
 export const BCRYPT_ROUNDS = 12;
 export const PRISMA_UNIQUE_VIOLATION = 'P2002';
@@ -16,22 +17,50 @@ export interface CombatStats {
   speed:      number;  // match pace: energy commands / second (0-100)
 }
 
+export interface ArenaPreferences {
+  defaultRobot:    string;  // 'unit-01' | 'unit-02'
+  soundFx:         boolean;
+  music:           boolean;
+  graphicsQuality: string;  // 'low' | 'medium' | 'high'
+}
+
+export interface NotificationSettings {
+  challengeReqs:    boolean;
+  tournamentAlerts: boolean;
+  matchResults:     boolean;
+}
+
+export const DEFAULT_ARENA_PREFERENCES: ArenaPreferences = {
+  defaultRobot:    'unit-01',
+  soundFx:         true,
+  music:           true,
+  graphicsQuality: 'medium',
+};
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  challengeReqs:    true,
+  tournamentAlerts: true,
+  matchResults:     true,
+};
+
 export interface UserProfile {
-  username: string;
-  email: string;
-  rank: number;
-  memberSince: Date;
-  selectedRobotId: string | null;
-  selectedColor: string | null;
-  totalMatches: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  matchHistory: MatchSummary[];
-  hasGoogle: boolean;
-  hasGithub: boolean;
-  provider: string | null;
-  combatStats: CombatStats;
+  username:             string;
+  email:                string;
+  rank:                 number;
+  memberSince:          Date;
+  selectedRobotId:      string | null;
+  selectedColor:        string | null;
+  arenaPreferences:     ArenaPreferences;
+  notificationSettings: NotificationSettings;
+  totalMatches:         number;
+  wins:                 number;
+  losses:               number;
+  winRate:              number;
+  matchHistory:         MatchSummary[];
+  hasGoogle:            boolean;
+  hasGithub:            boolean;
+  provider:             string | null;
+  combatStats:          CombatStats;
 }
 
 export interface MatchSummary {

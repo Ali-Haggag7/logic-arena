@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
-import { UserProfile, MatchSummary, UserLoadout, CombatStats, profileKey, loadoutKey, PROFILE_TTL } from './types';
+import { UserProfile, MatchSummary, UserLoadout, CombatStats, ArenaPreferences, NotificationSettings, profileKey, loadoutKey, PROFILE_TTL, DEFAULT_ARENA_PREFERENCES, DEFAULT_NOTIFICATION_SETTINGS } from './types';
 
 @Injectable()
 export class UsersQueryService {
@@ -21,8 +21,10 @@ export class UsersQueryService {
         email: true,
         rank: true,
         createdAt: true,
-        selectedRobotId: true,
-        selectedColor: true,
+        selectedRobotId:      true,
+        selectedColor:        true,
+        arenaPreferences:     true,
+        notificationSettings: true,
         googleId: true,
         githubId: true,
         provider: true,
@@ -63,21 +65,23 @@ export class UsersQueryService {
     const zeroCombatStats: CombatStats = { efficiency: 0, aggression: 0, defense: 0, precision: 0, speed: 0 };
 
     const profile: UserProfile = {
-      username: user.username,
-      email: user.email,
-      rank: user.rank,
-      memberSince: user.createdAt,
-      selectedRobotId: user.selectedRobotId,
-      selectedColor: user.selectedColor,
+      username:             user.username,
+      email:                user.email,
+      rank:                 user.rank,
+      memberSince:          user.createdAt,
+      selectedRobotId:      user.selectedRobotId,
+      selectedColor:        user.selectedColor,
+      arenaPreferences:     (user.arenaPreferences as unknown as ArenaPreferences | null) ?? DEFAULT_ARENA_PREFERENCES,
+      notificationSettings: (user.notificationSettings as unknown as NotificationSettings | null) ?? DEFAULT_NOTIFICATION_SETTINGS,
       totalMatches,
       wins,
       losses,
       winRate,
       matchHistory,
-      hasGoogle: !!user.googleId,
-      hasGithub: !!user.githubId,
-      provider: user.provider,
-      combatStats: (user.combatStats as CombatStats | null) ?? zeroCombatStats,
+      hasGoogle:    !!user.googleId,
+      hasGithub:    !!user.githubId,
+      provider:     user.provider,
+      combatStats:  (user.combatStats as CombatStats | null) ?? zeroCombatStats,
     };
 
     await this.redis.set(profileKey(userId), profile, PROFILE_TTL);

@@ -21,6 +21,8 @@ import {
   LeaderboardEntry,
   LEADERBOARD_LIMIT,
   LEADERBOARD_TTL,
+  ArenaPreferences,
+  NotificationSettings,
 } from './types';
 
 /** Typed request shape produced by AuthGuard JWT strategy */
@@ -157,6 +159,38 @@ export class UsersController {
         body.currentPassword,
         body.newPassword,
       );
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Update failed';
+      throw new BadRequestException(message);
+    }
+  }
+
+  // ── Update Arena Preferences (auth-gated) ───────────────────────────────
+  @UseGuards(AuthGuard)
+  @Put('preferences')
+  async updateArenaPreferences(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: Partial<ArenaPreferences>,
+  ) {
+    try {
+      await this.commandService.updateArenaPreferences(req.user.sub, body);
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Update failed';
+      throw new BadRequestException(message);
+    }
+  }
+
+  // ── Update Notification Settings (auth-gated) ───────────────────────────
+  @UseGuards(AuthGuard)
+  @Put('notifications')
+  async updateNotificationSettings(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: Partial<NotificationSettings>,
+  ) {
+    try {
+      await this.commandService.updateNotificationSettings(req.user.sub, body);
       return { success: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Update failed';
