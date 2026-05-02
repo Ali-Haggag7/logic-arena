@@ -119,6 +119,31 @@ export function PreferencesSection({ isGuest = false }: { isGuest?: boolean }) {
         </div>
       </div>
 
+      {/* Graphics Quality */}
+      <div className="flex flex-col gap-3">
+        <div className="text-[9px] tracking-[0.22em] text-accent/50 font-bold uppercase">Graphics Quality</div>
+        <div className="grid grid-cols-3 gap-3">
+          {(["low", "medium", "high"] as const).map((q) => {
+            const selected = prefs.graphicsQuality === q;
+            return (
+              <button
+                key={q}
+                type="button"
+                onClick={() => update("graphicsQuality", q)}
+                className={`py-3 rounded-xl border text-center transition-all duration-200 ${selected
+                  ? "border-accent bg-accent/[0.07] shadow-[0_0_16px_rgba(var(--accent-rgb),0.10)]"
+                  : "border-accent/10 bg-bg-secondary hover:border-accent/30"
+                } ${isGuest ? "opacity-60 grayscale-[0.5] cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                <div className={`text-[10px] font-black tracking-[0.15em] ${selected ? "text-accent" : "text-text-secondary"}`}>
+                  {q.toUpperCase()}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Toggles */}
       <div className="flex flex-col gap-0 border border-accent/10 rounded-xl overflow-hidden">
         {([

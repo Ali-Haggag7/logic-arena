@@ -8,23 +8,23 @@ export type Vec2 = { x: number; y: number };
 // Robot state received from server
 // ---------------------------------------------------------------------------
 export interface RobotState {
-  id:                string;
-  position:          Vec2;
-  color:             string;
-  health:            number;
-  rotation?:         number;
-  velocity?:         Vec2;
-  model?:            string;
-  spotted?:          boolean;
+  id: string;
+  position: Vec2;
+  color: string;
+  health: number;
+  rotation?: number;
+  velocity?: Vec2;
+  model?: string;
+  spotted?: boolean;
   // Energy (Feature 2)
-  energy?:           number;
-  maxEnergy?:        number;
-  inStasis?:         boolean;
+  energy?: number;
+  maxEnergy?: number;
+  inStasis?: boolean;
   // FOV (Feature 1)
-  fov?:              { angle: number; range: number };
-  fovDirection?:     number;
+  fov?: { angle: number; range: number };
+  fovDirection?: number;
   /** IDs of robots visible to this robot — sent by server in delta-diff */
-  visibleRobotIds?:  string[];
+  visibleRobotIds?: string[];
   totalEnergyConsumed?: number;
   totalDamageDealt?: number;
 }
@@ -33,7 +33,7 @@ export interface RobotState {
 // Projectile state
 // ---------------------------------------------------------------------------
 export interface ProjectileState {
-  id:       string;
+  id: string;
   position: Vec2;
 }
 
@@ -43,11 +43,11 @@ export interface ProjectileState {
 export type ObstacleType = 'SOLID' | 'TRAP' | 'LAVA' | 'FINISH_LINE';
 
 export interface ObstacleState {
-  id:        string;
-  type:      ObstacleType;
-  position:  Vec2;
-  width:     number;
-  height:    number;
+  id: string;
+  type: ObstacleType;
+  position: Vec2;
+  width: number;
+  height: number;
   rotation?: number;
 }
 
@@ -55,21 +55,21 @@ export interface ObstacleState {
 // Robot 3D model props
 // ---------------------------------------------------------------------------
 export interface RobotModelProps {
-  position:      [number, number, number];
-  color:         string;
-  health:        number;
-  velocity:      Vec2;
-  rotation?:     number;
+  position: [number, number, number];
+  color: string;
+  health: number;
+  velocity: Vec2;
+  rotation?: number;
   hitTimestamp?: number | null;
-  spotted?:      boolean;
+  spotted?: boolean;
   // Energy additions
-  energy?:       number;
-  maxEnergy?:    number;
-  inStasis?:     boolean;
+  energy?: number;
+  maxEnergy?: number;
+  inStasis?: boolean;
   // FOV additions
-  fov?:          { angle: number; range: number };
+  fov?: { angle: number; range: number };
   fovDirection?: number;
-  modelFile?:    string;
+  modelFile?: string;
   hideHealthBar?: boolean;
   speechBubble?: string | null;
 }
@@ -78,9 +78,9 @@ export interface RobotModelProps {
 // Hit burst effect
 // ---------------------------------------------------------------------------
 export interface HitBurst {
-  id:        string;
-  position:  [number, number, number];
-  color:     string;
+  id: string;
+  position: [number, number, number];
+  color: string;
   createdAt: number;
 }
 
@@ -97,7 +97,7 @@ export interface RobotErrorBoundaryState {
 }
 
 export interface FiredTracer {
-  robotId:        string;
+  robotId: string;
   targetPosition: Vec2;
 }
 
@@ -107,18 +107,18 @@ export interface SpeechBubbleState {
 }
 
 export interface Scene3DComponentProps {
-  gameStateRef:    MutableRefObject<GameState>;
-  obstacles?:      ObstacleState[];
-  firedTracer?:    FiredTracer | null;
-  speechBubble?:   SpeechBubbleState | null;
-  fogEnabled?:     boolean;
-  soundFx?:        boolean;
+  gameStateRef: MutableRefObject<GameState>;
+  obstacles?: ObstacleState[];
+  firedTracer?: FiredTracer | null;
+  speechBubble?: SpeechBubbleState | null;
+  fogEnabled?: boolean;
+  soundFx?: boolean;
   graphicsQuality?: string;
   /** GLB file path for the local player's robot ("/robot.glb" | "/robot2.glb") */
   localRobotFile?: string;
   /** Hex color saved in the local player's loadout — used to identify their robot in the scene */
   localRobotColor?: string;
-  displayMode?:    string;
+  displayMode?: string;
 }
 
 export interface HealthBarSpriteProps {
@@ -126,9 +126,9 @@ export interface HealthBarSpriteProps {
 }
 
 export interface EnergyBarSpriteProps {
-  energy:    number;
+  energy: number;
   maxEnergy: number;
-  inStasis:  boolean;
+  inStasis: boolean;
 }
 
 export interface HitBurstEffectProps {
@@ -136,13 +136,13 @@ export interface HitBurstEffectProps {
 }
 
 export interface HitParticlesProps {
-  bursts:     HitBurst[];
-  setBursts:  React.Dispatch<React.SetStateAction<HitBurst[]>>;
+  bursts: HitBurst[];
+  setBursts: React.Dispatch<React.SetStateAction<HitBurst[]>>;
 }
 
 export interface FallbackRobotProps {
   position: [number, number, number];
-  color:    string;
+  color: string;
 }
 
 export interface LaserModelProps {
@@ -159,18 +159,18 @@ export interface BoundaryLineProps {
 
 export interface LaserBeamProps {
   start: [number, number, number];
-  end:   [number, number, number];
+  end: [number, number, number];
 }
 
 export interface SpeechBubbleProps {
   position: [number, number, number];
-  message:  string;
+  message: string;
 }
 
 export interface FovConeProps {
-  position:    [number, number, number];
-  color:       string;
-  fov:         { angle: number; range: number };
+  position: [number, number, number];
+  color: string;
+  fov: { angle: number; range: number };
   fovDirection: number;
 }
 
