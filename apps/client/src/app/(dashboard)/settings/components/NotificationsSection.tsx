@@ -1,40 +1,113 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { SectionHeader, Toggle } from "./Shared";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { SectionHeader, Toggle, useFeedback } from "./Shared";
+import { apiClient } from "../../../../lib/api-client";
+
+interface NotificationSettings {
+  challengeReqs:    boolean;
+  tournamentAlerts: boolean;
+  matchResults:     boolean;
+}
+
+const DEFAULT_SETTINGS: NotificationSettings = {
+  challengeReqs:    true,
+  tournamentAlerts: true,
+  matchResults:     true,
+};
+
+const DEBOUNCE_MS = 800;
+
+const ITEMS: { id: keyof NotificationSettings; label: string; sub: string }[] = [
+  { id: "challengeReqs",    label: "Challenge Requests", sub: "Incoming battle challenges from other players" },
+  { id: "tournamentAlerts", label: "Tournament Alerts",  sub: "Updates when a tournament begins or ends" },
+  { id: "matchResults",     label: "Match Results",      sub: "Post-match outcome notifications" },
+];
 
 export function NotificationsSection({ isGuest = false }: { isGuest?: boolean }) {
-  const [challengeReqs, setChallengeReqs] = useState(true);
-  const [tournamentAlerts, setTournamentAlerts] = useState(true);
-  const [matchResults, setMatchResults] = useState(true);
+  const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const { state: feedback, flash } = useFeedback();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSaved = useRef<NotificationSettings>(DEFAULT_SETTINGS);
 
+  // ── Load from backend on mount ─────────────────────────────────────────────
   useEffect(() => {
-    setChallengeReqs(localStorage.getItem("notif_challenges") !== "false");
-    setTournamentAlerts(localStorage.getItem("notif_tournaments") !== "false");
-    setMatchResults(localStorage.getItem("notif_results") !== "false");
-  }, []);
+    if (isGuest) { setLoading(false); return; }
+    apiClient.get("/users/profile").then((res) => {
+      const ns = res.data.notificationSettings ?? DEFAULT_SETTINGS;
+      setSettings(ns);
+      lastSaved.current = ns;
+    }).catch(() => {
+      // Graceful degradation to localStorage
+      setSettings({
+        challengeReqs:    localStorage.getItem("notif_challenges")  !== "false",
+        tournamentAlerts: localStorage.getItem("notif_tournaments") !== "false",
+        matchResults:     localStorage.getItem("notif_results")     !== "false",
+      });
+    }).finally(() => setLoading(false));
+  }, [isGuest]);
 
-  const save = (key: string, value: boolean) =>
-    localStorage.setItem(key, String(value));
+  // ── Debounced persist ──────────────────────────────────────────────────────
+  const persist = useCallback((patch: Partial<NotificationSettings>) => {
+    if (isGuest) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        await apiClient.put("/users/notifications", patch);
+        lastSaved.current = { ...lastSaved.current, ...patch };
+        flash("success", "SAVED");
+      } catch {
+        setSettings(lastSaved.current);
+        flash("error", "SAVE FAILED");
+      }
+    }, DEBOUNCE_MS);
+  }, [isGuest, flash]);
+
+  // ── Optimistic update ──────────────────────────────────────────────────────
+  const update = useCallback((key: keyof NotificationSettings, value: boolean) => {
+    if (isGuest) return;
+    setSettings((prev) => ({ ...prev, [key]: value }));
+    persist({ [key]: value });
+  }, [isGuest, persist]);
+
+  if (loading) return (
+    <div className="flex flex-col gap-6 opacity-50 animate-pulse">
+      <SectionHeader>NOTIFICATIONS</SectionHeader>
+      <div className="h-36 rounded-xl border border-accent/10 bg-bg-secondary" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6">
       <SectionHeader>NOTIFICATIONS</SectionHeader>
       <div className="flex flex-col border border-accent/10 rounded-xl overflow-hidden">
-        {[
-          { id: "challenges", label: "Challenge Requests", sub: "Incoming battle challenges from other players", val: challengeReqs, set: (v: boolean) => { if (!isGuest) { setChallengeReqs(v); save("notif_challenges", v); } } },
-          { id: "tournaments", label: "Tournament Alerts", sub: "Updates when a tournament begins or ends", val: tournamentAlerts, set: (v: boolean) => { if (!isGuest) { setTournamentAlerts(v); save("notif_tournaments", v); } } },
-          { id: "matchResults", label: "Match Results", sub: "Post-match outcome notifications", val: matchResults, set: (v: boolean) => { if (!isGuest) { setMatchResults(v); save("notif_results", v); } } },
-        ].map(({ id, label, sub, val, set }, i, arr) => (
-          <div key={id} className={`flex items-center justify-between px-4 py-4 bg-bg-secondary ${i < arr.length - 1 ? "border-b border-accent/10" : ""} ${isGuest ? "opacity-60 grayscale-[0.5]" : ""}`}>
+        {ITEMS.map(({ id, label, sub }, i) => (
+          <div
+            key={id}
+            className={`flex items-center justify-between px-4 py-4 bg-bg-secondary ${i < ITEMS.length - 1 ? "border-b border-accent/10" : ""} ${isGuest ? "opacity-60 grayscale-[0.5]" : ""}`}
+          >
             <div>
               <div className="text-[11px] font-bold tracking-[0.1em] text-text-primary">{label}</div>
               <div className="text-[9px] text-text-secondary/50 tracking-[0.06em] mt-0.5">{sub}</div>
             </div>
-            <Toggle id={`notif_${id}`} ariaLabel={`notif_${id}`} checked={val} onChange={set} isGuest={isGuest} />
+            <Toggle
+              id={`notif_${id}`}
+              ariaLabel={label}
+              checked={settings[id]}
+              onChange={(v) => update(id, v)}
+              isGuest={isGuest}
+            />
           </div>
         ))}
       </div>
+
+      {/* Feedback row */}
+      {feedback.status !== "idle" && (
+        <p className={`text-[10px] tracking-widest font-mono ${feedback.status === "success" ? "text-green-400" : "text-red-400"}`}>
+          {feedback.message ?? (feedback.status === "success" ? "SAVED" : "ERROR")}
+        </p>
+      )}
     </div>
   );
 }
