@@ -19,8 +19,60 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Logic Arena",
-  description: "Competitive real-time robot battle simulator",
+  metadataBase: new URL(process.env.CLIENT_URL || "https://logicarena.dev"),
+  title: {
+    default: "Logic Arena | Competitive Robot Coding Simulator",
+    template: "%s | Logic Arena",
+  },
+  description:
+    "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
+  keywords: [
+    "Logic Arena",
+    "coding game",
+    "programming simulator",
+    "robot battle",
+    "developer game",
+    "learn to code",
+    "TypeScript game",
+    "coding competition",
+  ],
+  authors: [{ name: "Ali Haggag" }],
+  creator: "Ali Haggag",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    title: "Logic Arena | Competitive Robot Coding Simulator",
+    description:
+      "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
+    siteName: "Logic Arena",
+    images: [
+      {
+        url: "/icons/logic-arena.webp",
+        width: 1200,
+        height: 630,
+        alt: "Logic Arena Gameplay",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Logic Arena | Competitive Robot Coding Simulator",
+    description:
+      "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
+    images: ["/icons/logic-arena.webp"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: "/icons/logic-arena.webp",
     apple: "/icons/logic-arena.webp",
