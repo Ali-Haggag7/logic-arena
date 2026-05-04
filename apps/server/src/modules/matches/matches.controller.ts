@@ -8,6 +8,8 @@ import { CampaignService, CAMPAIGN_LEVEL_COUNT } from '../campaign/campaign.serv
 import { RedisService } from '../../common/redis.service';
 import { MatchEngine } from './match.engine';
 import { Robot } from '@logic-arena/engine';
+import { PrismaService } from '../../common/prisma.service';
+import { BLACK_MARKET_ITEMS } from '../users/black-market.constants';
 
 interface CampaignFightDto {
   levelId: number;
@@ -44,6 +46,7 @@ export class MatchesController {
   constructor(
     private readonly campaignService: CampaignService,
     private readonly redis: RedisService,
+    private readonly prisma: PrismaService,
   ) {}
 
   /** Synchronous campaign fight — no WebSocket, no DB persistence */
@@ -79,12 +82,30 @@ export class MatchesController {
       throw e;
     }
 
+    // ── Load User Loadout ──────────────────────────────────────────────
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { equippedChassis: true, equippedPaint: true, equippedTracer: true },
+    });
+
+    let userColor = '#22d3ee';
+    let userTracerColor = '#22d3ee';
+    let userModel = 'unit-01';
+
+    if (user) {
+      userModel = user.equippedChassis || 'chassis-phantom';
+      const paint = BLACK_MARKET_ITEMS.find(i => i.id === user.equippedPaint);
+      if (paint?.color) userColor = paint.color;
+      const tracer = BLACK_MARKET_ITEMS.find(i => i.id === user.equippedTracer);
+      if (tracer?.color) userTracerColor = tracer.color;
+    }
+
     // ── Run the match ──────────────────────────────────────────────────
     const matchId = `campaign-${crypto.randomUUID()}`;
 
     const engine = new MatchEngine(matchId, [
-      { id: userId,  script: userScript,  color: '#22d3ee' },
-      { id: 'bot-2', script: enemyScript, color: '#ef4444' },
+      { id: userId,  script: userScript,  color: userColor, model: userModel, tracerColor: userTracerColor },
+      { id: 'bot-2', script: enemyScript, color: '#ef4444', model: 'unit-02', tracerColor: '#ef4444' },
     ]);
 
     const startMs = Date.now();

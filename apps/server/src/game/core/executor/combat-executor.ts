@@ -41,6 +41,7 @@ export class CombatExecutor {
         robotId,
         { ...robot.position },
         { x: targetRobot.position.x, y: targetRobot.position.y },
+        robot.tracerColor
       );
       this.energyManager.recordDamage(robot, FIRE_DAMAGE);
       return;
@@ -71,7 +72,7 @@ export class CombatExecutor {
           const currentRobot = this.gameLoop.getRobots().find(r => r.id === robotId);
           if (!currentRobot || currentRobot.health <= 0) return;
 
-          this.gameLoop.spawnProjectile(robotId, originSnapshot, targetSnapshot);
+          this.gameLoop.spawnProjectile(robotId, originSnapshot, targetSnapshot, currentRobot.tracerColor);
           this.energyManager.recordDamage(currentRobot, BURST_DAMAGE);
         }, i * BURST_DELAY_MS);
       }

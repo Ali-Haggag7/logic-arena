@@ -167,10 +167,10 @@ export class GameLoop {
   // Spawning / removal
   // -------------------------------------------------------------------------
 
-  spawnProjectile(ownerId: string, pos: Vector2, targetPos: Vector2): void {
+  spawnProjectile(ownerId: string, pos: Vector2, targetPos: Vector2, color?: string): void {
     const robot = this.robots.find(r => r.id === ownerId);
     if (!robot) return;
-    this.projectiles.push(spawnProjectile(ownerId, robot.team, pos, targetPos));
+    this.projectiles.push(spawnProjectile(ownerId, robot.team, pos, targetPos, color || robot.tracerColor));
   }
 
   removeRobot(id: string): void {

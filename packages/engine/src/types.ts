@@ -41,6 +41,9 @@ export interface Robot {
   /** Color hex string used for rendering (e.g. '#00ffff'). */
   color?: string;
 
+  /** Color hex string for the robot's projectiles (e.g. '#ff0000'). */
+  tracerColor?: string;
+
   /** The 3D model file ID for rendering (e.g. 'unit-01' or 'unit-02'). */
   model?: string;
 
@@ -134,6 +137,7 @@ export interface Projectile {
   position: Vector2;
   velocity: Vector2;
   team: 'A' | 'B';
+  color?: string;
 }
 
 // ---------------------------------------------------------------------------

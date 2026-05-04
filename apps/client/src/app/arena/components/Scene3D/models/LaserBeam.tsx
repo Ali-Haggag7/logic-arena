@@ -3,7 +3,9 @@ import React, { useMemo } from "react";
 import * as THREE from "three";
 import { LaserBeamProps } from "../../../types";
 
-export const LaserBeam = ({ start, end }: LaserBeamProps) => {
+const DEFAULT_TRACER_COLOR = "#22d3ee";
+
+export const LaserBeam = ({ start, end, color }: LaserBeamProps) => {
   const midpoint = useMemo(() => {
     return new THREE.Vector3((start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2);
   }, [start, end]);
@@ -18,10 +20,18 @@ export const LaserBeam = ({ start, end }: LaserBeamProps) => {
     return new THREE.Quaternion().setFromUnitVectors(axis, direction.clone().normalize());
   }, [direction]);
 
+  // Resolve color: skip non-hex values (e.g. 'DEFAULT', 'paint-default') → use fallback
+  const resolvedColor = useMemo(() => {
+    if (!color || color.toUpperCase() === 'DEFAULT' || color.toLowerCase().startsWith('paint-') || color.toLowerCase().startsWith('tracer-')) {
+      return DEFAULT_TRACER_COLOR;
+    }
+    return color;
+  }, [color]);
+
   return (
     <mesh position={midpoint} quaternion={quaternion}>
-      <cylinderGeometry args={[0.03, 0.05, length, 12]} />
-      <meshStandardMaterial color="#FF00FF" emissive="#FF00FF" emissiveIntensity={6} toneMapped={false} />
+      <cylinderGeometry args={[0.025, 0.04, length, 12]} />
+      <meshStandardMaterial color={resolvedColor} emissive={resolvedColor} emissiveIntensity={8} toneMapped={false} />
     </mesh>
   );
 };

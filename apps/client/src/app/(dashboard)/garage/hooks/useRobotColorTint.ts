@@ -6,8 +6,8 @@ import { FALLBACK_COLOR } from "../constants/robots.constants";
 
 /**
  * Applies a hex color tint to all meshes in a GLTF scene.
- * - Snapshots original materials on first call.
- * - Restores originals when color is "DEFAULT".
+ * - Clears and re-snapshots originals whenever `scene` changes (fixes multi-chassis switching).
+ * - Restores originals when color is "DEFAULT" or "paint-default".
  * - Clones materials per color change and disposes the clone on cleanup,
  *   preventing the material-leak bug that occurred on every picker click.
  */
@@ -19,10 +19,17 @@ export function useRobotColorTint(
     new Map<string, THREE.Material | THREE.Material[]>()
   );
 
+  // ── Reset snapshot when the scene object itself changes ──────────────────
+  // Without this, switching from UNIT-01 → UNIT-02 leaves stale UUIDs in the
+  // map, so UNIT-02's meshes never match and the color is silently ignored.
+  useEffect(() => {
+    originalMaterials.current.clear();
+  }, [scene]);
+
   useEffect(() => {
     if (!scene) return;
 
-    // Snapshot originals once per scene instance
+    // Snapshot originals for the current scene
     if (originalMaterials.current.size === 0) {
       scene.traverse((obj) => {
         if ((obj as THREE.Mesh).isMesh) {
@@ -34,7 +41,12 @@ export function useRobotColorTint(
 
     const cloned: THREE.Material[] = [];
 
-    if (!color || color.trim().toUpperCase() === "DEFAULT") {
+    const isDefault =
+      !color ||
+      color.trim().toUpperCase() === "DEFAULT" ||
+      color.trim().toLowerCase() === "paint-default";
+
+    if (isDefault) {
       // Restore original materials
       scene.traverse((obj) => {
         if ((obj as THREE.Mesh).isMesh) {

@@ -160,6 +160,8 @@ export interface BoundaryLineProps {
 export interface LaserBeamProps {
   start: [number, number, number];
   end: [number, number, number];
+  /** Optional override color (hex). Falls back to default cyan when omitted. */
+  color?: string;
 }
 
 export interface SpeechBubbleProps {

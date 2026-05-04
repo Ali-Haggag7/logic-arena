@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings, LayoutDashboard, Trophy, Swords, Zap, User, Cpu, BookOpen, Award } from "lucide-react";
+import { Settings, LayoutDashboard, Trophy, Swords, Zap, User, Cpu, BookOpen, Award, ShoppingCart } from "lucide-react";
 import NavLink from "../../../../../components/ui/NavLink";
 
 const SIDEBAR_WIDTH = 220;
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/garage", label: "ROBOT GARAGE", iconNode: <Cpu className="w-3.5 h-3.5" /> },
   { href: "/docs", label: "ALISCRIPT DOCS", iconNode: <BookOpen className="w-3.5 h-3.5" /> },
   { href: "/tournaments", label: "TOURNAMENT HUB", iconNode: <Award className="w-3.5 h-3.5" /> },
+  { href: "/black-market", label: "BLACK MARKET", iconNode: <ShoppingCart className="w-3.5 h-3.5" /> },
 ];
 
 interface DashboardSidebarProps {

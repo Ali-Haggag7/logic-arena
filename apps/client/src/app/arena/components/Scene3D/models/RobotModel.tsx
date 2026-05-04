@@ -11,6 +11,7 @@ import {
 import { HIT_FLASH_DURATION } from '../sceneConstants';
 import { EnergyBarSprite } from './EnergyBar';
 import { SpeechBubble } from './SpeechBubble';
+import { createPrimitiveChassis } from './PrimitiveChassis';
 
 /* ── Error boundary ─────────────────────────────────────────────────────── */
 
@@ -96,10 +97,15 @@ const RobotModelInner = memo(({
         const applyMat = (m: THREE.Material) => {
           const mat = (m as THREE.MeshStandardMaterial).clone();
 
-          if (color && color.trim().toUpperCase() !== 'DEFAULT') {
+          // Skip tinting for native/default paint — preserve original GLTF materials
+          const isDefaultPaint = !color
+            || color.trim().toUpperCase() === 'DEFAULT'
+            || color.trim().toLowerCase() === 'paint-default';
+
+          if (!isDefaultPaint) {
             try {
               mat.color = new THREE.Color(color.trim());
-            } catch (e) {
+            } catch {
               mat.color = new THREE.Color('#22d3ee');
             }
           }
@@ -256,12 +262,31 @@ const BotModel = memo((props: RobotModelProps & { file: string }) => {
 });
 BotModel.displayName = 'BotModel';
 
+const PRIMITIVE_CHASSIS_IDS = new Set([
+  'chassis-phantom', 'chassis-wraith', 'chassis-titan',
+]);
+
+const PrimitiveBotModel = memo((props: RobotModelProps & { chassisId: string }) => {
+  const primitiveGroup = useMemo(
+    () => createPrimitiveChassis(props.chassisId),
+    [props.chassisId],
+  );
+  // scale=2 matches the visual footprint of robot.glb at its ROBOT_SCALES['/robot.glb']=2
+  return <RobotModelInner {...props} scene={primitiveGroup} scale={2} />;
+});
+PrimitiveBotModel.displayName = 'PrimitiveBotModel';
+
 export const RobotModel = memo((props: RobotModelProps) => {
-  // Prefer explicit modelFile prop; fall back to legacy color-based selection for backwards compat
-  const file = props.modelFile ?? ROBOT_FILES['unit-01'];
+  const file = props.modelFile ?? '/robot.glb';
+
+  if (PRIMITIVE_CHASSIS_IDS.has(file)) {
+    return <PrimitiveBotModel {...props} chassisId={file} />;
+  }
+
   return <BotModel {...props} file={file} />;
 });
 RobotModel.displayName = 'RobotModel';
+
 
 useGLTF.preload('/robot.glb');
 useGLTF.preload('/robot2.glb');

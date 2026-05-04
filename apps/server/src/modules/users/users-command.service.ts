@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException as BadReq, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
 import { ALLOWED_ROBOT_IDS, COLOR_REGEX, profileKey, loadoutKey, preferencesKey, BCRYPT_ROUNDS, PRISMA_UNIQUE_VIOLATION, ArenaPreferences, NotificationSettings } from './types';
+import { BLACK_MARKET_ITEMS, DEFAULT_UNLOCKED_ITEMS, ItemCategory } from './black-market.constants';
 
 @Injectable()
 export class UsersCommandService {
@@ -126,5 +127,73 @@ export class UsersCommandService {
 
     await this.prisma.user.delete({ where: { id: userId } });
     await this.redis.del(profileKey(userId), loadoutKey(userId));
+  }
+
+  // ── Black Market ────────────────────────────────────────────────────────────
+
+  async purchaseItem(userId: string, itemId: string): Promise<void> {
+    const catalogItem = BLACK_MARKET_ITEMS.find((i) => i.id === itemId);
+    if (!catalogItem) throw new BadReq('Item does not exist in the catalog');
+
+    const user = await this.prisma.user.findUnique({
+      where:  { id: userId },
+      select: { points: true, unlockedItems: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const effectiveOwned = [
+      ...user.unlockedItems,
+      ...DEFAULT_UNLOCKED_ITEMS,
+    ];
+    if (effectiveOwned.includes(itemId)) {
+      throw new ConflictException('Item already owned');
+    }
+    if (user.points < catalogItem.price) {
+      throw new BadReq('Insufficient points');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data:  {
+        points:        { decrement: catalogItem.price },
+        unlockedItems: { push: itemId },
+      },
+    });
+  }
+
+  async equipItem(
+    userId: string,
+    itemId: string,
+    category: ItemCategory,
+  ): Promise<void> {
+    const catalogItem = BLACK_MARKET_ITEMS.find(
+      (i) => i.id === itemId && i.category === category,
+    );
+    if (!catalogItem) throw new BadReq('Item does not exist for this category');
+
+    const user = await this.prisma.user.findUnique({
+      where:  { id: userId },
+      select: { unlockedItems: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const effectiveOwned = [
+      ...user.unlockedItems,
+      ...DEFAULT_UNLOCKED_ITEMS,
+    ];
+    if (!effectiveOwned.includes(itemId)) {
+      throw new BadReq('Item not owned — purchase it first');
+    }
+
+    const fieldMap: Record<ItemCategory, 'equippedChassis' | 'equippedPaint' | 'equippedTracer'> = {
+      chassis: 'equippedChassis',
+      paint:   'equippedPaint',
+      tracer:  'equippedTracer',
+    };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data:  { [fieldMap[category]]: itemId },
+    });
   }
 }

@@ -97,12 +97,14 @@ export function drawFrame(
       }
       ctx.moveTo(rx, ry);
       ctx.arc(rx, ry, 5, 0, TWO_PI);
+      const projColor = curr.color || "#22d3ee";
+      ctx.fillStyle = projColor;
+      ctx.shadowColor = projColor;
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.beginPath(); // reset path for next projectile if using different colors, wait, they are batched!
     });
-    ctx.fillStyle = "#22d3ee";
-    ctx.shadowColor = "#22d3ee";
-    ctx.shadowBlur = 12;
-    ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
   // Draw Robots

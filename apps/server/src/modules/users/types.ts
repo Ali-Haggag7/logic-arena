@@ -92,3 +92,11 @@ export const LEADERBOARD_LIMIT = 10;
 /** Redis TTL for the leaderboard snapshot, in seconds */
 export const LEADERBOARD_TTL = 20;
 
+/** Shape returned by GET /users/black-market */
+export interface BlackMarketData {
+  points:          number;
+  unlockedItems:   string[];
+  equippedChassis: string;
+  equippedPaint:   string;
+  equippedTracer:  string;
+}

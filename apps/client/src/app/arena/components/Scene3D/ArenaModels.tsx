@@ -23,8 +23,10 @@ const toSceneX = (x: number) => (x / 40) - 10;
 const toSceneZ = (y: number) => (y / 40) - 7.5;
 
 const ROBOT_FILES: Record<string, string> = {
-  'unit-01': '/robot.glb',
-  'unit-02': '/robot2.glb',
+  'unit-01':         '/robot.glb',
+  'unit-02':         '/robot2.glb',
+  'chassis-unit-01': '/robot.glb',
+  'chassis-unit-02': '/robot2.glb',
 };
 
 export const ArenaModels = ({
@@ -166,7 +168,7 @@ export const ArenaModels = ({
                       fovDirection={robot.fovDirection}
                       hideHealthBar={displayMode === 'TRAINING_SOLO'}
                       modelFile={
-                        robot.model ? ROBOT_FILES[robot.model] ?? '/robot.glb' : '/robot.glb'
+                        robot.model ? (ROBOT_FILES[robot.model] ?? robot.model) : '/robot.glb'
                       }
                       speechBubble={speechBubble?.robotId === robot.id ? speechBubble.message : null}
                     />
@@ -183,7 +185,7 @@ export const ArenaModels = ({
         if (robot.id !== firedTracer.robotId) return null;
         const start: [number, number, number] = [toSceneX(robot.position.x), 0.375, toSceneZ(robot.position.y)];
         const end: [number, number, number] = [toSceneX(firedTracer.targetPosition.x), 0.375, toSceneZ(firedTracer.targetPosition.y)];
-        return <LaserBeam key={`tracer-${robot.id}`} start={start} end={end} />;
+        return <LaserBeam key={`tracer-${robot.id}`} start={start} end={end} color={robot.color} />;
       })}
 
       {/* Projectiles */}

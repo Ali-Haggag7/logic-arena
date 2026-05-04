@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Post,
   Put,
   Req,
   UseGuards,
@@ -24,6 +25,7 @@ import {
   ArenaPreferences,
   NotificationSettings,
 } from './types';
+import { ItemCategory } from './black-market.constants';
 
 /** Typed request shape produced by AuthGuard JWT strategy */
 interface AuthenticatedRequest {
@@ -198,21 +200,52 @@ export class UsersController {
     }
   }
 
-  // ── Delete Account (auth-gated) ─────────────────────────────────────────
+  // ── Black Market (auth-gated) ─────────────────────────────────────────────
+
   @UseGuards(AuthGuard)
-  @Delete('account')
-  async deleteAccount(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: { confirmation?: string },
-  ) {
-    if (!body?.confirmation) {
-      throw new BadRequestException('Confirmation required to delete account');
-    }
+  @Get('black-market')
+  async getBlackMarket(@Req() req: AuthenticatedRequest) {
     try {
-      await this.commandService.deleteAccount(req.user.sub, body.confirmation);
+      return await this.queryService.getBlackMarket(req.user.sub);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load Black Market data';
+      throw new NotFoundException(message);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('black-market/purchase')
+  async purchaseItem(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { itemId: string },
+  ) {
+    if (!body?.itemId) throw new BadRequestException('itemId is required');
+    try {
+      await this.commandService.purchaseItem(req.user.sub, body.itemId);
       return { success: true };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Delete failed';
+      const message = err instanceof Error ? err.message : 'Purchase failed';
+      throw new BadRequestException(message);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('black-market/equip')
+  async equipItem(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { itemId: string; category: ItemCategory },
+  ) {
+    if (!body?.itemId)   throw new BadRequestException('itemId is required');
+    if (!body?.category) throw new BadRequestException('category is required');
+    const validCategories: ItemCategory[] = ['chassis', 'paint', 'tracer'];
+    if (!validCategories.includes(body.category)) {
+      throw new BadRequestException('category must be chassis, paint, or tracer');
+    }
+    try {
+      await this.commandService.equipItem(req.user.sub, body.itemId, body.category);
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Equip failed';
       throw new BadRequestException(message);
     }
   }

@@ -82,7 +82,8 @@ export function spawnProjectile(
   ownerId: string,
   team: 'A' | 'B',
   pos: Vector2,
-  targetPos: Vector2
+  targetPos: Vector2,
+  color?: string
 ): Projectile {
   const angle = Math.atan2(targetPos.y - pos.y, targetPos.x - pos.x);
   const speed = 400;
@@ -100,5 +101,6 @@ export function spawnProjectile(
       x: Math.cos(angle) * speed,
       y: Math.sin(angle) * speed
     },
+    color,
   };
 }

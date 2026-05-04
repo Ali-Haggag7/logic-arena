@@ -30,6 +30,12 @@ model User {
   selectedColor        String             @default("#22d3ee")
   arenaPreferences     Json? // { defaultRobot, soundFx, music, graphicsQuality }
   notificationSettings Json? // { challengeReqs, tournamentAlerts, matchResults }
+  // ── Black Market ──────────────────────────────────────────────────────────
+  points               Int                @default(0)
+  unlockedItems        String[]           @default([])
+  equippedChassis      String             @default("chassis-phantom")
+  equippedPaint        String             @default("paint-default")
+  equippedTracer       String             @default("tracer-pulse")
   createdAt            DateTime           @default(now())
   RobotScript          RobotScript[]
   Match                Match[]            @relation("Participants")

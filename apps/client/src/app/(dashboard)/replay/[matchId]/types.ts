@@ -17,6 +17,7 @@ export interface ProjectileSnapshot {
   ownerId?: string;
   position: Vector2;
   velocity?: Vector2;
+  color?: string;
 }
 
 export interface Snapshot {

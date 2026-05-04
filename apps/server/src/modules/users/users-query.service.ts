@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
-import { UserProfile, MatchSummary, UserLoadout, CombatStats, ArenaPreferences, NotificationSettings, profileKey, loadoutKey, PROFILE_TTL, DEFAULT_ARENA_PREFERENCES, DEFAULT_NOTIFICATION_SETTINGS } from './types';
+import {
+  UserProfile, MatchSummary, UserLoadout, CombatStats,
+  ArenaPreferences, NotificationSettings, BlackMarketData,
+  profileKey, loadoutKey, PROFILE_TTL,
+  DEFAULT_ARENA_PREFERENCES, DEFAULT_NOTIFICATION_SETTINGS,
+} from './types';
+import { DEFAULT_UNLOCKED_ITEMS } from './black-market.constants';
 
 @Injectable()
 export class UsersQueryService {
@@ -115,5 +121,54 @@ export class UsersQueryService {
       where: { username },
       select: { id: true, email: true, username: true, rank: true, createdAt: true },
     });
+  }
+
+  async getBlackMarket(userId: string): Promise<BlackMarketData> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        points:          true,
+        unlockedItems:   true,
+        equippedChassis: true,
+        equippedPaint:   true,
+        equippedTracer:  true,
+      },
+    });
+    if (!user) throw new Error('USER_NOT_FOUND');
+
+    // Ensure all default items are unlocked (retro-fits existing accounts if new defaults are added)
+    let unlockedItems = user.unlockedItems;
+    const missingDefaults = DEFAULT_UNLOCKED_ITEMS.filter(item => !unlockedItems.includes(item));
+
+    // Migrate old 'paint-crimson' default → 'paint-default' for pre-existing accounts.
+    // 'paint-default' is now the starter paint; crimson must be explicitly purchased.
+    const needsPaintMigration = user.equippedPaint === 'paint-crimson'
+      && !user.unlockedItems.includes('paint-crimson');
+
+    let equippedPaint = user.equippedPaint;
+
+    if (missingDefaults.length > 0 || needsPaintMigration) {
+      if (missingDefaults.length > 0) {
+        unlockedItems = [...unlockedItems, ...missingDefaults];
+      }
+      if (needsPaintMigration) {
+        equippedPaint = 'paint-default';
+      }
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(missingDefaults.length > 0 ? { unlockedItems: { set: unlockedItems } } : {}),
+          ...(needsPaintMigration ? { equippedPaint: 'paint-default' } : {}),
+        },
+      });
+    }
+
+    return {
+      points:          user.points,
+      unlockedItems,
+      equippedChassis: user.equippedChassis,
+      equippedPaint,
+      equippedTracer:  user.equippedTracer,
+    };
   }
 }

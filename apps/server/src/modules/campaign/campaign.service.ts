@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CAMPAIGN_LEVELS } from './campaign.data';
+import { CAMPAIGN_STAGE_REWARD_POINTS } from '../users/black-market.constants';
 
 export const CAMPAIGN_LEVEL_COUNT = 10;
 
@@ -52,9 +53,10 @@ export class CampaignService {
       data: {
         currentLevel: nextLevel,
         rank:         { increment: level.rewardRank },
+        points:       { increment: CAMPAIGN_STAGE_REWARD_POINTS },
       },
     });
-    return { nextLevel, rewardRank: level.rewardRank };
+    return { nextLevel, rewardRank: level.rewardRank, rewardPoints: CAMPAIGN_STAGE_REWARD_POINTS };
   }
 
   /** Returns the enemy script only if the user has unlocked that level. */

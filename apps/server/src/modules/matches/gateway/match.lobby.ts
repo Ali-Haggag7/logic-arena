@@ -5,6 +5,7 @@ import { MatchState } from './match.state';
 import { AuthenticatedSocket } from './types';
 import { MatchEngine } from '../match.engine';
 import * as crypto from 'crypto';
+import { BLACK_MARKET_ITEMS } from '../../users/black-market.constants';
 
 export class MatchLobbyManager {
   constructor(
@@ -29,6 +30,7 @@ export class MatchLobbyManager {
 
     let scriptContent = '';
     let selectedColor = '#22d3ee';
+    let selectedTracerColor = '#22d3ee';
     let selectedRobotId = 'unit-01';
 
     if (client.isGuest) {
@@ -45,11 +47,14 @@ export class MatchLobbyManager {
 
       const user = await this.prisma.user.findUnique({
         where: { id: client.userId },
-        select: { selectedColor: true, selectedRobotId: true },
+        select: { equippedChassis: true, equippedPaint: true, equippedTracer: true },
       });
       if (user) {
-        selectedColor = user.selectedColor ?? '#22d3ee';
-        selectedRobotId = user.selectedRobotId ?? 'unit-01';
+        selectedRobotId = user.equippedChassis || 'chassis-phantom';
+        const paint = BLACK_MARKET_ITEMS.find(i => i.id === user.equippedPaint);
+        if (paint?.color) selectedColor = paint.color;
+        const tracer = BLACK_MARKET_ITEMS.find(i => i.id === user.equippedTracer);
+        if (tracer?.color) selectedTracerColor = tracer.color;
       }
     }
 
@@ -70,6 +75,7 @@ export class MatchLobbyManager {
         script: scriptContent,
         color: selectedColor,
         model: selectedRobotId,
+        tracerColor: selectedTracerColor,
       };
 
       const initialPlayers =
