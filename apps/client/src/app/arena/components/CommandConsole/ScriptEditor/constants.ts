@@ -15,7 +15,8 @@ export const AUTOCOMPLETE_SUGGESTIONS: Suggestion[] = [
     { label: 'WAIT', detail: 'command', hint: 'Pause execution for N ticks' },
     // Control Flow
     { label: 'IF', detail: 'control', hint: 'Conditional branch' },
-    { label: 'WHILE', detail: 'control', hint: 'Loop while condition is true' },
+    { label: 'WHILE', detail: 'control', hint: 'Loop while condition is true (Max 10 iters)' },
+    { label: 'FOR', detail: 'control', hint: 'Loop from start to end (Warning: Heavy loops trigger 2000-op TLE)' },
     { label: 'FUNCTION', detail: 'control', hint: 'Define a reusable function' },
     { label: 'CALL', detail: 'control', hint: 'Call a function by name' },
     { label: 'SET', detail: 'control', hint: 'Assign a variable' },

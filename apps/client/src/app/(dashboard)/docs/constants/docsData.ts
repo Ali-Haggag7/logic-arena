@@ -1,7 +1,7 @@
 import { 
   Hexagon, Eye, Move, Zap, Brain, RotateCw, BarChart3, 
   Calculator, Brackets, Braces, Radar, RadioReceiver,
-  Search, Shield
+  Search, Shield, ServerCrash
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -504,6 +504,51 @@ IF state.mode == "ENGAGE" THEN
   END
 END`,
   },
+  {
+    title: 'The TLE Optimization',
+    badge: ServerCrash,
+    description: 'AliScript enforces a hard cap of 2,000 AST-node evaluations per tick. Brute-force O(N²) nested loops will crash your robot mid-combat with a [FATAL] TLE error. Learn to write O(N) linear scans or O(N log N) algorithms to stay under quota.',
+    difficulty: 'ADVANCED',
+    concept: 'Complexity Analysis / Instruction Quota',
+    color: '#ef4444',
+    code:
+      `// ── The TLE Optimization ───────────────────────
+// BAD: O(N²) brute-force — WILL trigger TLE crash
+// if enemies array is large enough.
+// (Each inner WHILE burns quota against the outer)
+
+// SET enemies = GET_ALL_VISIBLE_ENEMIES()
+// SET n = LENGTH(enemies)
+// SET i = 0
+// WHILE i < n DO             // outer loop
+//   SET j = 0
+//   WHILE j < n DO           // inner loop — quota killer
+//     SET j = j + 1
+//   END
+//   SET i = i + 1
+// END
+
+// GOOD: O(N) single-pass min-health search
+// Stays well within 2,000 ops even for large arrays.
+
+SET enemies = GET_ALL_VISIBLE_ENEMIES()
+SET n = LENGTH(enemies)
+IF n == 0 THEN
+  SCAN
+  MOVE
+ELSE
+  SET best = enemies[0]
+  SET i = 1
+  WHILE i < n DO
+    IF enemies[i][3] < best[3] THEN
+      SET best = enemies[i]
+    END
+    SET i = i + 1
+  END
+  SET rotation = ATAN2(best[2] - POSITION_Y, best[1] - POSITION_X)
+  FIRE
+END`,
+  },
 ];
 
 
@@ -527,6 +572,7 @@ export const QUICK_REF: QuickRefDoc[] = [
   { title: 'DICTIONARIES / STATE', icon: Braces, color: '#f43f5e', commands: ['SET obj = { k: "v" }', 'obj.key', 'obj["key"]', 'SET obj.key = val'] },
   { title: 'ADVANCED SENSORS', icon: Radar, color: '#ec4899', commands: ['GET_ALL_VISIBLE_ENEMIES()', 'Returns [dist, x, y, hp][]', 'RAYCAST(angle)', 'Returns dist to first hit'] },
   { title: 'SWARM INTELLIGENCE', icon: RadioReceiver, color: '#34d399', commands: ['BROADCAST(data)', 'Returns recipient count', 'RECEIVE()', 'Returns Array of messages'] },
+  { title: 'SYSTEM LIMITS', icon: ServerCrash, color: '#ef4444', commands: ['2000 Operations / Tick', 'Exceeding Quota = TLE Crash', 'WHILE loops cap at 10 iters'] },
 ];
 
 

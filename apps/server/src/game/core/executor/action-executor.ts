@@ -71,6 +71,18 @@ export class ActionExecutor {
     this.cooldowns.markQueryEmitted(robotId, queryName);
   }
 
+  emitError(robotId: string, message: string): void {
+    if (this.onEvent) {
+      this.onEvent('queryResult', {
+        robotId,
+        query:   'ERROR',
+        result:  'FATAL',
+        label:   message,
+        message: message,
+      });
+    }
+  }
+
   executeAction(
     robotId: string,
     action: ActionExpression | ScanStatement,

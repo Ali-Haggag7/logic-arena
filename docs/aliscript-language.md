@@ -1,4 +1,4 @@
-# AliScript Language Reference (v3.0 — Phase 1: Advanced Sensors)
+# AliScript Language Reference (v4.0 — Phase 4: Deterministic Execution)
 
 > **AliScript** is the custom scripting language powering Logic Arena's combat robots.  
 > Write algorithms. Implement sorting. Fire when you have line-of-sight. Win.
@@ -17,9 +17,10 @@
 8. [Advanced Tactics: Game Loop Architecture](#advanced-tactics-game-loop-architecture)
 9. [Advanced Sensors](#advanced-sensors)
 10. [Swarm Intelligence ⭐ NEW](#swarm-intelligence--new)
-11. [Status Query Functions](#status-query-functions)
-12. [Energy System](#energy-system)
-13. [Battle Tactics Examples](#battle-tactics-examples)
+11. [Execution Limits & TLE ⚡ NEW](#execution-limits--tle--new)
+12. [Status Query Functions](#status-query-functions)
+13. [Energy System](#energy-system)
+14. [Battle Tactics Examples](#battle-tactics-examples)
 
 ---
 
@@ -459,6 +460,80 @@ END
 ```
 
 > **Note:** Calling `RECEIVE()` when the inbox is empty returns `[]`. Messages are delivered exactly once.
+
+---
+
+## Execution Limits & TLE ⚡ NEW
+
+> AliScript is **fully deterministic**. Every robot on every server executes under an identical,
+> hardware-independent instruction quota. There are no wall-clock timers. The rules are the same
+> regardless of server load.
+
+### The Quota
+
+| Limit | Value | Scope |
+| :--- | :---: | :--- |
+| **Operations per tick** | `2,000` | Shared across the entire tick — IF, WHILE, FOR, CALL, all draw from the same pool |
+| **WHILE iterations per tick** | `10` | Hard cap per loop — prevents runaway infinite loops |
+
+Every AST-node evaluation (each statement inside a loop body, each branch of an IF, each function call) increments a shared counter.
+When the counter exceeds `2,000`, the robot **immediately halts** for that tick and a `[FATAL] TLE` error fires to the in-game console.
+
+### What Triggers a TLE?
+
+Brute-force **O(N²) nested loops** are the most common cause. If you write an inner loop inside an outer loop and both iterate over the same N enemies, the total operations grow quadratically:
+
+```aliascript
+// ⛔ BAD — O(N²) nested loop — WILL crash with TLE if N > ~40
+SET enemies = GET_ALL_VISIBLE_ENEMIES()
+SET n = LENGTH(enemies)
+SET i = 0
+WHILE i < n DO
+  SET j = 0
+  WHILE j < n DO          // inner loop — each iteration burns quota
+    SET j = j + 1
+  END
+  SET i = i + 1
+END
+// With n = 50 enemies: 50 × 50 = 2,500 ops → TLE crash
+```
+
+### The Fix — Write O(N) Algorithms
+
+A single-pass linear scan completes in exactly N operations — well within the 2,000-op budget even for large enemy arrays:
+
+```aliascript
+// ✅ GOOD — O(N) single-pass min-health search
+SET enemies = GET_ALL_VISIBLE_ENEMIES()
+SET n = LENGTH(enemies)
+
+IF n == 0 THEN
+  SCAN
+  MOVE
+ELSE
+  SET best = enemies[0]
+  SET i = 1
+  WHILE i < n DO           // single pass — O(N)
+    IF enemies[i][3] < best[3] THEN
+      SET best = enemies[i]
+    END
+    SET i = i + 1
+  END
+  SET rotation = ATAN2(best[2] - POSITION_Y, best[1] - POSITION_X)
+  FIRE
+END
+// With n = 50 enemies: ~55 ops → safely under quota
+```
+
+### Designing for the Quota
+
+| Algorithm | Complexity | Max safe N |
+| :--- | :---: | :--- |
+| Linear search / scan | O(N) | ~1,900 enemies |
+| Single sort pass | O(N log N) | ~200 enemies |
+| Nested loops | O(N²) | **~44 enemies before TLE** |
+
+> **Design Rule:** If your script uses two nested `WHILE` loops over the same dataset, rewrite it as a single linear pass. AliScript rewards algorithmic thinking — write like you're competing in a coding contest.
 
 ---
 

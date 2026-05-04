@@ -19,7 +19,7 @@ import {
 } from '../../../../../../packages/logic-parser/src';
 import { ActionExecutor } from '../executor';
 import { ExpressionEvaluator } from './expression-facade';
-import { CONSTANTS } from './types';
+import { CONSTANTS, OpsCounter } from './types';
 
 // ── Sandbox: allowed AST node types ─────────────────────────────────────────
 const ALLOWED_NODE_TYPES = new Set<string>([
@@ -81,7 +81,7 @@ export class BlockExecutor {
     robot: Robot,
     statements: Statement[],
     memory: Record<string, unknown>,
-    tickStart: number,
+    opsCounter: OpsCounter,
     dispatchedActions: Set<string> = new Set(),
   ): BlockResult {
     // Script execution continues during STASIS so users can branch on IN_STASIS.
@@ -90,9 +90,14 @@ export class BlockExecutor {
 
     for (const stmt of statements) {
       if (robot.health <= 0) return {};
-      if (Date.now() - tickStart > CONSTANTS.MAX_TICK_DURATION_MS) {
-        console.warn(`SANDBOX: tick timeout for robot ${robotId}`);
-        return {};
+      opsCounter.count++;
+      if (opsCounter.count > CONSTANTS.MAX_OPERATIONS_PER_TICK) {
+        if (!opsCounter.warned) {
+          console.warn(`TLE: Instruction quota exceeded for robot ${robotId}`);
+          this.actionExecutor.emitError(robotId, `[FATAL] TLE: Instruction quota exceeded (${CONSTANTS.MAX_OPERATIONS_PER_TICK} ops)`);
+          opsCounter.warned = true;
+        }
+        return { signal: BREAK_SIGNAL };
       }
 
       // ── Whitelist gate — skip unknown node types silently ────────────────
@@ -210,9 +215,9 @@ export class BlockExecutor {
             () => this.gameLoop.getGameState().obstacles,
           );
           const result = cond
-            ? this.executeBlock(robotId, robot, ifStmt.consequence, memory, tickStart, dispatchedActions)
+            ? this.executeBlock(robotId, robot, ifStmt.consequence, memory, opsCounter, dispatchedActions)
             : ifStmt.alternate
-              ? this.executeBlock(robotId, robot, ifStmt.alternate, memory, tickStart, dispatchedActions)
+              ? this.executeBlock(robotId, robot, ifStmt.alternate, memory, opsCounter, dispatchedActions)
               : {};
           
           // Propagate control flow signals (BREAK, CONTINUE, RETURN) up through IF
@@ -235,7 +240,7 @@ export class BlockExecutor {
             );
             if (!cond) break;
             const result = this.executeBlock(
-              robotId, robot, whileStmt.body, memory, tickStart, dispatchedActions,
+              robotId, robot, whileStmt.body, memory, opsCounter, dispatchedActions,
             );
             if (result.signal === BREAK_SIGNAL) break;
             if (result.signal === RETURN_SIGNAL) return result;
@@ -270,7 +275,7 @@ export class BlockExecutor {
             for (let i = startVal; i <= endVal && iterCount < maxIter; i++, iterCount++) {
               memory[varName] = i;
               const result = this.executeBlock(
-                robotId, robot, forStmt.body, memory, tickStart, dispatchedActions,
+                robotId, robot, forStmt.body, memory, opsCounter, dispatchedActions,
               );
               if (result.signal === BREAK_SIGNAL) break;
               if (result.signal === RETURN_SIGNAL) return result;
@@ -279,7 +284,7 @@ export class BlockExecutor {
             for (let i = startVal; i >= endVal && iterCount < maxIter; i--, iterCount++) {
               memory[varName] = i;
               const result = this.executeBlock(
-                robotId, robot, forStmt.body, memory, tickStart, dispatchedActions,
+                robotId, robot, forStmt.body, memory, opsCounter, dispatchedActions,
               );
               if (result.signal === BREAK_SIGNAL) break;
               if (result.signal === RETURN_SIGNAL) return result;
@@ -335,7 +340,7 @@ export class BlockExecutor {
               }
 
               const result = this.executeBlock(
-                robotId, robot, func.body, scopedMemory, tickStart, dispatchedActions,
+                robotId, robot, func.body, scopedMemory, opsCounter, dispatchedActions,
               );
 
               // Copy back non-parameter variables (side effects like SET x = ...)

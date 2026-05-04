@@ -9,6 +9,7 @@ import {
   syncFovToMemory,
   syncEnergyToMemory,
 } from './memory-sync';
+import { OpsCounter } from './types';
 
 export class LogicEvaluator {
   private registry: LogicRegistry;
@@ -74,13 +75,13 @@ export class LogicEvaluator {
     syncFovToMemory(robot, memory);
     syncEnergyToMemory(robot, memory);
 
-    const tickStart = Date.now();
+    const opsCounter: OpsCounter = { count: 0 };
     this.blockExecutor.executeBlock(
       robotId,
       robot,
       program.body,
       memory,
-      tickStart,
+      opsCounter,
     );
   }
 }
