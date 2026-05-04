@@ -12,6 +12,9 @@ export enum TokenType {
   RPAREN = "RPAREN",
   LBRACKET = "LBRACKET",
   RBRACKET = "RBRACKET",
+  LBRACE = "LBRACE",
+  RBRACE = "RBRACE",
+  DOT = "DOT",
   QUERY_CALL = "QUERY_CALL",
 }
 

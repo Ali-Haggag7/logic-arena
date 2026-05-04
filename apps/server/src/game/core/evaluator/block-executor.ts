@@ -137,19 +137,31 @@ export class BlockExecutor {
             () => this.gameLoop.getGameState().obstacles,
           );
 
-          // Handle indexed assignment: SET arr[i] = value
+
+          // Handle dot-notation property assignment: SET obj.prop = value
+          if (assign.property) {
+            const dictTarget = memory[assign.name.value];
+            if (dictTarget !== null && typeof dictTarget === 'object' && !Array.isArray(dictTarget)) {
+              (dictTarget as Record<string, unknown>)[assign.property] = val;
+            }
+            break;
+          }
+
+          // Handle bracket-notation assignment: SET arr[i] = value  OR  SET obj["key"] = value
           if (assign.index) {
             const idx = this.expressionEvaluator.evaluateExpression(
               robot, assign.index, memory,
               () => this.gameLoop.getRobots(),
               () => this.gameLoop.getGameState().obstacles,
             );
-            const arr = memory[assign.name.value];
-            if (Array.isArray(arr) && typeof idx === 'number') {
+            const container = memory[assign.name.value];
+            if (Array.isArray(container) && typeof idx === 'number') {
               const i = Math.floor(idx);
-              if (i >= 0 && i < arr.length) {
-                arr[i] = val;
+              if (i >= 0 && i < container.length) {
+                container[i] = val;
               }
+            } else if (container !== null && typeof container === 'object' && !Array.isArray(container)) {
+              (container as Record<string, unknown>)[String(idx)] = val;
             }
             break;
           }

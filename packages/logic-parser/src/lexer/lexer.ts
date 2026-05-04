@@ -165,6 +165,15 @@ export class Lexer {
             case ']':
                 token = { type: TokenType.RBRACKET, value: "]" };
                 break;
+            case '{':
+                token = { type: TokenType.LBRACE, value: "{" };
+                break;
+            case '}':
+                token = { type: TokenType.RBRACE, value: "}" };
+                break;
+            case '.':
+                token = { type: TokenType.DOT, value: "." };
+                break;
             case ',':
                 token = { type: TokenType.COMMA, value: "," };
                 break;

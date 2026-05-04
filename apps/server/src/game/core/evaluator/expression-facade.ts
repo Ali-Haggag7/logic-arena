@@ -2,6 +2,7 @@ import { Robot, Obstacle, performRaycast } from '@logic-arena/engine';
 import {
   Expression, NodeType, Identifier, NumberLiteral, StringLiteral,
   FunctionCallExpression, ArrayLiteral, IndexExpression,
+  ObjectLiteral, MemberExpression,
 } from '../../../../../../packages/logic-parser/src';
 import { resolveIdentifier } from './identifier-resolver';
 import { evaluateBinary, evaluateUnary, evaluateComparison } from './operator-handlers';
@@ -82,7 +83,7 @@ export class ExpressionEvaluator {
         );
       }
 
-      // ── Index access: arr[0] ──────────────────────────────────────────────
+      // Index access: arr[0] or obj["key"]
       case NodeType.IndexExpression: {
         const idxExpr = expression as IndexExpression;
         const obj = this.evaluateExpression(robot, idxExpr.object, memory, getRobots, getObstacles, depth + 1);
@@ -91,6 +92,29 @@ export class ExpressionEvaluator {
           const i = Math.floor(idx);
           if (i >= 0 && i < obj.length) return obj[i];
           return undefined;
+        }
+        if (obj !== null && typeof obj === 'object' && !Array.isArray(obj)) {
+          return (obj as Record<string, unknown>)[String(idx)];
+        }
+        return undefined;
+      }
+
+      // Object literal: { mode: "HUNT", target_id: 4 }
+      case NodeType.ObjectLiteral: {
+        const objLit = expression as ObjectLiteral;
+        const result: Record<string, unknown> = {};
+        for (const prop of objLit.properties) {
+          result[prop.key] = this.evaluateExpression(robot, prop.value, memory, getRobots, getObstacles, depth + 1);
+        }
+        return result;
+      }
+
+      // Member (dot) access: state.mode
+      case NodeType.MemberExpression: {
+        const memExpr = expression as MemberExpression;
+        const target = this.evaluateExpression(robot, memExpr.object, memory, getRobots, getObstacles, depth + 1);
+        if (target !== null && typeof target === 'object' && !Array.isArray(target)) {
+          return (target as Record<string, unknown>)[memExpr.property];
         }
         return undefined;
       }

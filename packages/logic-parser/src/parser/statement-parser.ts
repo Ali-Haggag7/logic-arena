@@ -201,14 +201,22 @@ export class StatementParser {
         return { type: NodeType.ScanStatement };
     }
 
-    // SET var = expr  OR  SET var[index] = expr
+    // SET var = expr  OR  SET var[index] = expr  OR  SET var.prop = expr
     private parseAssignmentStatement(): AssignmentStatement | null {
         if (!this.parser.expectPeek(TokenType.IDENTIFIER)) return null;
         const name: Identifier = { type: NodeType.Identifier, value: this.parser.currentToken.value };
 
-        // Check for indexed assignment: SET arr[i] = value
         let index: Expression | undefined;
-        if (peekIs(this.parser, TokenType.LBRACKET)) {
+        let property: string | undefined;
+
+        // Dot-notation assignment: SET obj.prop = value
+        if (peekIs(this.parser, TokenType.DOT)) {
+            this.parser.nextToken(); // consume '.'
+            if (!peekIs(this.parser, TokenType.IDENTIFIER)) return null;
+            this.parser.nextToken(); // move to property name
+            property = this.parser.currentToken.value;
+        // Bracket-notation assignment: SET arr[i] = value  OR  SET obj["key"] = value
+        } else if (peekIs(this.parser, TokenType.LBRACKET)) {
             this.parser.nextToken(); // consume '['
             this.parser.nextToken(); // move to index expression
             index = this.parser.expressionParser.parseExpression() ?? undefined;
@@ -224,7 +232,7 @@ export class StatementParser {
         const value = this.parser.expressionParser.parseExpression();
         if (!value) return null;
 
-        return { type: NodeType.AssignmentStatement, name, value, index };
+        return { type: NodeType.AssignmentStatement, name, value, index, property };
     }
 
     private parseActionStatement(): ActionStatement | null {
@@ -270,6 +278,7 @@ export class StatementParser {
             peekIs(this.parser, TokenType.STRING) ||
             peekIs(this.parser, TokenType.LPAREN) ||
             peekIs(this.parser, TokenType.LBRACKET) ||
+            peekIs(this.parser, TokenType.LBRACE) ||
             (peekIs(this.parser, TokenType.KEYWORD) && 
                 (this.parser.peekToken.value === "TRUE" || this.parser.peekToken.value === "FALSE" || this.parser.peekToken.value === "NOT"))
         ) {

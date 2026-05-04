@@ -2,7 +2,8 @@ import {
     TokenType, NodeType, Expression, 
     BinaryExpression, UnaryExpression, BooleanLiteral,
     Identifier, NumberLiteral, StringLiteral,
-    FunctionCallExpression, ArrayLiteral, IndexExpression
+    FunctionCallExpression, ArrayLiteral, IndexExpression,
+    ObjectLiteral, ObjectProperty, MemberExpression,
 } from "../types";
 import type { Parser } from "./parser";
 
@@ -183,26 +184,41 @@ export class ExpressionParser {
         return this.parsePostfix();
     }
 
-    // ── Postfix: array indexing  arr[0] ─────────────────────────────────────
+    // ── Postfix: array indexing arr[0], dot access obj.prop ────────────────
     private parsePostfix(): Expression | null {
         let expr = this.parsePrimary();
         if (!expr) return null;
 
-        // Handle arr[index] access
-        while (peekIs(this.parser, TokenType.LBRACKET)) {
-            this.parser.nextToken(); // consume '['
-            this.parser.nextToken(); // move to index expression
-            const index = this.parseOrExpression();
-            if (!index) return null;
-            // expect ']'
-            if (peekIs(this.parser, TokenType.RBRACKET)) {
-                this.parser.nextToken(); // consume ']'
+        // Handle chained postfix operators: arr[0], obj.prop, obj["key"], state.items[0].x
+        while (
+            peekIs(this.parser, TokenType.LBRACKET) ||
+            peekIs(this.parser, TokenType.DOT)
+        ) {
+            if (peekIs(this.parser, TokenType.LBRACKET)) {
+                this.parser.nextToken(); // consume '['
+                this.parser.nextToken(); // move to index expression
+                const index = this.parseOrExpression();
+                if (!index) return null;
+                if (peekIs(this.parser, TokenType.RBRACKET)) {
+                    this.parser.nextToken(); // consume ']'
+                }
+                expr = {
+                    type: NodeType.IndexExpression,
+                    object: expr,
+                    index,
+                } as IndexExpression;
+            } else {
+                // DOT notation: obj.propName
+                this.parser.nextToken(); // consume '.'
+                if (!peekIs(this.parser, TokenType.IDENTIFIER)) return null;
+                this.parser.nextToken(); // move to property identifier
+                const property = this.parser.currentToken.value;
+                expr = {
+                    type: NodeType.MemberExpression,
+                    object: expr,
+                    property,
+                } as MemberExpression;
             }
-            expr = {
-                type: NodeType.IndexExpression,
-                object: expr,
-                index,
-            } as IndexExpression;
         }
 
         return expr;
@@ -222,6 +238,11 @@ export class ExpressionParser {
                 this.parser.nextToken(); // consume ')'
             }
             return inner;
+        }
+
+        // Object literal: { key: expr, ... }
+        if (curIs(this.parser, TokenType.LBRACE)) {
+            return this.parseObjectLiteral();
         }
 
         // Array literal: [ expr, expr, ... ]
@@ -317,5 +338,58 @@ export class ExpressionParser {
         }
 
         return { type: NodeType.ArrayLiteral, elements };
+    }
+
+    // ── Object literal: { key: expr, key2: expr2 } ──────────────────────────
+    private parseObjectLiteral(): ObjectLiteral | null {
+        const properties: ObjectProperty[] = [];
+
+        // Handle empty object: {}
+        if (peekIs(this.parser, TokenType.RBRACE)) {
+            this.parser.nextToken(); // consume '}'
+            return { type: NodeType.ObjectLiteral, properties };
+        }
+
+        // Parse first property
+        const firstProp = this.parseObjectProperty();
+        if (firstProp) properties.push(firstProp);
+
+        // Parse comma-separated additional properties
+        while (peekIs(this.parser, TokenType.COMMA)) {
+            this.parser.nextToken(); // consume ','
+            const prop = this.parseObjectProperty();
+            if (prop) properties.push(prop);
+        }
+
+        // expect '}'
+        if (peekIs(this.parser, TokenType.RBRACE)) {
+            this.parser.nextToken(); // consume '}'
+        }
+
+        return { type: NodeType.ObjectLiteral, properties };
+    }
+
+    // ── Parse a single key: value pair ──────────────────────────────────────
+    private parseObjectProperty(): ObjectProperty | null {
+        this.parser.nextToken(); // move to key token
+
+        let key: string;
+        if (curIs(this.parser, TokenType.IDENTIFIER)) {
+            key = this.parser.currentToken.value;
+        } else if (curIs(this.parser, TokenType.STRING)) {
+            key = this.parser.currentToken.value;
+        } else {
+            return null;
+        }
+
+        // expect ':'
+        if (!peekIs(this.parser, TokenType.COLON)) return null;
+        this.parser.nextToken(); // consume ':'
+
+        this.parser.nextToken(); // move to value expression
+        const value = this.parseOrExpression();
+        if (!value) return null;
+
+        return { key, value };
     }
 }

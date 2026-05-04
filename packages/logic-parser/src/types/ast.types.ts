@@ -21,6 +21,8 @@ export enum NodeType {
   FunctionCallExpression = "FunctionCallExpression",
   ArrayLiteral = "ArrayLiteral",
   IndexExpression = "IndexExpression",
+  ObjectLiteral = "ObjectLiteral",
+  MemberExpression = "MemberExpression",
   BreakStatement = "BreakStatement",
   ContinueStatement = "ContinueStatement",
   ReturnStatement = "ReturnStatement",
@@ -43,7 +45,9 @@ export type Expression =
   | ActionExpression
   | FunctionCallExpression
   | ArrayLiteral
-  | IndexExpression;
+  | IndexExpression
+  | ObjectLiteral
+  | MemberExpression;
 
 export interface Program extends Statement {
   type: NodeType.Program;
@@ -102,7 +106,10 @@ export interface AssignmentStatement extends Statement {
   type: NodeType.AssignmentStatement;
   name: Identifier;
   value: Expression;
+  /** Bracket-notation index: SET arr[i] = x  or  SET obj["key"] = x */
   index?: Expression;
+  /** Dot-notation property: SET obj.prop = x */
+  property?: string;
 }
 
 export interface ActionStatement extends Statement {
@@ -164,6 +171,24 @@ export interface IndexExpression extends BaseNode {
   type: NodeType.IndexExpression;
   object: Expression;
   index: Expression;
+}
+
+export interface ObjectLiteral extends BaseNode {
+  type: NodeType.ObjectLiteral;
+  /** Ordered list of key-value pairs. Keys are always plain strings. */
+  properties: ObjectProperty[];
+}
+
+export interface ObjectProperty {
+  key: string;
+  value: Expression;
+}
+
+export interface MemberExpression extends BaseNode {
+  type: NodeType.MemberExpression;
+  object: Expression;
+  /** The property name as a compile-time string (dot-notation). */
+  property: string;
 }
 
 export interface Identifier extends BaseNode {
