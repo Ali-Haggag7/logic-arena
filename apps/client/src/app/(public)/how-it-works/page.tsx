@@ -1,178 +1,190 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from 'lucide-react';
+import {
+  ArrowRight, BookOpen, Code2, Crown, Layers, RefreshCw, Shield, Swords, Trophy, Zap,
+} from "lucide-react";
+
+import PublicPageLayout, {
+  PublicBody, PublicFooterCTA, PublicSectionCard, type PublicSection,
+} from "@/components/PublicPageLayout";
 
 export const metadata: Metadata = {
   title: "How It Works — Logic Arena",
-  description: "Discover how Logic Arena works: write your AliScript, deploy your robot, enter the arena, and climb the ranks.",
+  description: "Logic Arena transforms your code into a living, fighting robot. Four steps stand between you and combat glory.",
 };
 
-const STEPS = [
-  {
-    number: "01",
-    title: "Write Your Script",
-    tag: "STEP 01",
-    description:
-      "Use AliScript — our purpose-built combat scripting language — to define your robot's movement, attack patterns, and decision logic. The editor gives you full autocomplete, real-time syntax checking, and instant simulation previews.",
-  },
-  {
-    number: "02",
-    title: "Deploy Your Robot",
-    tag: "STEP 02",
-    description:
-      "Verify your code against the AliScript engine and deploy your bot to the Logic Arena cloud. Each version is versioned, logged, and battle-tested in a sandboxed environment before it hits the live arena.",
-  },
-  {
-    number: "03",
-    title: "Enter the Arena",
-    tag: "STEP 03",
-    description:
-      "Match against other players in real-time or asynchronous combat. Watch your algorithm execute faithfully under pressure — every decision your code makes is rendered live in the 3D arena viewer.",
-  },
-  {
-    number: "04",
-    title: "Climb the Ranks",
-    tag: "STEP 04",
-    description:
-      "Wins earn ELO rating points and unlock new arena tiers. Study replays to find weaknesses, iterate on your script, and ascend the global leaderboard to claim the title of Arena Champion.",
-  },
+const SECTIONS: PublicSection[] = [
+  { id: "write-your-script", title: "Write Your Script", label: "Step 01: Write" },
+  { id: "deploy-your-robot", title: "Deploy Your Robot", label: "Step 02: Deploy" },
+  { id: "enter-the-arena", title: "Enter the Arena", label: "Step 03: Enter" },
+  { id: "climb-the-ranks", title: "Climb the Ranks", label: "Step 04: Climb" },
+  { id: "aliscript-language", title: "The AliScript Language", label: "AliScript" },
+  { id: "competitive-engine", title: "The Competitive Engine", label: "Engine" },
 ];
 
 const ALISCRIPT_FEATURES = [
-  { icon: "◈", label: "Imperative syntax", desc: "Familiar C-style control flow with if/else, while, for" },
-  { icon: "⬡", label: "Robot API built-in", desc: "robot.move(), robot.attack(), robot.scan() — native to the language" },
-  { icon: "⚡", label: "Real-time execution", desc: "Runs at 60 ticks/second inside the engine with deterministic output" },
-  { icon: "⚙", label: "Sandboxed & safe", desc: "No filesystem or network access — pure battle logic only" },
-  { icon: "◉", label: "Instant replay", desc: "Every match is recorded and replayable frame-by-frame" },
-  { icon: "▶", label: "Version history", desc: "Roll back to any previous version of your script at any time" },
+  { icon: <Code2 size={15} />, label: "Imperative Syntax", desc: "Familiar C-style control flow: if / else / while / for — zero learning curve if you know any language." },
+  { icon: <Zap size={15} />, label: "Robot API Built-In", desc: "robot.move(), robot.attack(), robot.scan() — native language primitives, not a library." },
+  { icon: <RefreshCw size={15} />, label: "Deterministic Execution", desc: "Runs inside the engine at 60 ticks/second with a fixed instruction quota ensuring hardware-independent outcomes." },
+  { icon: <Shield size={15} />, label: "Sandboxed & Safe", desc: "No filesystem or network access. Pure battle logic — no side-channel attacks, no infinite loops escaping the quota." },
+  { icon: <Layers size={15} />, label: "Version History", desc: "Every script submission is versioned. Roll back to any prior version from your Garage at any time." },
+  { icon: <Trophy size={15} />, label: "Instant Replay", desc: "Every match is recorded and replayable frame-by-frame in the 3D Arena viewer, complete with event annotations." },
+];
+
+const ENGINE_FACTS = [
+  ["Deterministic Bytecode", "AliScript programs are compiled to a deterministic bytecode that produces identical outcomes regardless of server hardware or load."],
+  ["Instruction Quota System", "Each robot is allocated a fixed ops budget per tick. Scripts that exceed the budget receive a TLE (Time Limit Exceeded) result — not an unfair hardware advantage."],
+  ["WebSocket Real-Time Sync", "Live matches stream state deltas over WSS to all connected clients at 60 FPS. The 3D renderer interpolates intermediate frames for smooth visuals."],
+  ["Replay Ledger", "Every match outcome is committed to an append-only ledger on the server. Replays are lossless — they re-execute the original bytecode against the recorded input, not a saved video."],
 ];
 
 export default function HowItWorksPage() {
+  const steps = [
+    {
+      id: "write-your-script",
+      number: "01",
+      title: "Write Your Script",
+      icon: <Code2 size={16} />,
+      body: "Use AliScript — our purpose-built combat scripting language — to define your robot's movement, attack patterns, and decision logic. The editor provides full autocomplete, real-time syntax checking, inline documentation, and an instruction-count profiler. You see performance impact before you ever deploy.",
+      detail: "AliScript runs in a sandboxed execution environment. Every script you write is fully isolated — it can read sensor data and issue commands, but it cannot access the network, filesystem, or any resources outside the engine.",
+    },
+    {
+      id: "deploy-your-robot",
+      number: "02",
+      title: "Deploy Your Robot",
+      icon: <Layers size={16} />,
+      body: "When your script is ready, deploy it to the Logic Arena cloud with a single click. The engine compiles your code to deterministic bytecode and runs it through a verification suite — checking for sandbox violations, quota breaches, and syntax errors — before it ever touches a live match.",
+      detail: "Every successful deployment creates a numbered version in your Garage. You can maintain multiple robot configurations simultaneously and switch between them freely. Deployments take effect immediately for asynchronous matches and at the next queue entry for live matches.",
+    },
+    {
+      id: "enter-the-arena",
+      number: "03",
+      title: "Enter the Arena",
+      icon: <Swords size={16} />,
+      body: "Queue for a ranked or unranked match. The matchmaking engine pairs you against an opponent of comparable ELO rating. Once both players are confirmed, the battle engine executes your scripts deterministically on the server — and the result streams live to the 3D Arena viewer in your browser.",
+      detail: "Matches are fully observable in real-time. Every robot action, health delta, and AI decision is rendered faithfully in the 3D viewer. Spectator mode is always on — any player can watch any live match, and your friends can spectate your ranked games directly via a share link.",
+    },
+    {
+      id: "climb-the-ranks",
+      number: "04",
+      title: "Climb the Ranks",
+      icon: <Crown size={16} />,
+      body: "Wins earn ELO rating points; losses reduce them. The ELO delta per match is determined by the skill gap between you and your opponent — defeating a higher-ranked player earns significantly more. Study your match replays to identify strategic weaknesses, iterate your script, and ascend the global leaderboard.",
+      detail: "The leaderboard is global, real-time, and permanent. Seasonal resets are announced 30 days in advance. Top performers from each season are preserved in the Hall of Champions — a permanent historical record of Logic Arena's elite.",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-bg-primary font-mono relative overflow-hidden">
-      {/* Background scanlines */}
-      <div
-        className="absolute inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(var(--accent-rgb),0.012) 3px, rgba(var(--accent-rgb),0.012) 4px)",
-        }}
-      />
-      {/* Grid */}
-      <div
-        className="absolute inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(var(--accent-rgb),0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.03) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+    <PublicPageLayout
+      badge="Platform Guide"
+      title="How It Works"
+      subtitle="Logic Arena transforms your code into a living, fighting robot. Four steps stand between you and combat glory. Master each one to rise through the ranks."
+      lastUpdated="May 2026"
+      sections={SECTIONS}
+    >
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
-        {/* Back nav */}
-        <Link
-          href="/"
-          className="group inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] text-accent/70 hover:text-accent uppercase mb-10 transition-all duration-300"
-        >
-          <span className="group-hover:-translate-x-1 transition-transform">←</span> BACK
-        </Link>
-
-        {/* Hero */}
-        <div className="mb-14 relative flex items-center bg-accent/5 border border-accent/20 rounded-xl overflow-hidden shadow-[inset_0_0_20px_rgba(var(--accent-rgb),0.05)]">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent shadow-[0_0_15px_rgba(var(--accent-rgb),0.8)]" />
-          <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-accent/10 to-transparent pointer-events-none" />
-          <div className="px-10 py-12 relative z-10 w-full">
-            <p className="text-[10px] font-black tracking-[0.45em] text-accent/60 uppercase mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent/40 animate-pulse" />
-              SYSTEM OVERVIEW
-            </p>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-[0.15em] text-accent drop-shadow-[0_0_15px_rgba(var(--accent-rgb),0.4)] mb-4 uppercase">
-              How It Works
-            </h1>
-            <div className="h-px w-full max-w-sm bg-gradient-to-r from-accent/50 to-transparent mb-5" />
-            <p className="text-[13px] font-mono text-accent/70 leading-[1.8] tracking-[0.03em] max-w-2xl drop-shadow-[0_0_1px_rgba(var(--accent-rgb),0.1)]">
-              Logic Arena transforms your code into a living, fighting robot. Four steps stand between
-              you and combat glory. Master each one to rise through the ranks.
-            </p>
-          </div>
-        </div>
-
-        {/* 4-Step Visual Flow */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
-          {STEPS.map((step) => (
-            <div
-              key={step.number}
-              className="relative bg-bg-secondary/40 backdrop-blur-sm border border-accent/20 rounded-xl p-8 overflow-hidden group hover:border-accent/40 hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.1)] transition-all duration-300 shadow-[0_0_30px_rgba(var(--accent-rgb),0.03)]"
-            >
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-accent/[0.02] to-transparent" />
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-accent shadow-[0_0_15px_rgba(var(--accent-rgb),0.8)] transition-all duration-500" />
+      {/* Steps 01–04 */}
+      {steps.map((step, i) => (
+        <PublicSectionCard key={step.id} id={step.id} index={i + 1} title={step.title} icon={step.icon}>
+          <div className="flex flex-col gap-5">
+            {/* Big number watermark */}
+            <div className="flex gap-5 items-start">
               <div
-                className="text-[64px] font-black leading-none text-accent/5 select-none mb-4 tracking-tighter group-hover:text-accent/15 transition-all duration-500 drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.1)]"
+                className="hidden sm:flex shrink-0 items-center justify-center w-16 h-16 rounded-xl text-[28px] font-black"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  color: "rgba(var(--accent-rgb),0.12)",
+                  background: "rgba(var(--accent-rgb),0.04)",
+                  border: "1px solid rgba(var(--accent-rgb),0.08)",
+                  letterSpacing: "-0.05em",
+                }}
               >
                 {step.number}
               </div>
-              <p className="text-[9px] font-black tracking-[0.35em] text-accent/50 uppercase mb-3 drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.2)]">
-                {step.tag}
+              <div className="flex flex-col gap-3 flex-1">
+                <PublicBody>{step.body}</PublicBody>
+              </div>
+            </div>
+
+            {/* Detail block */}
+            <div
+              className="rounded-xl p-4"
+              style={{
+                background: "rgba(var(--accent-rgb),0.03)",
+                border: "1px solid rgba(var(--accent-rgb),0.1)",
+                borderLeft: "3px solid rgba(var(--accent-rgb),0.4)",
+              }}
+            >
+              <p
+                className="text-[12px] sm:text-[13px] leading-[1.9]"
+                style={{ color: "rgba(var(--accent-rgb),0.6)", fontFamily: "var(--font-mono)" }}
+              >
+                {step.detail}
               </p>
-              <h2 className="text-lg font-black tracking-[0.15em] text-accent uppercase mb-4 group-hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)] transition-all">
-                {step.title}
-              </h2>
-              <p className="text-[12.5px] font-mono text-accent/70 leading-[1.8] tracking-[0.03em]">
-                {step.description}
-              </p>
+            </div>
+          </div>
+        </PublicSectionCard>
+      ))}
+
+      {/* AliScript language section */}
+      <PublicSectionCard id="aliscript-language" index={5} title="The AliScript Language" icon={<BookOpen size={16} />}>
+        <div className="flex flex-col gap-6">
+          <PublicBody>
+            AliScript is a purpose-built combat scripting language designed from the ground up for the Logic Arena engine. It executes inside each robot&apos;s sandboxed runtime at 60 ticks per second, with a deterministic instruction quota that guarantees fair outcomes on any server hardware.
+          </PublicBody>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {ALISCRIPT_FEATURES.map(f => (
+              <div
+                key={f.label}
+                className="group flex items-start gap-4 p-4 rounded-xl transition-all duration-300"
+                style={{
+                  background: "rgba(var(--accent-rgb),0.03)",
+                  border: "1px solid rgba(var(--accent-rgb),0.08)",
+                }}
+              >
+                <div className="shrink-0 mt-0.5" style={{ color: "var(--accent)" }}>{f.icon}</div>
+                <div>
+                  <p className="text-[11px] font-black tracking-[0.12em] uppercase mb-1.5" style={{ color: "var(--accent)", fontFamily: "var(--font-mono)" }}>{f.label}</p>
+                  <p className="text-[12px] leading-[1.75]" style={{ color: "rgba(var(--accent-rgb),0.6)", fontFamily: "var(--font-mono)" }}>{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link href="/docs#aliscript" className="group flex items-center justify-center gap-2 px-6 h-11 rounded-xl text-[11px] font-black tracking-[0.25em] uppercase transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(var(--accent-rgb),0.15)] hover:bg-accent/15 hover:border-accent/50" style={{ background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.35)", color: "var(--accent)" }}>
+              Full Documentation <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link href="/arena" className="flex items-center justify-center gap-2 px-6 h-11 rounded-xl text-[11px] font-black tracking-[0.25em] uppercase transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(var(--accent-rgb),0.15)] hover:bg-accent/10 hover:border-accent/30 hover:text-accent" style={{ background: "rgba(var(--accent-rgb),0.04)", border: "1px solid rgba(var(--accent-rgb),0.15)", color: "rgba(var(--accent-rgb),0.6)" }}>
+              Try Practice Mode
+            </Link>
+          </div>
+        </div>
+      </PublicSectionCard>
+
+      {/* Engine section */}
+      <PublicSectionCard id="competitive-engine" index={6} title="The Competitive Engine" icon={<Zap size={16} />}>
+        <div className="flex flex-col gap-4">
+          <PublicBody>
+            The Logic Arena combat engine is built on four non-negotiable principles: determinism, fairness, transparency, and integrity. Here is exactly how it works under the hood.
+          </PublicBody>
+          {ENGINE_FACTS.map(([heading, body]) => (
+            <div key={heading} className="flex gap-4 items-start py-3 border-b last:border-0" style={{ borderColor: "rgba(var(--accent-rgb),0.08)" }}>
+              <div className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)", boxShadow: "0 0 6px var(--accent)" }} />
+              <div>
+                <p className="text-[11px] font-black tracking-[0.2em] uppercase mb-1" style={{ color: "var(--accent)", fontFamily: "var(--font-mono)" }}>{heading}</p>
+                <PublicBody>{body}</PublicBody>
+              </div>
             </div>
           ))}
         </div>
+      </PublicSectionCard>
 
-        {/* AliScript Overview */}
-        <div className="bg-bg-secondary/40 backdrop-blur-sm border border-accent/20 rounded-xl p-8 lg:p-10 mb-10 shadow-[0_0_30px_rgba(var(--accent-rgb),0.03)] relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-accent/[0.02] to-transparent" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.8)]" />
-              <h2 className="text-[14px] font-black tracking-[0.25em] uppercase text-accent drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.5)]">
-                AliScript Language
-              </h2>
-            </div>
-            <p className="text-[13px] font-mono text-accent/70 leading-[1.8] tracking-[0.03em] mb-8 max-w-3xl drop-shadow-[0_0_1px_rgba(var(--accent-rgb),0.1)]">
-              AliScript is a purpose-built combat scripting language designed from the ground up for the Logic Arena engine.
-              It executes efficiently inside each robot's execution sandbox at 60 ticks per second.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {ALISCRIPT_FEATURES.map((f) => (
-                <div
-                  key={f.label}
-                  className="group flex items-start gap-4 p-4 rounded-xl border border-transparent hover:border-accent/30 bg-accent/[0.02] hover:bg-accent/5 hover:shadow-[inset_0_0_15px_rgba(var(--accent-rgb),0.05)] transition-all duration-300"
-                >
-                  <span className="text-accent text-lg mt-0.5 drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.4)] group-hover:drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)]">{f.icon}</span>
-                  <div>
-                    <p className="text-[11px] font-black tracking-[0.1em] text-accent mb-1.5 uppercase group-hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.5)] transition-all">
-                      {f.label}
-                    </p>
-                    <p className="text-[11px] font-mono text-accent/60 leading-relaxed group-hover:text-accent/80 transition-all">{f.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-10 flex flex-wrap gap-4">
-              <Link
-                href="/docs#aliscript"
-                className="group flex items-center justify-center min-w-[200px] h-12 bg-accent/10 border border-accent/40 rounded-lg text-accent text-[11px] font-black tracking-[0.3em] uppercase hover:bg-accent/20 hover:border-accent/80 hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all duration-300"
-              >
-                READ FULL DOCS <ArrowRight className="ml-2 w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/arena"
-                className="flex items-center justify-center min-w-[200px] h-12 bg-bg-secondary/50 border border-accent/20 rounded-lg text-accent/60 text-[11px] font-black tracking-[0.3em] uppercase hover:text-accent hover:border-accent/50 hover:bg-accent/5 transition-all duration-300"
-              >
-                TRY PRACTICE MODE
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <PublicFooterCTA>
+        Ready to compete?{" "}
+        <Link href="/register" className="inline-block border-b transition-all duration-200 ml-1 hover:-translate-y-[1px] hover:border-accent hover:text-accent/90" style={{ color: "var(--accent)", borderColor: "rgba(var(--accent-rgb),0.35)" }}>Create your account</Link>
+        {" "}·{" "}
+        <Link href="/docs" className="inline-block border-b transition-all duration-200 ml-1 hover:-translate-y-[1px] hover:border-accent hover:text-accent/90" style={{ color: "var(--accent)", borderColor: "rgba(var(--accent-rgb),0.35)" }}>Read the docs</Link>
+      </PublicFooterCTA>
+    </PublicPageLayout>
   );
 }
