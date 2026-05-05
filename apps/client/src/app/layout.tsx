@@ -48,9 +48,9 @@ export const metadata: Metadata = {
     siteName: "Logic Arena",
     images: [
       {
-        url: "/icons/logic-arena.webp",
-        width: 1200,
-        height: 630,
+        url: "/icons/icon-512.png",
+        width: 512,
+        height: 512,
         alt: "Logic Arena Gameplay",
       },
     ],
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     title: "Logic Arena | Competitive Robot Coding Simulator",
     description:
       "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
-    images: ["/icons/logic-arena.webp"],
+    images: ["/icons/icon-512.png"],
   },
   robots: {
     index: true,
@@ -74,8 +74,8 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/icons/logic-arena.webp",
-    apple: "/icons/logic-arena.webp",
+    icon: "/icons/icon-512.png",
+    apple: "/icons/icon-192.png",
   },
 };
 
