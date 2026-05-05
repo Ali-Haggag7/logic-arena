@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useAuthState } from "../../../hooks/useAuthState";
 
 import { SectionId } from "./components/Shared";
 import { SettingsLayout } from "./components/SettingsLayout";
@@ -10,7 +11,6 @@ import { SecuritySection } from "./components/SecuritySection";
 import { AppearanceSection } from "./components/AppearanceSection";
 import { PreferencesSection } from "./components/PreferencesSection";
 import { NotificationsSection } from "./components/NotificationsSection";
-import { apiClient } from "../../../lib/api-client";
 
 function renderSection(id: SectionId | null, isGuest: boolean) {
   switch (id) {
@@ -26,14 +26,7 @@ function renderSection(id: SectionId | null, isGuest: boolean) {
 export default function SettingsPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [activeSection, setActiveSection] = useState<SectionId | null>("identity");
-  const [isGuest, setIsGuest] = useState(false);
-
-  React.useEffect(() => {
-    const token = localStorage.getItem("token") || localStorage.getItem("jwtToken");
-    if (!token) {
-      setIsGuest(true);
-    }
-  }, []);
+  const { isGuest } = useAuthState();
 
   return (
     <SettingsLayout
@@ -45,3 +38,4 @@ export default function SettingsPage() {
     />
   );
 }
+

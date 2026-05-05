@@ -8,11 +8,12 @@ import { Tournament } from "./types";
 import { CreateTournamentForm } from "./components/CreateTournamentForm";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { AuthModal } from "../../../components/AuthModal";
+import { useAuthState } from "../../../hooks/useAuthState";
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isGuest, setIsGuest] = useState(false);
+  const { isGuest } = useAuthState();
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState<string | null>(null);
@@ -23,21 +24,16 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     setUserId(localStorage.getItem("userId"));
-    setIsGuest(!localStorage.getItem("token"));
   }, []);
 
   const fetchTournaments = useCallback(async () => {
     try {
       const res = await apiClient.get("/tournaments");
-      // FIX 13: deep-compare to avoid flicker on unchanged poll results
       setTournaments((prev) =>
         JSON.stringify(prev) === JSON.stringify(res.data) ? prev : res.data
       );
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { status?: number } };
-      if (axiosError.response?.status === 401) {
-        setIsGuest(true);
-      }
+    } catch {
+      /* 401s are handled globally by apiClient interceptor */
     } finally {
       setLoading(false);
     }

@@ -26,6 +26,7 @@ import {
   CATEGORY_LABELS,
 } from "./constants";
 import type { ItemCategory, MarketItem } from "./types";
+import { useAuthState } from "../../../hooks/useAuthState";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const DEFAULT_LOADOUT: Record<ItemCategory, string> = {
@@ -149,8 +150,7 @@ const CATEGORIES: ItemCategory[] = ["chassis", "paint", "tracer"];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function BlackMarketPage() {
-  const isGuest =
-    typeof window !== "undefined" && !localStorage.getItem("token");
+  const { isGuest } = useAuthState();
 
   // ── State ────────────────────────────────────────────────────────────────
   const [points, setPoints] = useState<number>(INITIAL_POINTS);
@@ -165,13 +165,16 @@ export default function BlackMarketPage() {
     tracer:  findItem(DEFAULT_LOADOUT.tracer,  "tracer"),
   }));
   const [equippedIds, setEquippedIds] = useState<Record<ItemCategory, string>>(DEFAULT_LOADOUT);
-  const [loading, setLoading] = useState(!isGuest);
+  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // ── Load from API ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (isGuest) return;
+    if (isGuest) {
+      setLoading(false);
+      return;
+    }
 
     let cancelled = false;
     apiClient
@@ -199,15 +202,14 @@ export default function BlackMarketPage() {
         setPreviewItem(loadout.chassis);
       })
       .catch(() => {
-        /* silently fall back to mock defaults */
+        /* 401s are handled globally by apiClient interceptor */
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
 
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isGuest]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const showToast = useCallback(

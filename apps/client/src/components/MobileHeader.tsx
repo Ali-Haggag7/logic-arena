@@ -1,20 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeSwitcher } from "./ui/ThemeSwitcher";
+import { useAuthState } from "../hooks/useAuthState";
 
 export function MobileHeader() {
   const pathname = usePathname() || "";
   const router = useRouter();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token") || localStorage.getItem("jwtToken");
-    setIsLoggedIn(!!token);
-    setAuthChecked(true);
-  }, [pathname]);
+  const { isGuest: isNotLoggedIn, refresh } = useAuthState();
+  const isLoggedIn = !isNotLoggedIn;
 
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
   const isAuthPage = authRoutes.some(route => pathname.startsWith(route));
@@ -29,82 +24,80 @@ export function MobileHeader() {
   const visibilityClass = (isAuthPage || isStaticPage) ? "flex" : "flex md:hidden";
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("jwtToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    setIsLoggedIn(false);
+    ["token", "jwtToken", "userId", "username"].forEach((k) =>
+      localStorage.removeItem(k)
+    );
+    window.dispatchEvent(new Event("auth:changed"));
+    refresh();
     router.push("/login");
   };
 
   let authButtonContent = null;
 
-  if (authChecked) {
-    if (isLoggedIn) {
-      if (isAuthPage) {
-        authButtonContent = (
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard")}
-            className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-accent/50 hover:text-accent transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
-          >
-            [ DASHBOARD ]
-          </button>
-        );
-      } else {
-        authButtonContent = (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-red-500/50 hover:text-red-500 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--color-red-500),0.6)]"
-          >
-            [ LOGOUT ]
-          </button>
-        );
-      }
+  if (isLoggedIn) {
+    if (isAuthPage) {
+      authButtonContent = (
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard")}
+          className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-accent/50 hover:text-accent transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
+        >
+          [ DASHBOARD ]
+        </button>
+      );
     } else {
-      if (pathname === "/login") {
-        authButtonContent = (
-          <button
-            type="button"
-            onClick={() => router.push("/register")}
-            className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-accent/50 hover:text-accent transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
-          >
-            [ REGISTER ]
-          </button>
-        );
-      } else if (pathname === "/register" || (isAuthPage && pathname !== "/login")) {
-        authButtonContent = (
+      authButtonContent = (
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-red-500/50 hover:text-red-500 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--color-red-500),0.6)]"
+        >
+          [ LOGOUT ]
+        </button>
+      );
+    }
+  } else {
+    if (pathname === "/login") {
+      authButtonContent = (
+        <button
+          type="button"
+          onClick={() => router.push("/register")}
+          className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-accent/50 hover:text-accent transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
+        >
+          [ REGISTER ]
+        </button>
+      );
+    } else if (pathname === "/register" || (isAuthPage && pathname !== "/login")) {
+      authButtonContent = (
+        <button
+          type="button"
+          onClick={() => router.push("/login")}
+          className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-accent/50 hover:text-accent transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
+        >
+          [ LOGIN ]
+        </button>
+      );
+    } else {
+      // Masterclass UX: Split pill button for non-auth browsing pages
+      authButtonContent = (
+        <div className="flex items-center gap-2 bg-accent/5 border border-accent/20 px-2.5 py-1.5 rounded-lg shadow-[inset_0_0_8px_rgba(var(--accent-rgb),0.05)]">
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="text-[9.5px] font-bold tracking-[0.15em] uppercase text-accent/50 hover:text-accent transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
+            className="text-[8.5px] font-black tracking-[0.2em] uppercase text-accent/50 hover:text-accent transition-all duration-300"
           >
-            [ LOGIN ]
+            LOGIN
           </button>
-        );
-      } else {
-        // Masterclass UX: Split pill button for non-auth browsing pages
-        authButtonContent = (
-          <div className="flex items-center gap-2 bg-accent/5 border border-accent/20 px-2.5 py-1.5 rounded-lg shadow-[inset_0_0_8px_rgba(var(--accent-rgb),0.05)]">
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="text-[8.5px] font-black tracking-[0.2em] uppercase text-accent/50 hover:text-accent transition-all duration-300"
-            >
-              LOGIN
-            </button>
-            <span className="text-[9px] text-accent/30 font-light drop-shadow-[0_0_2px_rgba(var(--accent-rgb),0.3)]">/</span>
-            <button
-              type="button"
-              onClick={() => router.push("/register")}
-              className="text-[8.5px] font-black tracking-[0.2em] uppercase text-accent hover:text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.5)] hover:drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)] transition-all duration-300"
-            >
-              REGISTER
-            </button>
-          </div>
-        );
-      }
+          <span className="text-[9px] text-accent/30 font-light drop-shadow-[0_0_2px_rgba(var(--accent-rgb),0.3)]">/</span>
+          <button
+            type="button"
+            onClick={() => router.push("/register")}
+            className="text-[8.5px] font-black tracking-[0.2em] uppercase text-accent hover:text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.5)] hover:drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)] transition-all duration-300"
+          >
+            REGISTER
+          </button>
+        </div>
+      );
     }
   }
 

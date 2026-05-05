@@ -1,19 +1,16 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthState } from "../../../../../hooks/useAuthState";
 
 export function useDashboardAuth() {
   const router = useRouter();
-  const [username, setUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    setUsername(localStorage.getItem("username"));
-  }, []);
+  const { username } = useAuthState();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("jwtToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
+    ["token", "jwtToken", "userId", "username"].forEach((k) =>
+      localStorage.removeItem(k)
+    );
+    // Notify all mounted useAuthState subscribers in the same tab
+    window.dispatchEvent(new Event("auth:changed"));
     router.push("/login");
   };
 

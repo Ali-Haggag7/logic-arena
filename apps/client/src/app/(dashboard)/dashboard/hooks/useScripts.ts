@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../../../lib/api-client";
 import { RobotScript } from "../components/ScriptCard";
+import { useAuthState } from "../../../../hooks/useAuthState";
 
 export type GameMode = "COMBAT" | "RACING" | "TRAINING_SOLO";
 
@@ -21,28 +22,41 @@ export function useScripts() {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedMode, setSelectedMode] = useState<GameMode>("COMBAT");
     const [editingScript, setEditingScript] = useState<RobotScript | null>(null);
-    const [isGuest, setIsGuest] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const router = useRouter();
 
+    // Reactive auth state — re-evaluates when token arrives after login redirect
+    const { isGuest } = useAuthState();
+
     useEffect(() => {
+        // Don't hit the server if we already know there's no token.
+        // This eliminates the noisy 401 "Authorization header not found" on first mount.
+        if (isGuest) {
+            setScripts([GUEST_SCRIPT]);
+            setInitialLoad(false);
+            return;
+        }
+
         const fetchScripts = async () => {
             try {
                 const response = await apiClient.get("/scripts");
                 setScripts(response.data);
             } catch (error: unknown) {
                 const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
-                console.error("Failed to fetch scripts:", axiosError.response?.data?.message ?? axiosError.message);
                 if (axiosError.response?.status === 401) {
-                    setIsGuest(true);
+                    // apiClient interceptor already cleared localStorage & fired auth:expired.
+                    // Just fall back to guest script — no console.error needed here.
                     setScripts([GUEST_SCRIPT]);
+                } else {
+                    console.error("Failed to fetch scripts:", axiosError.response?.data?.message ?? axiosError.message);
                 }
             } finally {
                 setInitialLoad(false);
             }
         };
+
         fetchScripts();
-    }, [router]);
+    }, [isGuest]);
 
     const handleCreateScript = async (e: React.FormEvent) => {
         if (e) e.preventDefault();

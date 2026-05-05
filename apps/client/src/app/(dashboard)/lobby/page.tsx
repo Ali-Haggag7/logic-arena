@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LobbyMatchCard } from "./components/LobbyMatchCard";
 import { LobbySkeleton } from "./components/LobbySkeleton";
@@ -10,16 +10,13 @@ import { ErrorPanel } from "./components/ErrorPanel";
 import { useLobbySocket } from "./hooks/useLobbySocket";
 import { useDeployMatch } from "./hooks/useDeployMatch";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useAuthState } from "../../../hooks/useAuthState";
 
 export default function LobbyPage() {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [showScriptWarning, setShowScriptWarning] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
-
-  useEffect(() => {
-    setIsGuest(!localStorage.getItem("token"));
-  }, []);
+  const { isGuest } = useAuthState();
 
   const { matches, connectionStatus, setRetryKey, socket } = useLobbySocket();
   const { handleDeployMatch } = useDeployMatch({ socket, onNoScript: () => setShowScriptWarning(true) });

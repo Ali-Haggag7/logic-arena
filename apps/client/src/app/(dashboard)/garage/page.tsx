@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { AuthModal } from "../../../components/AuthModal";
 import { apiClient } from "../../../lib/api-client";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useAuthState } from "../../../hooks/useAuthState";
 import { RobotShowroom } from "../black-market/components/RobotShowroom";
 import { MARKET_ITEMS, CATEGORY_LABELS } from "../black-market/constants";
 import { MarketItem } from "../black-market/types";
@@ -62,9 +63,7 @@ const RARITY_STYLES: Record<MarketItem["rarity"], { badge: string; border: strin
 };
 
 export default function GaragePage() {
-  const [isGuest, setIsGuest] = useState<boolean>(
-    () => typeof window !== "undefined" && !localStorage.getItem("token")
-  );
+  const { isGuest } = useAuthState();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT);
 
@@ -101,10 +100,8 @@ export default function GaragePage() {
         if (data.equippedPaint) setEquippedPaint(data.equippedPaint);
         if (data.equippedTracer) setEquippedTracer(data.equippedTracer);
       })
-      .catch((err) => {
-        if (err.response?.status === 401) {
-          setIsGuest(true);
-        }
+      .catch(() => {
+        /* 401s are handled globally by apiClient interceptor */
       })
       .finally(() => setIsLoading(false));
   }, [isGuest]);
