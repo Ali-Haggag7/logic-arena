@@ -32,6 +32,12 @@ export function setAuthSession(nextSession: AuthSession): void {
     authSession.userId = nextSession.userId;
     authSession.username = nextSession.username;
     authSession.avatarUrl = nextSession.avatarUrl ?? authSession.avatarUrl ?? null;
+    
+    // Persist non-sensitive public data to prevent UI hydration flicker
+    if (typeof window !== "undefined") {
+        if (nextSession.username) localStorage.setItem("logic_arena_display_name", nextSession.username);
+        if (nextSession.avatarUrl) localStorage.setItem("logic_arena_avatar", nextSession.avatarUrl);
+    }
     window.dispatchEvent(new Event("auth:changed"));
 }
 
@@ -40,6 +46,11 @@ export function clearAuthSession(): void {
     authSession.userId = null;
     authSession.username = null;
     authSession.avatarUrl = null;
+    
+    if (typeof window !== "undefined") {
+        localStorage.removeItem("logic_arena_display_name");
+        localStorage.removeItem("logic_arena_avatar");
+    }
     window.dispatchEvent(new Event("auth:changed"));
 }
 
@@ -56,11 +67,15 @@ export function getAuthUserId(): string | null {
 }
 
 export function getAuthUsername(): string | null {
-    return authSession.username;
+    if (authSession.username) return authSession.username;
+    if (typeof window !== "undefined") return localStorage.getItem("logic_arena_display_name");
+    return null;
 }
 
 export function getAuthAvatarUrl(): string | null {
-    return authSession.avatarUrl ?? null;
+    if (authSession.avatarUrl) return authSession.avatarUrl;
+    if (typeof window !== "undefined") return localStorage.getItem("logic_arena_avatar");
+    return null;
 }
 
 export function setSelectedScriptId(scriptId: string | null): void {
