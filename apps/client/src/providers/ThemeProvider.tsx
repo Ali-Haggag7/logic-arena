@@ -40,8 +40,6 @@ function ThemeMetaSync() {
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", color);
-
-    document.body.style.backgroundColor = color;
   }, [resolvedTheme]);
 
   return null;
