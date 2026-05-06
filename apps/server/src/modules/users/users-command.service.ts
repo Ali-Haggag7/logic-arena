@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
+import { CloudinaryService } from '../../common/cloudinary.service';
 import { ALLOWED_ROBOT_IDS, COLOR_REGEX, profileKey, loadoutKey, preferencesKey, BCRYPT_ROUNDS, PRISMA_UNIQUE_VIOLATION, ArenaPreferences, NotificationSettings } from './types';
 import { BLACK_MARKET_ITEMS, DEFAULT_UNLOCKED_ITEMS, ItemCategory } from './black-market.constants';
 
@@ -11,6 +12,7 @@ export class UsersCommandService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly cloudinary: CloudinaryService,
   ) { }
 
   async updateLoadout(userId: string, robotId: string, color: string): Promise<void> {
@@ -127,6 +129,18 @@ export class UsersCommandService {
 
     await this.prisma.user.delete({ where: { id: userId } });
     await this.redis.del(profileKey(userId), loadoutKey(userId));
+  }
+
+  // ── Avatar Upload ──────────────────────────────────────────────────────────
+
+  async uploadAvatar(userId: string, buffer: Buffer): Promise<string> {
+    const url = await this.cloudinary.uploadAvatar(buffer, userId);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: url },
+    });
+    await this.redis.del(profileKey(userId));
+    return url;
   }
 
   // ── Black Market ────────────────────────────────────────────────────────────

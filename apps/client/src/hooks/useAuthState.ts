@@ -2,21 +2,23 @@ import { useEffect, useState, useCallback } from "react";
 import { apiClient } from "../lib/api-client";
 import { clearAuthSession, getAuthSession, setAuthSession } from "../lib/client-security";
 
-function readAuthState(): { isGuest: boolean; username: string | null } {
+function readAuthState(): { isGuest: boolean; username: string | null; avatarUrl: string | null } {
   const session = getAuthSession();
   return {
     isGuest: !session.isAuthenticated,
     username: session.username,
+    avatarUrl: session.avatarUrl ?? null,
   };
 }
 
 /**
- * Returns reactive `{ isGuest, username }` backed by in-memory session metadata.
+ * Returns reactive `{ isGuest, username, avatarUrl }` backed by in-memory session metadata.
  * Sensitive account identifiers are intentionally never persisted to localStorage.
  */
 export function useAuthState(): {
   isGuest: boolean;
   username: string | null;
+  avatarUrl: string | null;
   refresh: () => void;
 } {
   const [state, setState] = useState(readAuthState);
@@ -35,6 +37,7 @@ export function useAuthState(): {
         isAuthenticated: true,
         userId: res.data.id ?? null,
         username: res.data.username ?? null,
+        avatarUrl: res.data.avatarUrl ?? null,
       });
       refresh();
     }).catch(() => {
@@ -62,3 +65,4 @@ export function useAuthState(): {
 
   return { ...state, refresh };
 }
+

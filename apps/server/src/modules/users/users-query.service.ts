@@ -25,6 +25,7 @@ export class UsersQueryService {
       select: {
         username: true,
         email: true,
+        avatarUrl: true,
         rank: true,
         createdAt: true,
         selectedRobotId: true,
@@ -74,6 +75,7 @@ export class UsersQueryService {
     const profile: UserProfile = {
       username: user.username,
       email: user.email,
+      avatarUrl: user.avatarUrl,
       rank: user.rank,
       memberSince: user.createdAt,
       selectedRobotId: user.selectedRobotId,

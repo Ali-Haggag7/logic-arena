@@ -6,12 +6,14 @@ type AuthSession = {
     isAuthenticated?: boolean;
     userId: string | null;
     username: string | null;
+    avatarUrl?: string | null;
 };
 
 const authSession: AuthSession = {
     isAuthenticated: false,
     userId: null,
     username: null,
+    avatarUrl: null,
 };
 
 let selectedScriptId: string | null = null;
@@ -29,6 +31,7 @@ export function setAuthSession(nextSession: AuthSession): void {
     authSession.isAuthenticated = Boolean(nextSession.isAuthenticated ?? nextSession.userId ?? nextSession.username);
     authSession.userId = nextSession.userId;
     authSession.username = nextSession.username;
+    authSession.avatarUrl = nextSession.avatarUrl ?? authSession.avatarUrl ?? null;
     window.dispatchEvent(new Event("auth:changed"));
 }
 
@@ -36,6 +39,7 @@ export function clearAuthSession(): void {
     authSession.isAuthenticated = false;
     authSession.userId = null;
     authSession.username = null;
+    authSession.avatarUrl = null;
     window.dispatchEvent(new Event("auth:changed"));
 }
 
@@ -53,6 +57,10 @@ export function getAuthUserId(): string | null {
 
 export function getAuthUsername(): string | null {
     return authSession.username;
+}
+
+export function getAuthAvatarUrl(): string | null {
+    return authSession.avatarUrl ?? null;
 }
 
 export function setSelectedScriptId(scriptId: string | null): void {

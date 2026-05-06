@@ -46,6 +46,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 export interface UserProfile {
   username:             string;
   email:                string;
+  avatarUrl:            string | null;
   rank:                 number;
   memberSince:          Date;
   selectedRobotId:      string | null;

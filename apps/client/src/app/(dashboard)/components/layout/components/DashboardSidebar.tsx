@@ -18,10 +18,11 @@ const navItems = [
 
 interface DashboardSidebarProps {
   username: string | null;
+  avatarUrl: string | null;
   onLogout: () => void;
 }
 
-export function DashboardSidebar({ username, onLogout }: DashboardSidebarProps) {
+export function DashboardSidebar({ username, avatarUrl, onLogout }: DashboardSidebarProps) {
   return (
     <aside
       className="flex flex-col bg-bg-primary/95 border-r border-accent/[0.12] shadow-[4px_0_30px_rgba(var(--accent-rgb),0.04)] sticky top-0 h-screen overflow-y-auto z-50 shrink-0 scrollbar-thin scrollbar-thumb-accent/20 scrollbar-track-transparent"
@@ -74,8 +75,12 @@ export function DashboardSidebar({ username, onLogout }: DashboardSidebarProps) 
       {/* ── USER + LOGOUT ── */}
       <div className="p-[14px_12px] border-t border-accent/[0.08] relative z-10">
         <div className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-accent/[0.04] rounded-md border border-accent/10 hover:border-accent/30 transition-colors group cursor-default">
-          <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)] transition-all duration-300">
-            ◉
+          <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)] transition-all duration-300 overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              "◉"
+            )}
           </span>
           <div className="overflow-hidden">
             <div className="text-[9px] text-accent/35 tracking-[0.18em] mb-[2px]">PLAYER</div>
@@ -86,6 +91,7 @@ export function DashboardSidebar({ username, onLogout }: DashboardSidebarProps) 
         </div>
 
         <button
+          type="button"
           onClick={onLogout}
           className="w-full flex items-center justify-center gap-1.5 py-[9px] px-[14px] bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 hover:border-red-500/60 rounded-md text-red-500/50 hover:text-red-300 text-[10px] font-bold tracking-[0.2em] font-mono cursor-pointer transition-all duration-200 group"
         >

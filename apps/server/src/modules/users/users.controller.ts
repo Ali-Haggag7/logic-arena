@@ -10,8 +10,11 @@ import {
   Post,
   Put,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
@@ -33,6 +36,7 @@ import {
   UpdateProfileDto,
 } from './users.dto';
 import { ItemCategory } from './black-market.constants';
+import { ImageFileValidationPipe } from '../../common/file-validation.pipe';
 
 /** Typed request shape produced by AuthGuard JWT strategy */
 interface AuthenticatedRequest {
@@ -40,6 +44,9 @@ interface AuthenticatedRequest {
 }
 
 const LEADERBOARD_CACHE_KEY = 'leaderboard:snapshot';
+
+/** Multer file size hard cap — 2 MB */
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 @SkipThrottle({ auth: true })
 @Controller('users')
@@ -114,6 +121,25 @@ export class UsersController {
       return { success: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Update failed';
+      throw new BadRequestException(message);
+    }
+  }
+
+  // ── Avatar Upload (auth-gated, secure) ────────────────────────────────────
+  @UseGuards(AuthGuard)
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('avatar', {
+    limits: { fileSize: AVATAR_MAX_BYTES },
+  }))
+  async uploadAvatar(
+    @Req() req: AuthenticatedRequest,
+    @UploadedFile(new ImageFileValidationPipe()) file: Express.Multer.File,
+  ) {
+    try {
+      const avatarUrl = await this.commandService.uploadAvatar(req.user.sub, file.buffer);
+      return { success: true, avatarUrl };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Avatar upload failed';
       throw new BadRequestException(message);
     }
   }

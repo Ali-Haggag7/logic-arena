@@ -5,7 +5,7 @@ import { clearAuthSession, clearSensitiveBrowserStorage } from "../../../../../l
 
 export function useDashboardAuth() {
   const router = useRouter();
-  const { username } = useAuthState();
+  const { username, avatarUrl } = useAuthState();
 
   const handleLogout = async () => {
     try {
@@ -16,5 +16,6 @@ export function useDashboardAuth() {
     router.push("/login");
   };
 
-  return { username, handleLogout };
+  return { username, avatarUrl, handleLogout };
 }
+
