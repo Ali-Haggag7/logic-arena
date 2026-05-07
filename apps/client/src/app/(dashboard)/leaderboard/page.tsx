@@ -16,8 +16,9 @@ import { getAuthSession } from "../../../lib/client-security";
 
 interface UserStatusUpdatePayload {
   userId: string;
-  status: "idle" | "in-match";
+  status: "idle" | "in-match" | "online";
   matchId?: string;
+  isOnline?: boolean; // absent = true (connect/in-match); explicit false = disconnected
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -38,16 +39,24 @@ const LeaderboardPage = () => {
   // Dedicated socket for leaderboard presence (reuses existing WS connection)
   const socketRef = useRef<Socket | null>(null);
 
-  // Apply a status update to a single user in the users list
+  // Apply a status update to a single user in the users list.
+  // Any event from the server means the user is connected => isOnline = true
+  // unless the server explicitly sends isOnline:false (on disconnect).
+  // "idle"     = online but not in a match
+  // "in-match" = actively playing
   const applyStatusUpdate = useCallback(
     (payload: UserStatusUpdatePayload) => {
       setUsers((prev) =>
         prev.map((u) => {
           if (u.id !== payload.userId) return u;
+          const isOnline = payload.isOnline ?? true;
           return {
             ...u,
+            isOnline,
             inMatchId:
-              payload.status === "in-match" ? payload.matchId : undefined,
+              isOnline && payload.status === "in-match"
+                ? payload.matchId
+                : undefined,
           };
         }),
       );
@@ -78,14 +87,20 @@ const LeaderboardPage = () => {
     const socket = io(wsUrl, { withCredentials: true, autoConnect: false });
     socketRef.current = socket;
 
+    // Snapshot: authoritative list of ALL online users sent on joinLeaderboard.
+    // isOnline is included so we can correct any stale value from the REST cache.
     const handleSnapshot = (
-      snapshot: Array<{ userId: string; matchId?: string }>,
+      snapshot: Array<{ userId: string; isOnline: boolean; matchId?: string }>,
     ) => {
       setUsers((prev) =>
         prev.map((u) => {
           const entry = snapshot.find((s) => s.userId === u.id);
           if (!entry) return u;
-          return { ...u, inMatchId: entry.matchId };
+          return {
+            ...u,
+            isOnline: entry.isOnline,
+            inMatchId: entry.matchId,
+          };
         }),
       );
     };

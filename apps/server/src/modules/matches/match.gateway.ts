@@ -169,6 +169,14 @@ export class MatchGateway
           status: 'idle',
         });
       }
+
+      // Always broadcast that the user went offline so the leaderboard dot
+      // goes dark immediately rather than waiting for the next REST poll TTL.
+      this.server.to(LEADERBOARD_ROOM).emit('userStatusUpdate', {
+        userId: client.userId,
+        status: 'idle',
+        isOnline: false,
+      });
     }
 
     // Clean up lobby if they hosted one
@@ -274,16 +282,35 @@ export class MatchGateway
   }
 
   @SubscribeMessage('joinLeaderboard')
-  handleJoinLeaderboard(@ConnectedSocket() client: AuthenticatedSocket) {
+  async handleJoinLeaderboard(@ConnectedSocket() client: AuthenticatedSocket) {
     client.join(LEADERBOARD_ROOM);
 
-    // Send a snapshot of all currently in-match users on join
-    const snapshot: Array<{ userId: string; status: string; matchId?: string }> = [];
-    for (const [userId, status] of this.state.userStatus.entries()) {
-      if (status.status === 'in-match') {
-        snapshot.push({ userId, status: 'in-match', matchId: status.matchId });
+    // Build a snapshot of ALL currently-online authenticated users.
+    // We iterate the live socket list so the snapshot is accurate for idle users too
+    // (userStatus only tracks in-match users, not everyone who is connected).
+    const allSockets = await this.server.fetchSockets();
+    const seenUserIds = new Set<string>();
+    const snapshot: Array<{
+      userId: string;
+      isOnline: boolean;
+      matchId?: string;
+    }> = [];
+
+    for (const s of allSockets) {
+      const sock = s as unknown as AuthenticatedSocket;
+      if (!sock.userId || sock.isGuest || seenUserIds.has(sock.userId)) {
+        continue;
       }
+      seenUserIds.add(sock.userId);
+      const status = this.state.userStatus.get(sock.userId);
+      snapshot.push({
+        userId: sock.userId,
+        isOnline: true,
+        matchId:
+          status?.status === 'in-match' ? status.matchId : undefined,
+      });
     }
+
     client.emit('userStatusSnapshot', snapshot);
   }
 
