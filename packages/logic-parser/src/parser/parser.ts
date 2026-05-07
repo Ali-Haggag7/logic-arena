@@ -1,7 +1,7 @@
-import { Token, TokenType, Program, Statement } from "../types";
+import { Token, TokenType, Program, NodeType } from "../types";
 import { Lexer } from "../lexer";
-import { ExpressionParser } from "./expression-parser";
-import { StatementParser } from "./statement-parser";
+import { ExpressionParser } from "./expression";
+import { StatementParser } from "./statement";
 
 export class Parser {
     private lexer: Lexer;
@@ -34,14 +34,14 @@ export class Parser {
     }
 
     public parse(): Program {
-        const program: Program = { type: "Program" as any, body: [] };
+        const program: Program = { type: NodeType.Program, body: [] };
 
         while (this.currentToken.type !== TokenType.EOF) {
             const statement = this.statementParser.parseStatement();
             if (statement) {
                 program.body.push(statement);
             }
-            this.nextToken(); // Advance to the next token
+            this.nextToken();
         }
         return program;
     }
