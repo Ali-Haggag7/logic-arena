@@ -5,6 +5,7 @@ import {
   UserProfile, MatchSummary, UserLoadout, CombatStats,
   ArenaPreferences, NotificationSettings, BlackMarketData,
   profileKey, loadoutKey, PROFILE_TTL,
+  blackMarketKey, combatLoadoutKey,
   DEFAULT_ARENA_PREFERENCES, DEFAULT_NOTIFICATION_SETTINGS,
 } from './types';
 import { DEFAULT_UNLOCKED_ITEMS } from './black-market.constants';
@@ -127,6 +128,9 @@ export class UsersQueryService {
   }
 
   async getBlackMarket(userId: string): Promise<BlackMarketData> {
+    const cached = await this.redis.get<BlackMarketData>(blackMarketKey(userId));
+    if (cached) return cached;
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -166,12 +170,19 @@ export class UsersQueryService {
       });
     }
 
-    return {
+    const data = {
       points: user.points,
       unlockedItems,
       equippedChassis: user.equippedChassis,
       equippedPaint,
       equippedTracer: user.equippedTracer,
     };
+    await this.redis.set(blackMarketKey(userId), data, PROFILE_TTL);
+    await this.redis.set(combatLoadoutKey(userId), {
+      equippedChassis: data.equippedChassis,
+      equippedPaint: data.equippedPaint,
+      equippedTracer: data.equippedTracer,
+    }, PROFILE_TTL);
+    return data;
   }
 }

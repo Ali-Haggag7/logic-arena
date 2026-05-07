@@ -39,13 +39,13 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   onModuleInit() {
     // Initialize the separated managers
     this.lobbyManager = new MatchLobbyManager(this.state, this.server, this.prisma, this.redisService);
     this.socialManager = new MatchSocialManager(this.server, this.prisma, this.redisService);
-    this.loopManager = new MatchLoopManager(this.state, this.server, this.prisma);
+    this.loopManager = new MatchLoopManager(this.state, this.server, this.prisma, this.redisService);
 
     // Boot up the global match tick loop
     this.loopManager.startLoop();
@@ -140,7 +140,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (match) {
           match.stop();
           this.state.cleanupMatch(matchId);
-          
+
           if (this.state.lobbyMatches.has(matchId)) {
             this.state.lobbyMatches.delete(matchId);
             this.server.emit('lobbyUpdated', Array.from(this.state.lobbyMatches.values()));
@@ -171,7 +171,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('getLobby')
-  handleGetLobby(@ConnectedSocket() client: AuthenticatedSocket) {
+  async handleGetLobby(@ConnectedSocket() client: AuthenticatedSocket) {
     return this.lobbyManager.handleGetLobby(client);
   }
 

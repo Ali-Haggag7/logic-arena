@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
 import { CloudinaryService } from '../../common/cloudinary.service';
-import { ALLOWED_ROBOT_IDS, COLOR_REGEX, profileKey, loadoutKey, preferencesKey, BCRYPT_ROUNDS, PRISMA_UNIQUE_VIOLATION, ArenaPreferences, NotificationSettings } from './types';
+import { ALLOWED_ROBOT_IDS, COLOR_REGEX, profileKey, loadoutKey, preferencesKey, blackMarketKey, combatLoadoutKey, BCRYPT_ROUNDS, PRISMA_UNIQUE_VIOLATION, ArenaPreferences, NotificationSettings } from './types';
 import { BLACK_MARKET_ITEMS, DEFAULT_UNLOCKED_ITEMS, ItemCategory } from './black-market.constants';
 
 @Injectable()
@@ -150,7 +150,7 @@ export class UsersCommandService {
     if (!catalogItem) throw new BadReq('Item does not exist in the catalog');
 
     const user = await this.prisma.user.findUnique({
-      where:  { id: userId },
+      where: { id: userId },
       select: { points: true, unlockedItems: true },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -168,11 +168,12 @@ export class UsersCommandService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data:  {
-        points:        { decrement: catalogItem.price },
+      data: {
+        points: { decrement: catalogItem.price },
         unlockedItems: { push: itemId },
       },
     });
+    await this.redis.del(profileKey(userId), blackMarketKey(userId));
   }
 
   async equipItem(
@@ -186,7 +187,7 @@ export class UsersCommandService {
     if (!catalogItem) throw new BadReq('Item does not exist for this category');
 
     const user = await this.prisma.user.findUnique({
-      where:  { id: userId },
+      where: { id: userId },
       select: { unlockedItems: true },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -201,13 +202,14 @@ export class UsersCommandService {
 
     const fieldMap: Record<ItemCategory, 'equippedChassis' | 'equippedPaint' | 'equippedTracer'> = {
       chassis: 'equippedChassis',
-      paint:   'equippedPaint',
-      tracer:  'equippedTracer',
+      paint: 'equippedPaint',
+      tracer: 'equippedTracer',
     };
 
     await this.prisma.user.update({
       where: { id: userId },
-      data:  { [fieldMap[category]]: itemId },
+      data: { [fieldMap[category]]: itemId },
     });
+    await this.redis.del(profileKey(userId), loadoutKey(userId), blackMarketKey(userId), combatLoadoutKey(userId));
   }
 }

@@ -6,6 +6,10 @@ import { AuthenticatedSocket } from './types';
 import { MatchEngine } from '../match.engine';
 import * as crypto from 'crypto';
 import { BLACK_MARKET_ITEMS } from '../../users/black-market.constants';
+import { combatLoadoutKey } from '../../users/types';
+
+const LOBBY_CACHE_KEY = 'lobby:matches';
+const LOBBY_CACHE_TTL = 120;
 
 export class MatchLobbyManager {
   constructor(
@@ -14,6 +18,12 @@ export class MatchLobbyManager {
     private prisma: PrismaService,
     private redis: RedisService,
   ) { }
+
+  private async publishLobbySnapshot(): Promise<void> {
+    const snapshot = Array.from(this.state.lobbyMatches.values());
+    await this.redis.set(LOBBY_CACHE_KEY, snapshot, LOBBY_CACHE_TTL);
+    this.server.emit('lobbyUpdated', snapshot);
+  }
 
   async handleJoinMatch(
     client: AuthenticatedSocket,
@@ -45,7 +55,12 @@ export class MatchLobbyManager {
       }
       scriptContent = script.content;
 
-      const user = await this.prisma.user.findUnique({
+      const cachedLoadout = await this.redis.get<{
+        equippedChassis: string;
+        equippedPaint: string;
+        equippedTracer: string;
+      }>(combatLoadoutKey(client.userId));
+      const user = cachedLoadout ?? await this.prisma.user.findUnique({
         where: { id: client.userId },
         select: { equippedChassis: true, equippedPaint: true, equippedTracer: true },
       });
@@ -82,13 +97,13 @@ export class MatchLobbyManager {
         mode === 'RACING'
           ? [playerToken]
           : mode === 'TRAINING_SOLO'
-          ? [
+            ? [
               playerToken,
               { id: 'dummy-1', script: '', color: '#ef4444', model: 'dummy' },
               { id: 'dummy-2', script: '', color: '#eab308', model: 'dummy' },
               { id: 'dummy-3', script: '', color: '#3b82f6', model: 'dummy' },
             ]
-          : [playerToken, { id: 'bot-2', script: '', color: '#ff00ff', model: 'unit-02' }];
+            : [playerToken, { id: 'bot-2', script: '', color: '#ff00ff', model: 'unit-02' }];
 
       match = new MatchEngine(data.matchId, initialPlayers, {
         mode,
@@ -121,7 +136,7 @@ export class MatchLobbyManager {
         match.removePlayer('bot-2');
         match.addPlayer({ id: client.userId!, script: scriptContent, color: selectedColor, model: selectedRobotId });
         this.state.lobbyMatches.delete(data.matchId);
-        this.server.emit('lobbyUpdated', Array.from(this.state.lobbyMatches.values()));
+        await this.publishLobbySnapshot();
       } else {
         const isReconnect = match.getState().robots.some(r => r.id === client.userId);
         if (!isReconnect) {
@@ -183,11 +198,18 @@ export class MatchLobbyManager {
       createdAt: Date.now(),
     });
     client.emit('matchCreated', { matchId });
-    this.server.emit('lobbyUpdated', Array.from(this.state.lobbyMatches.values()));
+    await this.publishLobbySnapshot();
   }
 
-  handleGetLobby(client: AuthenticatedSocket) {
-    client.emit('lobbyList', Array.from(this.state.lobbyMatches.values()));
+  async handleGetLobby(client: AuthenticatedSocket) {
+    const localLobby = Array.from(this.state.lobbyMatches.values());
+    if (localLobby.length > 0) {
+      client.emit('lobbyList', localLobby);
+      return;
+    }
+
+    const cachedLobby = await this.redis.get<unknown[]>(LOBBY_CACHE_KEY);
+    client.emit('lobbyList', cachedLobby ?? []);
   }
 
   handleResetGame(client: AuthenticatedSocket, data: { matchId: string }) {

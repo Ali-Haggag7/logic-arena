@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import { PrismaService } from '../../../common/prisma.service';
+import { RedisService } from '../../../common/redis.service';
 import { MatchState } from './match.state';
 import { captureReplaySnapshot } from './match.snapshot';
 import { checkWinCondition } from './match.win-condition';
@@ -13,7 +14,8 @@ export class MatchLoopManager {
     private state: MatchState,
     private server: Server,
     private prisma: PrismaService,
-  ) {}
+    private redis?: RedisService,
+  ) { }
 
   startLoop() {
     if (this.timer) return;
@@ -51,6 +53,7 @@ export class MatchLoopManager {
             this.state,
             this.prisma,
             match,
+            this.redis,
           );
 
           match.stop();

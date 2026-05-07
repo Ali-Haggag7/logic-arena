@@ -1,13 +1,16 @@
 import { PrismaService } from '../../../common/prisma.service';
 import { MatchState } from './match.state';
 import { MatchEngine } from '../match.engine';
-import { CombatStats } from '../../users/types';
+import { CombatStats, profileKey } from '../../users/types';
 import { Prisma } from '@prisma/client';
+import { RedisService } from '../../../common/redis.service';
+
+const LEADERBOARD_CACHE_KEY = 'leaderboard:snapshot';
 
 // Maximum reference values used to normalize each raw metric to 0-100
-const MAX_DAMAGE_PER_MATCH  = 200;  // theoretical max damage a robot deals
-const MAX_ENERGY_RATE       = 3;    // max energy commands-per-second
-const MAX_EFFICIENCY        = 25;   // efficiency score ceiling (damage/energy * 100)
+const MAX_DAMAGE_PER_MATCH = 200;  // theoretical max damage a robot deals
+const MAX_ENERGY_RATE = 3;    // max energy commands-per-second
+const MAX_EFFICIENCY = 25;   // efficiency score ceiling (damage/energy * 100)
 
 function clamp(v: number, lo = 0, hi = 100): number {
   return Math.max(lo, Math.min(hi, v));
@@ -34,8 +37,8 @@ function computeCombatStats(
   durationSecs: number,
 ): CombatStats {
   const energyConsumed = robot.totalEnergyConsumed ?? 0;
-  const damageDealt    = robot.totalDamageDealt    ?? 0;
-  const finalHealth    = robot.health;
+  const damageDealt = robot.totalDamageDealt ?? 0;
+  const finalHealth = robot.health;
 
   // Efficiency: how much damage per energy unit (normalized)
   const efficiency = normalize(effScore, MAX_EFFICIENCY);
@@ -96,6 +99,7 @@ export async function persistMatchResults(
   matchState: MatchState,
   prisma: PrismaService,
   matchRef: MatchEngine,
+  redis?: RedisService,
 ): Promise<void> {
   const playerIds = state.robots
     .map((r) => r.id)
@@ -104,7 +108,7 @@ export async function persistMatchResults(
 
   if (playerIds.length === 0) return;
 
-  const snapshots  = matchState.replaySnapshots.get(matchId) || [];
+  const snapshots = matchState.replaySnapshots.get(matchId) || [];
   const durationMs = Date.now() - startTime;
   const durationSecs = Math.max(1, Math.floor(durationMs / 1000));
 
@@ -147,7 +151,7 @@ export async function persistMatchResults(
   });
 
   for (let i = 0; i < aliveAtEnd.length; i++) {
-    const robot    = aliveAtEnd[i];
+    const robot = aliveAtEnd[i];
     const scriptId = playerScriptMap.get(robot.id);
     if (!scriptId) continue;
 
@@ -175,7 +179,7 @@ export async function persistMatchResults(
       select: { combatStats: true },
     });
     const existingStats = existingUser?.combatStats as CombatStats | null;
-    const mergedStats   = mergeStats(existingStats, newStats);
+    const mergedStats = mergeStats(existingStats, newStats);
 
     await prisma.user.update({
       where: { id: robot.id },
@@ -188,5 +192,9 @@ export async function persistMatchResults(
       where: { id: winner.id },
       data: { rank: { increment: 10 } },
     });
+  }
+
+  if (redis) {
+    await redis.del(LEADERBOARD_CACHE_KEY, ...playerIds.map((id) => profileKey(id)));
   }
 }

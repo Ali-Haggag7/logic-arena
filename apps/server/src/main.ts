@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ValidationPipe } from '@nestjs/common';
 import express from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
+import { RedisIoAdapter } from './common/redis-io.adapter';
 
 // ── Strict CORS whitelist ────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -111,7 +111,9 @@ async function bootstrap() {
   });
 
   // ── WebSocket ──────────────────────────────────────────────────────────────
-  app.useWebSocketAdapter(new IoAdapter(app));
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.setGlobalPrefix('api');
 
