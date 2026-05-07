@@ -4,9 +4,10 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../common/prisma.service';
 import { RedisService } from '../../common/redis.service';
 import { CloudinaryService } from '../../common/cloudinary.service';
-import { ALLOWED_ROBOT_IDS, COLOR_REGEX, profileKey, loadoutKey, preferencesKey, blackMarketKey, combatLoadoutKey, BCRYPT_ROUNDS, PRISMA_UNIQUE_VIOLATION, ArenaPreferences, NotificationSettings } from './types';
+import { ALLOWED_ROBOT_IDS, COLOR_REGEX, profileKey, loadoutKey, preferencesKey, blackMarketKey, combatLoadoutKey, leaderboardSnapshotKey, leaderboardRankKey, BCRYPT_ROUNDS, PRISMA_UNIQUE_VIOLATION, ArenaPreferences, NotificationSettings } from './types';
 import { AUTH_COOKIE_MAX_AGE_SECONDS, sessionVersionKey } from '../auth/types';
 import { BLACK_MARKET_ITEMS, DEFAULT_UNLOCKED_ITEMS, ItemCategory } from './black-market.constants';
+import { campaignVersionKey } from '../campaign/campaign.service';
 
 @Injectable()
 export class UsersCommandService {
@@ -15,6 +16,20 @@ export class UsersCommandService {
     private readonly redis: RedisService,
     private readonly cloudinary: CloudinaryService,
   ) { }
+
+  private async invalidateUserCaches(userId: string): Promise<void> {
+    await this.redis.del(
+      profileKey(userId),
+      loadoutKey(userId),
+      preferencesKey(userId),
+      blackMarketKey(userId),
+      combatLoadoutKey(userId),
+    );
+  }
+
+  private async invalidateLeaderboardCaches(): Promise<void> {
+    await this.redis.del(leaderboardSnapshotKey, leaderboardRankKey);
+  }
 
   async updateLoadout(userId: string, robotId: string, color: string): Promise<void> {
     if (!ALLOWED_ROBOT_IDS.includes(robotId)) {
@@ -43,6 +58,7 @@ export class UsersCommandService {
         data,
       });
       await this.redis.del(profileKey(userId), loadoutKey(userId));
+      await this.invalidateLeaderboardCaches();
     } catch (err: unknown) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -78,6 +94,7 @@ export class UsersCommandService {
       data: { passwordHash: newHash },
     });
     await this.redis.incr(sessionVersionKey(userId), AUTH_COOKIE_MAX_AGE_SECONDS);
+    await this.redis.del(profileKey(userId));
   }
 
   async updateArenaPreferences(
@@ -130,7 +147,12 @@ export class UsersCommandService {
     }
 
     await this.prisma.user.delete({ where: { id: userId } });
-    await this.redis.del(profileKey(userId), loadoutKey(userId));
+    await this.invalidateUserCaches(userId);
+    await this.invalidateLeaderboardCaches();
+    await this.redis.del(sessionVersionKey(userId));
+    await this.redis.delPattern(`script:${userId}:*`);
+    await this.redis.del(`scripts:list:${userId}`);
+    await this.redis.del(campaignVersionKey(userId));
   }
 
   // ── Avatar Upload ──────────────────────────────────────────────────────────
@@ -142,6 +164,7 @@ export class UsersCommandService {
       data: { avatarUrl: url },
     });
     await this.redis.del(profileKey(userId));
+    await this.invalidateLeaderboardCaches();
     return url;
   }
 
@@ -184,7 +207,7 @@ export class UsersCommandService {
       throw new ConflictException('Item purchase could not be completed — retry with latest wallet state');
     }
 
-    await this.redis.del(profileKey(userId), blackMarketKey(userId));
+    await this.redis.del(profileKey(userId), blackMarketKey(userId), combatLoadoutKey(userId));
   }
 
   async equipItem(

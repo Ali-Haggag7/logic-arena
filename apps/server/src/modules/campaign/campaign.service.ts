@@ -32,9 +32,10 @@ export const ERR_USER_NOT_FOUND = 'USER_NOT_FOUND';
 export const ERR_ALREADY_CLAIMED = 'ALREADY_CLAIMED';
 
 const CAMPAIGN_CACHE_TTL = 120;
-const campaignProgressKey = (userId: string) => `campaign:progress:${userId}`;
-const campaignTabsKey = (userId: string) => `campaign:tabs:${userId}`;
-const campaignLevelKey = (userId: string, levelId: string) => `campaign:level:${userId}:${levelId}`;
+export const campaignVersionKey = (userId: string) => `campaign:version:${userId}`;
+export const campaignProgressKey = (userId: string, version: number) => `campaign:v${version}:progress:${userId}`;
+export const campaignTabsKey = (userId: string, version: number) => `campaign:v${version}:tabs:${userId}`;
+export const campaignLevelKey = (userId: string, levelId: string, version: number) => `campaign:v${version}:level:${userId}:${levelId}`;
 
 @Injectable()
 export class CampaignService {
@@ -64,7 +65,8 @@ export class CampaignService {
   }
 
   private async getCompletedLevelIds(userId: string): Promise<string[]> {
-    const cached = await this.redis.get<string[]>(campaignProgressKey(userId));
+    const version = await this.getCampaignCacheVersion(userId);
+    const cached = await this.redis.get<string[]>(campaignProgressKey(userId, version));
     if (cached) return cached;
 
     const user = await this.prisma.user.findUnique({
@@ -72,20 +74,24 @@ export class CampaignService {
       select: { completedCampaignLevels: true },
     });
     const completed = user?.completedCampaignLevels ?? [];
-    await this.redis.set(campaignProgressKey(userId), completed, CAMPAIGN_CACHE_TTL);
+    await this.redis.set(campaignProgressKey(userId, version), completed, CAMPAIGN_CACHE_TTL);
     return completed;
   }
 
+  private async getCampaignCacheVersion(userId: string): Promise<number> {
+    return (await this.redis.get<number>(campaignVersionKey(userId))) ?? 0;
+  }
+
   private async invalidateUserCampaignCache(userId: string): Promise<void> {
-    await this.redis.del(campaignProgressKey(userId), campaignTabsKey(userId));
-    await this.redis.delPattern(campaignLevelKey(userId, '*'));
+    await this.redis.incr(campaignVersionKey(userId), CAMPAIGN_CACHE_TTL);
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
 
   /** Returns all tabs with per-level unlock/completion state for the user. */
   async getTabsWithLevels(userId: string): Promise<TabWithLevels[]> {
-    const cached = await this.redis.get<TabWithLevels[]>(campaignTabsKey(userId));
+    const version = await this.getCampaignCacheVersion(userId);
+    const cached = await this.redis.get<TabWithLevels[]>(campaignTabsKey(userId, version));
     if (cached) return cached;
 
     const completed = await this.getCompletedLevelIds(userId);
@@ -96,13 +102,14 @@ export class CampaignService {
         this.buildLevelResponse(level, completed),
       ),
     }));
-    await this.redis.set(campaignTabsKey(userId), tabs, CAMPAIGN_CACHE_TTL);
+    await this.redis.set(campaignTabsKey(userId, version), tabs, CAMPAIGN_CACHE_TTL);
     return tabs;
   }
 
   /** Returns a single level's public info (no enemy script). Throws if locked. */
   async getLevel(userId: string, levelId: string): Promise<LevelResponse> {
-    const cached = await this.redis.get<LevelResponse>(campaignLevelKey(userId, levelId));
+    const version = await this.getCampaignCacheVersion(userId);
+    const cached = await this.redis.get<LevelResponse>(campaignLevelKey(userId, levelId, version));
     if (cached) return cached;
 
     const level = getLevelById(levelId);
@@ -113,7 +120,7 @@ export class CampaignService {
     if (!this.isLevelUnlocked(level, completed)) throw new Error(ERR_LEVEL_LOCKED);
 
     const response = this.buildLevelResponse(level, completed);
-    await this.redis.set(campaignLevelKey(userId, levelId), response, CAMPAIGN_CACHE_TTL);
+    await this.redis.set(campaignLevelKey(userId, levelId, version), response, CAMPAIGN_CACHE_TTL);
     return response;
   }
 

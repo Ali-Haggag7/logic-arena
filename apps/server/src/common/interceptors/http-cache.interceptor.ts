@@ -9,6 +9,9 @@ import { RedisService } from '../redis.service';
 import { AUTH_COOKIE_NAME } from '../../modules/auth/types';
 
 const CACHE_TTL = 60; // seconds — public non-user-specific GET responses
+const PUBLIC_CACHEABLE_PATHS = new Set([
+  '/users/leaderboard',
+]);
 
 type HeaderValue = string | string[] | undefined;
 
@@ -20,6 +23,10 @@ function headerIncludesAuthCookie(cookieHeader: HeaderValue): boolean {
     .split(';')
     .map((cookie) => cookie.trim())
     .some((cookie) => cookie.startsWith(`${AUTH_COOKIE_NAME}=`));
+}
+
+function getPathname(url: string): string {
+  return url.split('?')[0] || '/';
 }
 
 /**
@@ -46,9 +53,10 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     const hasAuthorizationHeader = Boolean(req.headers['authorization']);
     const hasAuthCookie = headerIncludesAuthCookie(req.headers['cookie']);
+    const isExplicitlyCacheable = PUBLIC_CACHEABLE_PATHS.has(getPathname(req.url));
 
     // Only cache public GET — skip auth-gated, cookie-authenticated, and mutating requests
-    if (req.method !== 'GET' || hasAuthorizationHeader || hasAuthCookie) {
+    if (req.method !== 'GET' || hasAuthorizationHeader || hasAuthCookie || !isExplicitlyCacheable) {
       res.setHeader('X-Cache', 'BYPASS');
       return next.handle();
     }

@@ -7,6 +7,8 @@ export const loadoutKey = (id: string) => `user:loadout:${id}`;
 export const preferencesKey = (id: string) => `user:preferences:${id}`;
 export const blackMarketKey = (id: string) => `user:black-market:${id}`;
 export const combatLoadoutKey = (id: string) => `user:combat-loadout:${id}`;
+export const leaderboardSnapshotKey = 'leaderboard:snapshot';
+export const leaderboardRankKey = 'leaderboard:rank';
 
 export const BCRYPT_ROUNDS = 12;
 export const PRISMA_UNIQUE_VIOLATION = 'P2002';

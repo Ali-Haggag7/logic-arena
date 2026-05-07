@@ -25,6 +25,8 @@ import {
   LeaderboardEntry,
   LEADERBOARD_LIMIT,
   LEADERBOARD_TTL,
+  leaderboardRankKey,
+  leaderboardSnapshotKey,
 } from './types';
 import {
   EquipItemDto,
@@ -43,8 +45,6 @@ interface AuthenticatedRequest {
   user: { sub: string };
 }
 
-const LEADERBOARD_CACHE_KEY = 'leaderboard:snapshot';
-const LEADERBOARD_ZSET_KEY = 'leaderboard:rank';
 const replayKey = (matchId: string) => `replay:${matchId}`;
 const REPLAY_TTL = 3_600;
 
@@ -65,12 +65,12 @@ export class UsersController {
   @Get('leaderboard')
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     // 1. Serve from cache if available
-    const cached = await this.redis.get<LeaderboardEntry[]>(LEADERBOARD_CACHE_KEY);
+    const cached = await this.redis.get<LeaderboardEntry[]>(leaderboardSnapshotKey);
     if (cached) return cached;
 
     // 1b. Prefer Redis sorted-set ranking when already warm
     if (this.redis.healthy) {
-      const ranked = await this.redis.getClient().zrevrange(LEADERBOARD_ZSET_KEY, 0, LEADERBOARD_LIMIT - 1, 'WITHSCORES');
+      const ranked = await this.redis.getClient().zrevrange(leaderboardRankKey, 0, LEADERBOARD_LIMIT - 1, 'WITHSCORES');
       const ids = ranked.filter((_, i) => i % 2 === 0);
       if (ids.length > 0) {
         const users = await this.prisma.user.findMany({
@@ -93,7 +93,7 @@ export class UsersController {
           .filter((entry): entry is LeaderboardEntry => entry !== null);
 
         if (result.length > 0) {
-          await this.redis.set(LEADERBOARD_CACHE_KEY, result, LEADERBOARD_TTL);
+          await this.redis.set(leaderboardSnapshotKey, result, LEADERBOARD_TTL);
           return result;
         }
       }
@@ -123,10 +123,10 @@ export class UsersController {
     }));
 
     // 4. Cache the assembled result for LEADERBOARD_TTL seconds
-    await this.redis.set(LEADERBOARD_CACHE_KEY, result, LEADERBOARD_TTL);
+    await this.redis.set(leaderboardSnapshotKey, result, LEADERBOARD_TTL);
     if (this.redis.healthy && users.length > 0) {
       await this.redis.getClient().zadd(
-        LEADERBOARD_ZSET_KEY,
+        leaderboardRankKey,
         ...users.flatMap((user) => [String(user.rank), user.id]),
       );
     }
