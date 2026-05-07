@@ -1,4 +1,18 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   server:
     build:
       context: .
@@ -10,6 +24,12 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_TLS: "false"
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://localhost:3001/health" ]
@@ -35,3 +55,6 @@ services:
       PORT: 3000
       HOSTNAME: "0.0.0.0"
     restart: unless-stopped
+
+volumes:
+  redis-data:

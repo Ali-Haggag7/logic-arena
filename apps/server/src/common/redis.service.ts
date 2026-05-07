@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
 
+function isRedisTlsEnabled(): boolean {
+  return ['1', 'true', 'yes'].includes((process.env.REDIS_TLS ?? '').toLowerCase());
+}
+
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
@@ -8,12 +12,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private isReady = false;
 
   onModuleInit() {
+    const useTls = isRedisTlsEnabled();
+
     this.client = new Redis({
       host: process.env.REDIS_HOST ?? '127.0.0.1',
       port: Number(process.env.REDIS_PORT) || 6379,
       password: process.env.REDIS_PASSWORD,
       family: 4, // Force IPv4 to prevent Node DNS timeouts
-      tls: {}, // explicitly pass tls as requested
+      ...(useTls ? { tls: {} } : {}),
       // ── Resilience ────────────────────────────────────────────────────────
       lazyConnect: true,        // don't block app startup
       enableReadyCheck: true,
