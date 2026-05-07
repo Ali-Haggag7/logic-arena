@@ -1,5 +1,5 @@
 import React from "react";
-import { Crown, Swords } from "lucide-react";
+import { Crown, Eye, Swords } from "lucide-react";
 import { LeaderboardSkeleton } from "./LeaderboardSkeleton";
 import { OnlineDot } from "./ui/OnlineDot";
 import { YouBadge } from "./ui/YouBadge";
@@ -65,11 +65,7 @@ export function MobileList({
 
               {/* Action Bar */}
               <div className="w-full">
-                {isSelf ? (
-                  <div className="w-full h-[44px] flex items-center justify-center text-accent/30 font-bold tracking-[0.15em] text-[10px] uppercase">
-                    YOUR POSITION
-                  </div>
-                ) : isGuest ? (
+                {isSelf ? null : isGuest ? (
                   <button
                     type="button"
                     aria-label="Log in to challenge this player"
@@ -85,7 +81,7 @@ export function MobileList({
                     onClick={() => onSpectate(user.inMatchId!)}
                     className="w-full h-[44px] flex items-center justify-center gap-2 bg-transparent border border-violet-500/50 text-violet-300 font-bold tracking-[0.15em] text-[10px] rounded-lg transition-transform duration-150 active:scale-95 uppercase hover:bg-violet-900/20"
                   >
-                    <span aria-hidden="true">👁️</span>
+                    <Eye size={13} aria-hidden="true" />
                     WATCH LIVE
                   </button>
                 ) : user.isOnline ? (

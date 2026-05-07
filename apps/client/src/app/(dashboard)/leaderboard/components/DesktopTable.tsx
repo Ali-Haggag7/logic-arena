@@ -1,5 +1,5 @@
 import React from "react";
-import { Crown } from "lucide-react";
+import { Crown, Eye } from "lucide-react";
 import { LeaderboardSkeleton } from "./LeaderboardSkeleton";
 import { OnlineDot } from "./ui/OnlineDot";
 import { YouBadge } from "./ui/YouBadge";
@@ -153,7 +153,7 @@ export function DesktopTable({
                             onClick={() => onSpectate(user.inMatchId!)}
                             className="text-[10px] tracking-[0.15em] px-3 py-1 rounded border border-violet-500/50 bg-violet-900/20 hover:bg-violet-500/25 text-violet-300 hover:text-violet-100 transition-all whitespace-nowrap flex items-center gap-1"
                           >
-                            <span aria-hidden="true">👁️</span> WATCH
+                            <Eye size={12} aria-hidden="true" /> WATCH
                           </button>
                         ) : user.isOnline ? (
                           <button

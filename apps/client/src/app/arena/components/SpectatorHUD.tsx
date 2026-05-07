@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { Eye, LogOut } from "lucide-react";
 import { Socket } from "socket.io-client";
 
 interface SpectatorHUDProps {
@@ -41,12 +41,11 @@ export function SpectatorHUD({
         aria-live="polite"
         aria-label={`${spectatorCount} spectator${spectatorCount !== 1 ? "s" : ""} watching`}
       >
-        <span
-          className="text-base leading-none animate-pulse"
+        <Eye
+          size={14}
+          className="animate-pulse"
           aria-hidden="true"
-        >
-          👁️
-        </span>
+        />
         <span>{spectatorCount} WATCHING</span>
         <span
           className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"
