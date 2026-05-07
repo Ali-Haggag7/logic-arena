@@ -18,6 +18,7 @@ import { DesktopHUD } from './components/DesktopHUD';
 import { ArenaStyles } from './components/ArenaStyles';
 import { TrainingHUD } from './components/TrainingMode/TrainingHUD';
 import { RacingHUD } from './components/TrainingMode/RacingHUD';
+import { SpectatorHUD } from './components/SpectatorHUD';
 
 interface RobotScript {
   id: string;
@@ -39,13 +40,14 @@ const ArenaPageContent = () => {
   const searchParams = useSearchParams();
   const urlScriptId = searchParams.get('scriptId');
   const urlMode = searchParams.get('mode') || 'COMBAT';
+  const isSpectator = searchParams.get('spectate') === 'true';
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const isPortrait = useMediaQuery("(orientation: portrait)");
   const fps = useFPS();
 
   const [resolvedScriptId, setResolvedScriptId] = useState<string | null>(urlScriptId);
   const [script, setScript] = useState<RobotScript | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isSpectator);
   const [error, setError] = useState<string | null>(null);
   const [localRobotFile, setLocalRobotFile] = useState('/robots/robot.glb');
   const [localRobotColor, setLocalRobotColor] = useState('#22d3ee');
@@ -59,7 +61,8 @@ const ArenaPageContent = () => {
     fogEnabled, setFogEnabled,
     socketUserId,
     firedTracer, speechBubble,
-  } = useGameState(resolvedScriptId, urlMode);
+    spectatorCount,
+  } = useGameState(isSpectator ? null : resolvedScriptId, urlMode, isSpectator);
 
   const displayMode = serverConfirmedMode;
   const projectileAnimRef = useRef<number | null>(null);
@@ -70,33 +73,34 @@ const ArenaPageContent = () => {
     return () => { if (projectileAnimRef.current) cancelAnimationFrame(projectileAnimRef.current); };
   }, []);
 
+  // Load arena preferences (skip for spectators — they don't have a robot)
   useEffect(() => {
+    if (isSpectator) return;
     apiClient.get('/users/profile').then((res) => {
-      // 1. Visual robot model & color from Garage loadout
       const file = ROBOT_FILES[res.data.selectedRobotId] ?? '/robots/robot.glb';
       setLocalRobotFile(file);
       if (res.data.selectedColor) setLocalRobotColor(res.data.selectedColor);
 
-      // 2. Arena preferences — sync soundFx and graphicsQuality from DB
       const prefs = res.data.arenaPreferences;
       if (prefs) {
         setSoundFx(prefs.soundFx !== false);
         if (prefs.graphicsQuality) setGraphicsQuality(prefs.graphicsQuality);
-        // If no robot was already selected via URL/garage, honour arenaPreferences.defaultRobot
         if (!res.data.selectedRobotId && prefs.defaultRobot) {
           setLocalRobotFile(ROBOT_FILES[prefs.defaultRobot] ?? '/robots/robot.glb');
         }
       }
     }).catch(() => { });
-  }, []);
+  }, [isSpectator]);
 
+  // Script resolution (skipped for spectators)
   useEffect(() => {
+    if (isSpectator) return;
+
     let isMounted = true;
 
     const resolveAndFetch = async () => {
       let targetScriptId = resolvedScriptId;
 
-      // 1. Try to resolve if missing
       if (!targetScriptId) {
         const stored = getSelectedScriptId();
         if (stored) {
@@ -140,7 +144,6 @@ const ArenaPageContent = () => {
         }
       }
 
-      // 2. Fetch the specific script
       try {
         const response = await apiClient.get(`/scripts/${targetScriptId}`);
         if (isMounted) {
@@ -150,7 +153,6 @@ const ArenaPageContent = () => {
       } catch (err: unknown) {
         const axiosError = err as { response?: { status?: number, data?: { message?: string } }, message?: string };
 
-        // GUEST MODE: If unauthorized or script not found, provide a default training script
         if (axiosError.response?.status === 401 || !getAuthUserId()) {
           if (isMounted) {
             setResolvedScriptId('guest-script');
@@ -164,8 +166,6 @@ const ArenaPageContent = () => {
           return;
         }
 
-        // Self-healing: If the script is invalid, clear the in-memory selection
-        // clear the invalid cache and fallback to the user's first available script.
         setSelectedScriptId(null);
 
         try {
@@ -174,7 +174,7 @@ const ArenaPageContent = () => {
             const fallbackId = res.data[0].id as string;
             setSelectedScriptId(fallbackId);
             if (isMounted) {
-              setResolvedScriptId(fallbackId); // Triggers re-run with valid ID
+              setResolvedScriptId(fallbackId);
             }
           } else {
             if (isMounted) {
@@ -195,7 +195,7 @@ const ArenaPageContent = () => {
     resolveAndFetch();
 
     return () => { isMounted = false; };
-  }, [router, resolvedScriptId]);
+  }, [router, resolvedScriptId, isSpectator]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-cyan-500 font-mono tracking-widest animate-pulse">Loading Arena...</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center bg-black text-red-500 font-mono">ERROR 404: {error}</div>;
@@ -207,10 +207,8 @@ const ArenaPageContent = () => {
   const activeUserId = getAuthUserId() || socketUserId;
   const matchId = searchParams.get('matchId') || 'default-match';
 
-  // Determine if this is a PvP match
   const isPvP = availableRobots.length >= 2 && !availableRobots.some(id => id.toLowerCase().includes('bot'));
 
-  // If PvP, lock the user to their own robot so they cannot switch to the opponent
   const filteredAvailableRobots = isPvP && activeUserId && availableRobots.includes(activeUserId)
     ? [activeUserId]
     : availableRobots;
@@ -221,7 +219,33 @@ const ArenaPageContent = () => {
 
       {isMobile && isPortrait && <OrientationLock />}
 
-      {matchResult && (
+      {/* Spectator-only overlays */}
+      {isSpectator && (
+        <SpectatorHUD
+          spectatorCount={spectatorCount}
+          socket={socket}
+          matchId={matchId}
+        />
+      )}
+
+      {/* Spectator count visible to players too (top-center, subtle) */}
+      {!isSpectator && spectatorCount > 0 && (
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10px] font-black tracking-widest uppercase select-none"
+          style={{
+            background: 'rgba(109,40,217,0.15)',
+            border: '1px solid rgba(167,139,250,0.25)',
+            backdropFilter: 'blur(8px)',
+            color: 'rgba(196,181,253,0.7)',
+          }}
+          aria-label={`${spectatorCount} spectator${spectatorCount !== 1 ? 's' : ''} watching`}
+        >
+          <span aria-hidden="true">👁️</span>
+          <span>{spectatorCount}</span>
+        </div>
+      )}
+
+      {matchResult && !isSpectator && (
         <WinnerScreen
           matchResult={matchResult}
           currentUserId={activeUserId}
@@ -245,62 +269,67 @@ const ArenaPageContent = () => {
         />
       </div>
 
-      {displayMode === 'TRAINING_SOLO' && (
-        <TrainingHUD
-          playerRobot={robots.find(r => r.id === activeUserId)}
-          shotsFired={trainingStats.shotsFired}
-          dummiesDestroyed={trainingStats.dummiesDestroyed}
-          startTime={trainingStats.startTime}
-          isMobile={isMobile}
-          socket={socket}
-          dummies={robots.filter(r => r.id.startsWith('dummy-'))}
-        />
-      )}
-
-      {displayMode === 'RACING' && (
-        <RacingHUD
-          playerRobot={robots.find(r => r.id === activeUserId)}
-          startTime={trainingStats.startTime}
-          isMobile={isMobile}
-        />
-      )}
-
-      {isMobile ? (
+      {/* Player-only HUD elements — hidden for spectators */}
+      {!isSpectator && (
         <>
-          <MobileTopRightHUD
-            fps={fps}
-            fogEnabled={fogEnabled}
-            setFogEnabled={setFogEnabled}
-            socket={socket}
-            isConnected={isConnected}
-            robots={robots}
-            projectiles={projectiles}
-            displayMode={displayMode}
-          />
-          <MobileControls
-            socket={socket}
-            selectedRobotId={selectedRobotId}
-            availableRobots={filteredAvailableRobots}
-            setSelectedRobotId={setSelectedRobotId}
-            isMobile={isMobile}
-          />
+          {displayMode === 'TRAINING_SOLO' && (
+            <TrainingHUD
+              playerRobot={robots.find(r => r.id === activeUserId)}
+              shotsFired={trainingStats.shotsFired}
+              dummiesDestroyed={trainingStats.dummiesDestroyed}
+              startTime={trainingStats.startTime}
+              isMobile={isMobile}
+              socket={socket}
+              dummies={robots.filter(r => r.id.startsWith('dummy-'))}
+            />
+          )}
+
+          {displayMode === 'RACING' && (
+            <RacingHUD
+              playerRobot={robots.find(r => r.id === activeUserId)}
+              startTime={trainingStats.startTime}
+              isMobile={isMobile}
+            />
+          )}
+
+          {isMobile ? (
+            <>
+              <MobileTopRightHUD
+                fps={fps}
+                fogEnabled={fogEnabled}
+                setFogEnabled={setFogEnabled}
+                socket={socket}
+                isConnected={isConnected}
+                robots={robots}
+                projectiles={projectiles}
+                displayMode={displayMode}
+              />
+              <MobileControls
+                socket={socket}
+                selectedRobotId={selectedRobotId}
+                availableRobots={filteredAvailableRobots}
+                setSelectedRobotId={setSelectedRobotId}
+                isMobile={isMobile}
+              />
+            </>
+          ) : (
+            <DesktopHUD
+              displayMode={displayMode}
+              scriptTitle={script?.title}
+              socket={socket}
+              fogEnabled={fogEnabled}
+              setFogEnabled={setFogEnabled}
+              selectedRobotId={selectedRobotId}
+              availableRobots={filteredAvailableRobots}
+              setSelectedRobotId={setSelectedRobotId}
+              isMobile={isMobile}
+              robots={robots}
+              projectiles={projectiles}
+              isConnected={isConnected}
+              isPvP={isPvP}
+            />
+          )}
         </>
-      ) : (
-        <DesktopHUD
-          displayMode={displayMode}
-          scriptTitle={script?.title}
-          socket={socket}
-          fogEnabled={fogEnabled}
-          setFogEnabled={setFogEnabled}
-          selectedRobotId={selectedRobotId}
-          availableRobots={filteredAvailableRobots}
-          setSelectedRobotId={setSelectedRobotId}
-          isMobile={isMobile}
-          robots={robots}
-          projectiles={projectiles}
-          isConnected={isConnected}
-          isPvP={isPvP}
-        />
       )}
     </div>
   );

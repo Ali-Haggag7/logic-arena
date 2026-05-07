@@ -13,6 +13,7 @@ export function DesktopTable({
   isLoading,
   currentUserId,
   onChallenge,
+  onSpectate,
   isGuest,
 }: LeaderboardViewProps) {
   return (
@@ -144,6 +145,15 @@ export function DesktopTable({
                             className="text-[10px] tracking-[0.15em] px-3 py-1 rounded border border-accent/10 bg-transparent text-accent/20 cursor-not-allowed whitespace-nowrap"
                           >
                             LOGIN TO CHALLENGE
+                          </button>
+                        ) : user.inMatchId ? (
+                          <button
+                            type="button"
+                            aria-label={`Watch ${user.username}'s live match`}
+                            onClick={() => onSpectate(user.inMatchId!)}
+                            className="text-[10px] tracking-[0.15em] px-3 py-1 rounded border border-violet-500/50 bg-violet-900/20 hover:bg-violet-500/25 text-violet-300 hover:text-violet-100 transition-all whitespace-nowrap flex items-center gap-1"
+                          >
+                            <span aria-hidden="true">👁️</span> WATCH
                           </button>
                         ) : user.isOnline ? (
                           <button

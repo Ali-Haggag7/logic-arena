@@ -127,7 +127,7 @@ export class UsersController {
     // 3. Batch all online-presence checks into a single MGET round-trip
     const presenceKeys = users.map((u) => `user:online:${u.id}`);
     const presenceValues: (string | null)[] =
-      presenceKeys.length > 0
+      presenceKeys.length > 0 && this.redis.healthy
         ? await this.redis.getClient().mget(...presenceKeys)
         : [];
 

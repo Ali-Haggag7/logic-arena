@@ -165,7 +165,7 @@ export async function persistMatchResults(
         duration: durationSecs,
         startedAt: new Date(startTime),
         endedAt: new Date(),
-        replayData: snapshots,
+        replayData: snapshots as Prisma.InputJsonValue,
         participants: { connect: playerIds.map((id) => ({ id })) },
       },
       update: {
@@ -174,7 +174,7 @@ export async function persistMatchResults(
         duration: durationSecs,
         startedAt: new Date(startTime),
         endedAt: new Date(),
-        replayData: snapshots,
+        replayData: snapshots as Prisma.InputJsonValue,
         participants: { connect: playerIds.map((id) => ({ id })) },
       },
     });

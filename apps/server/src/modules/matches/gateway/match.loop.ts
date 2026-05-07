@@ -86,7 +86,7 @@ export class MatchLoopManager {
         }
 
         // 3. Emit Delta State
-        const prevState = this.state.lastStateMap.get(matchId);
+        const prevState = this.state.lastStateMap.get(matchId) as Parameters<typeof computeDeltaDiff>[1];
         const delta = computeDeltaDiff(state, prevState);
 
         const hasChanges =

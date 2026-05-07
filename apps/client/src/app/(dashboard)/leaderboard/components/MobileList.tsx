@@ -11,6 +11,7 @@ export function MobileList({
   isLoading,
   currentUserId,
   onChallenge,
+  onSpectate,
   isGuest,
 }: LeaderboardViewProps) {
   return (
@@ -76,6 +77,16 @@ export function MobileList({
                     className="w-full h-[44px] flex items-center justify-center bg-transparent border border-accent/10 text-accent/20 font-bold tracking-[0.15em] text-[10px] rounded-lg cursor-not-allowed uppercase"
                   >
                     LOGIN TO CHALLENGE
+                  </button>
+                ) : user.inMatchId ? (
+                  <button
+                    type="button"
+                    aria-label={`Watch ${user.username}'s live match`}
+                    onClick={() => onSpectate(user.inMatchId!)}
+                    className="w-full h-[44px] flex items-center justify-center gap-2 bg-transparent border border-violet-500/50 text-violet-300 font-bold tracking-[0.15em] text-[10px] rounded-lg transition-transform duration-150 active:scale-95 uppercase hover:bg-violet-900/20"
+                  >
+                    <span aria-hidden="true">👁️</span>
+                    WATCH LIVE
                   </button>
                 ) : user.isOnline ? (
                   <button

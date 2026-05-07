@@ -5,5 +5,6 @@ export interface LeaderboardViewProps {
   isLoading: boolean;
   currentUserId: string;
   onChallenge: (userId: string) => void;
+  onSpectate: (matchId: string) => void;
   isGuest: boolean;
 }

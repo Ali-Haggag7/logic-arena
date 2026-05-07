@@ -5,6 +5,7 @@ export type AuthenticatedSocket = Socket & {
   userId?: string;
   matchId?: string;
   isGuest?: boolean;
+  isSpectator?: boolean;
 };
 
 export const TRACKED_ROBOT_PROPS = [

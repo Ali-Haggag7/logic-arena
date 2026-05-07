@@ -10,7 +10,11 @@ import {
   FiredTracer, SpeechBubbleState,
 } from '../types';
 
-export const useGameState = (scriptId: string | null, mode: string | null) => {
+export const useGameState = (
+  scriptId: string | null,
+  mode: string | null,
+  isSpectator = false,
+) => {
   const searchParams = useSearchParams();
   const matchIdFromUrl = searchParams.get('matchId');
 
@@ -44,6 +48,9 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
   } | null>(null);
   const [serverConfirmedMode, setServerConfirmedMode] = useState<string>(mode || 'COMBAT');
 
+  // Spectator viewer count — updated by server spectatorCount events
+  const [spectatorCount, setSpectatorCount] = useState<number>(0);
+
   // FOG toggle (spectator/debug)
   const [fogEnabled, setFogEnabled] = useState<boolean>(true);
 
@@ -64,8 +71,10 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
 
     const handleConnect = () => {
       console.log('[Socket] Connected');
-      if (scriptId) {
-        const matchId = matchIdFromUrl || 'default-match';
+      const matchId = matchIdFromUrl || 'default-match';
+      if (isSpectator) {
+        socket.emit('spectate', { matchId });
+      } else if (scriptId) {
         socket.emit('joinMatch', { matchId, scriptId, mode: mode || 'COMBAT' });
       }
     };
@@ -219,6 +228,7 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
     socket.on('matchJoinedInfo', handleMatchJoinedInfo);
     socket.on('queryResult', handleQueryResult);
     socket.on('dummyKilled', handleDummyKilled);
+    socket.on('spectatorCount', (count: number) => setSpectatorCount(count));
 
     if (socket.connected) {
       handleConnect();
@@ -236,11 +246,12 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
       socket.off('matchJoinedInfo', handleMatchJoinedInfo);
       socket.off('queryResult', handleQueryResult);
       socket.off('dummyKilled', handleDummyKilled);
+      socket.off('spectatorCount');
       socket.disconnect();
       if (tracerTimeoutRef.current !== null) window.clearTimeout(tracerTimeoutRef.current);
       if (speechTimeoutRef.current !== null) window.clearTimeout(speechTimeoutRef.current);
     };
-  }, [socket, scriptId, matchIdFromUrl, mode]);
+  }, [socket, scriptId, matchIdFromUrl, mode, isSpectator]);
 
   const availableRobots = useMemo(() => uiState.robots.map(r => r.id), [uiState.robots]);
 
@@ -261,5 +272,6 @@ export const useGameState = (scriptId: string | null, mode: string | null) => {
     fogEnabled,
     setFogEnabled,
     socketUserId,
+    spectatorCount,
   };
 };

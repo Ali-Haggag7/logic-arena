@@ -16,7 +16,7 @@ import { AUTH_COOKIE_NAME, JwtPayload } from '../auth/types';
 
 import { AuthenticatedSocket } from './gateway/types';
 import { MatchState } from './gateway/match.state';
-import { LOBBY_ROOM, MatchLobbyManager } from './gateway/match.lobby';
+import { LOBBY_ROOM, LEADERBOARD_ROOM, MatchLobbyManager } from './gateway/match.lobby';
 import { MatchSocialManager } from './gateway/match.social';
 import { MatchLoopManager } from './gateway/match.loop';
 
@@ -150,6 +150,27 @@ export class MatchGateway
       await this.redisService.del(`user:online:${client.userId}`);
     }
 
+    // Clean up spectator tracking on disconnect
+    if (client.matchId && client.isSpectator) {
+      const spectators = this.state.spectatorSockets.get(client.matchId);
+      if (spectators) {
+        spectators.delete(client.id);
+        this.server.to(client.matchId).emit('spectatorCount', spectators.size);
+      }
+    }
+
+    // If the user was tracked as in-match, mark them idle and notify leaderboard
+    if (client.userId && !client.isSpectator) {
+      const status = this.state.userStatus.get(client.userId);
+      if (status?.status === 'in-match') {
+        this.state.userStatus.set(client.userId, { status: 'idle' });
+        this.server.to(LEADERBOARD_ROOM).emit('userStatusUpdate', {
+          userId: client.userId,
+          status: 'idle',
+        });
+      }
+    }
+
     // Clean up lobby if they hosted one
     // We delay this by 2 seconds. If they navigated to the arena, they will reconnect
     // and `isOnline` will be true again, preventing the lobby match from disappearing.
@@ -252,6 +273,25 @@ export class MatchGateway
     return this.lobbyManager.handleLeaveLobby(client);
   }
 
+  @SubscribeMessage('joinLeaderboard')
+  handleJoinLeaderboard(@ConnectedSocket() client: AuthenticatedSocket) {
+    client.join(LEADERBOARD_ROOM);
+
+    // Send a snapshot of all currently in-match users on join
+    const snapshot: Array<{ userId: string; status: string; matchId?: string }> = [];
+    for (const [userId, status] of this.state.userStatus.entries()) {
+      if (status.status === 'in-match') {
+        snapshot.push({ userId, status: 'in-match', matchId: status.matchId });
+      }
+    }
+    client.emit('userStatusSnapshot', snapshot);
+  }
+
+  @SubscribeMessage('leaveLeaderboard')
+  handleLeaveLeaderboard(@ConnectedSocket() client: AuthenticatedSocket) {
+    client.leave(LEADERBOARD_ROOM);
+  }
+
   @SubscribeMessage('resetGame')
   handleResetGame(
     @ConnectedSocket() client: AuthenticatedSocket,
@@ -284,6 +324,62 @@ export class MatchGateway
   @SubscribeMessage('respawnDummies')
   handleRespawnDummies(@ConnectedSocket() client: AuthenticatedSocket) {
     return this.lobbyManager.handleRespawnDummies(client);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Spectator routing
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage('spectate')
+  handleSpectate(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { matchId: string },
+  ) {
+    if (!data?.matchId) {
+      client.emit('error', { message: 'Invalid matchId.' });
+      return;
+    }
+
+    const match = this.state.matches.get(data.matchId);
+    if (!match) {
+      client.emit('error', { message: 'Match not found or not active.' });
+      return;
+    }
+
+    // Mark socket as spectator so game command handlers can guard against it
+    (client as AuthenticatedSocket & { isSpectator?: boolean }).isSpectator = true;
+    client.matchId = data.matchId;
+    client.join(data.matchId);
+
+    // Track spectator set
+    if (!this.state.spectatorSockets.has(data.matchId)) {
+      this.state.spectatorSockets.set(data.matchId, new Set<string>());
+    }
+    const spectators = this.state.spectatorSockets.get(data.matchId)!;
+    spectators.add(client.id);
+
+    // Send current game state snapshot to the new spectator
+    client.emit('gameState', match.getState());
+
+    // Broadcast updated spectator count to the entire match room
+    this.server.to(data.matchId).emit('spectatorCount', spectators.size);
+
+    client.emit('spectateJoined', { matchId: data.matchId });
+  }
+
+  @SubscribeMessage('leaveSpectate')
+  handleLeaveSpectate(@ConnectedSocket() client: AuthenticatedSocket) {
+    if (!client.matchId) return;
+
+    const spectators = this.state.spectatorSockets.get(client.matchId);
+    if (spectators) {
+      spectators.delete(client.id);
+      this.server.to(client.matchId).emit('spectatorCount', spectators.size);
+    }
+
+    client.leave(client.matchId);
+    (client as AuthenticatedSocket & { isSpectator?: boolean }).isSpectator = false;
+    client.matchId = undefined;
   }
 
   // ---------------------------------------------------------------------------

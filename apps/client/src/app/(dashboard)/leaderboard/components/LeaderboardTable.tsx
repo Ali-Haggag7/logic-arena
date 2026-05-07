@@ -15,6 +15,7 @@ export const LeaderboardTable = memo(function LeaderboardTable({
   isLoading,
   currentUserId,
   onChallenge,
+  onSpectate,
   isGuest,
   isMobile,
 }: LeaderboardTableProps) {
@@ -24,6 +25,7 @@ export const LeaderboardTable = memo(function LeaderboardTable({
       isLoading={isLoading}
       currentUserId={currentUserId}
       onChallenge={onChallenge}
+      onSpectate={onSpectate}
       isGuest={isGuest}
     />
   ) : (
@@ -32,6 +34,7 @@ export const LeaderboardTable = memo(function LeaderboardTable({
       isLoading={isLoading}
       currentUserId={currentUserId}
       onChallenge={onChallenge}
+      onSpectate={onSpectate}
       isGuest={isGuest}
     />
   );

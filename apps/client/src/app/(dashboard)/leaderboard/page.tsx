@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { apiClient } from "../../../lib/api-client";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { io, Socket } from "socket.io-client";
+import { apiClient, API_BASE_URL } from "../../../lib/api-client";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { useSocket } from "../../../context/SocketContext";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
@@ -9,13 +11,18 @@ import type { LeaderboardUser } from "./types";
 import { POLL_INTERVAL_MS } from "./types";
 import { getAuthUserId } from "../../../lib/client-security";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-
+interface UserStatusUpdatePayload {
+  userId: string;
+  status: "idle" | "in-match";
+  matchId?: string;
+}
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 const LeaderboardPage = () => {
+  const router = useRouter();
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -25,9 +32,31 @@ const LeaderboardPage = () => {
   const { sendChallenge } = useSocket();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  // Dedicated socket for leaderboard presence (reuses existing WS connection)
+  const socketRef = useRef<Socket | null>(null);
+
+  // Apply a status update to a single user in the users list
+  const applyStatusUpdate = useCallback(
+    (payload: UserStatusUpdatePayload) => {
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id !== payload.userId) return u;
+          return {
+            ...u,
+            inMatchId:
+              payload.status === "in-match" ? payload.matchId : undefined,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const response = await apiClient.get<LeaderboardUser[]>("/users/leaderboard");
+      const response = await apiClient.get<LeaderboardUser[]>(
+        "/users/leaderboard",
+      );
       setUsers(response.data);
       setHasError(false);
     } catch {
@@ -37,6 +66,45 @@ const LeaderboardPage = () => {
     }
   }, []);
 
+  // Subscribe to leaderboard presence room over WebSocket
+  useEffect(() => {
+    const wsUrl = API_BASE_URL.replace("https://", "wss://")
+      .replace("http://", "ws://")
+      .replace(/\/api$/, "");
+
+    const socket = io(wsUrl, { withCredentials: true, autoConnect: false });
+    socketRef.current = socket;
+
+    const handleSnapshot = (
+      snapshot: Array<{ userId: string; matchId?: string }>,
+    ) => {
+      setUsers((prev) =>
+        prev.map((u) => {
+          const entry = snapshot.find((s) => s.userId === u.id);
+          if (!entry) return u;
+          return { ...u, inMatchId: entry.matchId };
+        }),
+      );
+    };
+
+    socket.on("connect", () => {
+      socket.emit("joinLeaderboard");
+    });
+
+    socket.on("userStatusSnapshot", handleSnapshot);
+    socket.on("userStatusUpdate", (payload: UserStatusUpdatePayload) => {
+      applyStatusUpdate(payload);
+    });
+
+    socket.connect();
+
+    return () => {
+      socket.emit("leaveLeaderboard");
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [applyStatusUpdate]);
+
   useEffect(() => {
     const userId = getAuthUserId();
     setIsGuest(!userId);
@@ -45,7 +113,6 @@ const LeaderboardPage = () => {
     fetchLeaderboard();
 
     const interval = setInterval(() => {
-      // Only poll when the tab is visible — saves battery and server load
       if (document.visibilityState === "visible") {
         fetchLeaderboard();
       }
@@ -54,10 +121,20 @@ const LeaderboardPage = () => {
     return () => clearInterval(interval);
   }, [fetchLeaderboard]);
 
+  const handleSpectate = useCallback(
+    (matchId: string) => {
+      const socket = socketRef.current;
+      if (socket?.connected) {
+        socket.emit("spectate", { matchId });
+      }
+      router.push(`/arena?matchId=${matchId}&spectate=true`);
+    },
+    [router],
+  );
+
   return (
     <div
-      className={`min-h-screen bg-bg-primary font-mono text-accent selection:bg-accent/30 relative overflow-hidden ${isMobile ? "pb-[calc(80px+env(safe-area-inset-bottom))]" : "pb-12"
-        }`}
+      className={`min-h-screen bg-bg-primary font-mono text-accent selection:bg-accent/30 relative overflow-hidden ${isMobile ? "pb-[calc(80px+env(safe-area-inset-bottom))]" : "pb-12"}`}
     >
       {/* Background Grid */}
       <div
@@ -91,6 +168,7 @@ const LeaderboardPage = () => {
               isLoading={isLoading}
               currentUserId={currentUserId}
               onChallenge={sendChallenge}
+              onSpectate={handleSpectate}
               isGuest={isGuest}
               isMobile={true}
             />
@@ -118,6 +196,7 @@ const LeaderboardPage = () => {
               isLoading={isLoading}
               currentUserId={currentUserId}
               onChallenge={sendChallenge}
+              onSpectate={handleSpectate}
               isGuest={isGuest}
               isMobile={false}
             />

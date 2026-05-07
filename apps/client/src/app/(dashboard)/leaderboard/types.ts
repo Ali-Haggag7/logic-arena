@@ -4,6 +4,7 @@ export interface LeaderboardUser {
   username: string;
   rank: number;
   isOnline: boolean;
+  inMatchId?: string;
   _count: { wonMatches: number };
 }
 

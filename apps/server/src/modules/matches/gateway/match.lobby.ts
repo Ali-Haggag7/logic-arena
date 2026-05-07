@@ -11,6 +11,7 @@ import { combatLoadoutKey } from '../../users/types';
 const LOBBY_CACHE_KEY = 'lobby:matches';
 const LOBBY_CACHE_TTL = 120;
 export const LOBBY_ROOM = 'lobby:viewers';
+export const LEADERBOARD_ROOM = 'leaderboard:viewers';
 
 export class MatchLobbyManager {
   constructor(
@@ -191,6 +192,19 @@ export class MatchLobbyManager {
     client.join(data.matchId);
     client.emit('matchJoinedInfo', { mode });
     this.server.to(data.matchId).emit('gameState', match.getState());
+
+    // Broadcast user in-match status to leaderboard viewers
+    if (client.userId && !client.isGuest) {
+      this.state.userStatus.set(client.userId, {
+        status: 'in-match',
+        matchId: data.matchId,
+      });
+      this.server.to(LEADERBOARD_ROOM).emit('userStatusUpdate', {
+        userId: client.userId,
+        status: 'in-match',
+        matchId: data.matchId,
+      });
+    }
   }
 
   async handleCreateMatch(
