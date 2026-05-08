@@ -15,6 +15,7 @@ import { MatchHistorySection }  from "./components/sections/MatchHistorySection"
 function makeAnonProfile(): ProfileData {
   return {
     username:     "GUEST",
+    avatarUrl:    null,
     rank:         0,
     memberSince:  new Date().toISOString(),
     totalMatches: 0,

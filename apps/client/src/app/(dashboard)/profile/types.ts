@@ -17,6 +17,7 @@ export interface CombatStats {
 
 export interface ProfileData {
   username: string;
+  avatarUrl: string | null;
   rank: number;
   memberSince: string; // ISO string
   totalMatches: number;

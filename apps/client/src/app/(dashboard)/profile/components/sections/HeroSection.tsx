@@ -25,17 +25,21 @@ export function HeroSection({ loading, profile, isMobile, profileColor, dominant
       {/* Avatar */}
       {loading ? (
         <div
-          className="rounded-full animate-[shimmer_1.5s_infinite] shrink-0"
+          className="animate-[shimmer_1.5s_infinite] shrink-0"
           style={{
             width:  isMobile ? 80 : 100,
             height: isMobile ? 80 : 100,
             background:     "rgba(var(--accent-rgb),0.07)",
             backgroundSize: "200% 100%",
+            border:         "2px solid rgba(var(--accent-rgb),0.45)",
+            clipPath:       "polygon(50% 4%, 95% 27.5%, 95% 72.5%, 50% 96%, 5% 72.5%, 5% 27.5%)",
+            boxShadow:      "0 0 18px rgba(var(--accent-rgb),0.25)",
           }}
         />
       ) : (
         <HexAvatar
           username={profile?.username ?? "??"}
+          avatarUrl={profile?.avatarUrl ?? null}
           color={profileColor}
           size={isMobile ? 80 : 100}
         />

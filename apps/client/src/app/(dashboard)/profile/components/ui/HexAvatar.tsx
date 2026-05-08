@@ -4,15 +4,17 @@ import React, { useId } from "react";
 
 interface Props {
   username: string;
+  avatarUrl: string | null;
   color: string;
   size: number;
 }
 
 // Unique filter IDs via useId() prevent SVG filter conflicts when multiple
 // avatars appear on the same page.
-export function HexAvatar({ username, color, size }: Props) {
+export function HexAvatar({ username, avatarUrl, color, size }: Props) {
   const uid      = useId();
   const filterId = `hex-glow-${uid}`;
+  const clipId   = `hex-clip-${uid}`;
   const initials = username.slice(0, 2).toUpperCase();
 
   return (
@@ -31,6 +33,9 @@ export function HexAvatar({ username, color, size }: Props) {
             <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
+          <clipPath id={clipId}>
+            <polygon points="50,12 86,31 86,69 50,88 14,69 14,31" />
+          </clipPath>
         </defs>
         {/* Outer hex */}
         <polygon
@@ -47,18 +52,38 @@ export function HexAvatar({ username, color, size }: Props) {
           stroke={`${color}40`}
           strokeWidth="1"
         />
-        {/* Initials */}
-        <text
-          x="50" y="58"
-          textAnchor="middle"
-          fontFamily="monospace"
-          fontWeight="900"
-          fontSize="28"
-          fill={color}
-          style={{ filter: `drop-shadow(0 0 6px ${color})` }}
-        >
-          {initials}
-        </text>
+        {avatarUrl ? (
+          <image
+            href={avatarUrl}
+            x="14"
+            y="12"
+            width="72"
+            height="76"
+            preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#${clipId})`}
+            aria-label={`Profile picture for ${username}`}
+          />
+        ) : (
+          <text
+            x="50" y="58"
+            textAnchor="middle"
+            fontFamily="monospace"
+            fontWeight="900"
+            fontSize="28"
+            fill={color}
+            style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+          >
+            {initials}
+          </text>
+        )}
+        {avatarUrl && (
+          <polygon
+            points="50,12 86,31 86,69 50,88 14,69 14,31"
+            fill="transparent"
+            stroke={color}
+            strokeWidth="2"
+          />
+        )}
       </svg>
     </div>
   );
