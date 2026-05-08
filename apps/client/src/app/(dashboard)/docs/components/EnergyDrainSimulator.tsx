@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Zap } from 'lucide-react';
+import { Activity, Battery, Pause, Play, RotateCcw, Zap } from 'lucide-react';
 import {
   getCost,
   MAX_ENERGY,
@@ -14,10 +14,10 @@ import {
 const SIM_TICK_MS = 120;
 
 const SIMULATE_CMDS: { label: string; cmds: string[] }[] = [
-  { label: 'SCAN loop',        cmds: ['SCAN', 'MOVE'] },
-  { label: 'PATHFIND + FIRE',  cmds: ['PATHFIND', 'FIRE'] },
-  { label: 'BURST sniper',     cmds: ['SCAN', 'PATHFIND', 'BURST_FIRE'] },
-  { label: 'Pure movement',    cmds: ['MOVE_FAST'] },
+  { label: 'SCAN loop',       cmds: ['SCAN', 'MOVE'] },
+  { label: 'PATHFIND + FIRE', cmds: ['PATHFIND', 'FIRE'] },
+  { label: 'BURST sniper',    cmds: ['SCAN', 'PATHFIND', 'BURST_FIRE'] },
+  { label: 'Pure movement',   cmds: ['MOVE_FAST'] },
 ];
 
 export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
@@ -32,9 +32,9 @@ export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
 
   const barColor =
     inStasis || exitingStasis ? 'var(--docs-red)' :
-    pct > 60               ? 'var(--docs-green)' :
-    pct > 30               ? 'var(--docs-orange)' :
-                             'var(--docs-red)';
+    pct > 60                 ? 'var(--docs-green)' :
+    pct > 30                 ? 'var(--docs-orange)' :
+                               'var(--docs-red)';
 
   const tickCost = SIMULATE_CMDS[simIndex].cmds.reduce(
     (sum, cmd) => sum + getCost(cmd),
@@ -67,32 +67,186 @@ export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
     setRunning(false);
   }, []);
 
-  // FIX: deps array prevents interval churn on every render
+  // Keep the interval stable while the simulator is running.
   useEffect(() => {
     if (!running) return;
     const id = setInterval(handleTick, SIM_TICK_MS);
     return () => clearInterval(id);
   }, [running, handleTick]);
 
+  const statusLabel =
+    inStasis      ? 'STASIS - REGEN ACTIVE' :
+    exitingStasis ? 'EXITING STASIS' :
+                    'ENERGY';
+
+  const statusColor = inStasis ? 'var(--docs-red)' : barColor;
+  const activePreset = SIMULATE_CMDS[simIndex];
+
+  if (isMobile) {
+    return (
+      <div className="relative overflow-hidden rounded-[28px] border border-text-primary/10 bg-card/80 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        <div
+          className="absolute inset-x-10 -top-20 h-32 rounded-full blur-3xl pointer-events-none opacity-20"
+          style={{ background: barColor }}
+        />
+
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border"
+              style={{
+                color: 'var(--docs-indigo)',
+                borderColor: 'color-mix(in srgb, var(--docs-indigo) 22%, transparent)',
+                background: 'color-mix(in srgb, var(--docs-indigo) 8%, transparent)',
+              }}
+            >
+              <Zap className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-black uppercase tracking-[0.24em]" style={{ color: 'var(--docs-indigo)' }}>
+                Drain Simulator
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-[10px] font-mono text-text-secondary/55">
+                <Activity className="h-3 w-3" />
+                <span>tick #{tickCount}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <div className="font-mono text-[20px] leading-none text-text-primary/80">
+              {Math.round(energy)}
+              <span className="text-[11px] text-text-secondary/45">/{MAX_ENERGY}</span>
+            </div>
+            <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: statusColor }}>
+              {statusLabel}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative mt-4">
+          <div className="h-2 overflow-hidden rounded-full bg-text-primary/10">
+            <div
+              className="h-full rounded-full transition-all duration-100"
+              style={{
+                width: `${pct}%`,
+                background: `linear-gradient(90deg, color-mix(in srgb, ${barColor} 62%, transparent), ${barColor})`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto docs-scrollbar">
+          <div className="flex min-w-max gap-2 pb-1">
+            {SIMULATE_CMDS.map((p, i) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => { setSimIndex(i); handleReset(); }}
+                className="h-10 rounded-full border px-4 text-[11px] font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                style={{
+                  borderColor: i === simIndex ? 'var(--docs-indigo)' : 'color-mix(in srgb, var(--text-primary) 10%, transparent)',
+                  background: i === simIndex ? 'color-mix(in srgb, var(--docs-indigo) 12%, transparent)' : 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
+                  color: i === simIndex ? 'var(--docs-indigo)' : 'var(--text-secondary)',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-3">
+          <div className="min-w-0 rounded-2xl border border-text-primary/10 bg-text-primary/[0.03] px-3 py-2">
+            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-text-secondary/45">
+              <Battery className="h-3 w-3" />
+              Per tick
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-mono">
+              {activePreset.cmds.map(cmd => (
+                <span key={cmd} className="text-text-secondary/65">
+                  <code className="font-black text-accent">{cmd}</code>
+                  <span className="text-text-secondary/45"> -{getCost(cmd)}</span>
+                </span>
+              ))}
+              {inStasis && (
+                <span className="text-text-secondary/65">
+                  <code className="font-black" style={{ color: 'var(--docs-indigo)' }}>REGEN</code>
+                  <span className="text-text-secondary/45"> +{REGEN_PER_TICK}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="text-right">
+            <div className="text-[9px] font-black uppercase tracking-[0.18em] text-text-secondary/40">Net</div>
+            <div className="font-mono text-[14px] font-black tracking-wider" style={{ color: netPerTick >= 0 ? 'var(--docs-green)' : 'var(--docs-orange)' }}>
+              {netPerTick >= 0 ? '+' : ''}{netPerTick}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-[1fr_48px] gap-2">
+          <button
+            type="button"
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl border text-[12px] font-black uppercase tracking-[0.18em] transition-all active:scale-[0.98] cursor-pointer"
+            style={{
+              borderColor: running ? 'var(--docs-red)' : 'var(--docs-indigo)',
+              background: running ? 'color-mix(in srgb, var(--docs-red) 10%, transparent)' : 'color-mix(in srgb, var(--docs-indigo) 12%, transparent)',
+              color: running ? 'var(--docs-red)' : 'var(--docs-indigo)',
+            }}
+            onClick={() => setRunning(!running)}
+          >
+            {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {running ? 'Pause' : 'Simulate'}
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            aria-label="Reset simulator"
+            title="Reset simulator"
+            className="grid h-12 place-items-center rounded-2xl border border-text-secondary/15 text-text-secondary/60 transition-all active:scale-95 hover:border-text-secondary/35 cursor-pointer"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+        </div>
+
+        {!inStasis && (
+          <p className="mt-3 text-[9px] leading-relaxed text-text-secondary/45 font-mono">
+            Active robots do not regenerate. Drain to STASIS to recover.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl border border-indigo-400/25 bg-card/30 p-5 backdrop-blur-sm">
-      <div className="flex items-center gap-3 mb-5">
-        <Zap className="w-4 h-4 text-indigo-400" />
-        <span className="text-xs font-black tracking-[0.2em] uppercase text-indigo-400">Drain Simulator</span>
-        <span className="ml-auto text-[10px] text-text-secondary/50 font-mono">tick #{tickCount}</span>
+    <div className="rounded-xl border border-text-primary/10 bg-card/35 p-4 backdrop-blur-sm">
+      <div className="mb-4 flex items-center gap-3">
+        <div
+          className="grid h-8 w-8 place-items-center rounded-lg border"
+          style={{
+            color: 'var(--docs-indigo)',
+            borderColor: 'color-mix(in srgb, var(--docs-indigo) 25%, transparent)',
+            background: 'color-mix(in srgb, var(--docs-indigo) 7%, transparent)',
+          }}
+        >
+          <Zap className="h-4 w-4" />
+        </div>
+        <span className="text-[11px] font-black tracking-[0.2em] uppercase" style={{ color: 'var(--docs-indigo)' }}>
+          Drain Simulator
+        </span>
+        <span className="ml-auto text-[10px] text-text-secondary/45 font-mono">tick #{tickCount}</span>
       </div>
 
-      {/* Energy bar */}
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex items-end justify-between mb-2">
-          <span style={{ color: inStasis ? 'var(--docs-red)' : barColor }} className="font-black tracking-widest uppercase">
-            {inStasis       ? '⚠ STASIS — REGEN ACTIVE'  :
-             exitingStasis  ? '↑ EXITING STASIS…'         :
-                              'ENERGY'}
+          <span style={{ color: statusColor }} className="text-sm font-black tracking-widest uppercase">
+            {statusLabel}
           </span>
-          <span className="text-text-secondary/60">{Math.round(energy)} / {MAX_ENERGY}</span>
+          <span className="font-mono text-sm text-text-secondary/65">{Math.round(energy)} / {MAX_ENERGY}</span>
         </div>
-        <div className="h-3 rounded-full bg-card/60 border border-text-secondary/10 overflow-hidden">
+        <div className="h-2.5 rounded-full bg-text-primary/10 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-100"
             style={{ width: `${pct}%`, background: `linear-gradient(90deg, color-mix(in srgb, ${barColor} 60%, transparent), ${barColor})` }}
@@ -105,17 +259,16 @@ export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
         )}
       </div>
 
-      {/* Preset selector */}
-      <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-2 mb-4`}>
+      <div className="grid grid-cols-4 gap-2 mb-3">
         {SIMULATE_CMDS.map((p, i) => (
           <button
             key={p.label}
             type="button"
             onClick={() => { setSimIndex(i); handleReset(); }}
-            className={`p-3 rounded-xl border flex flex-col items-center justify-center transition-all ${i === simIndex ? 'bg-card' : 'bg-transparent'} hover:opacity-75 cursor-pointer`}
+            className="min-h-12 rounded-lg border px-3 py-2 text-[12px] font-medium transition-all hover:opacity-80 cursor-pointer"
             style={{
               borderColor: i === simIndex ? 'var(--docs-indigo)' : 'color-mix(in srgb, var(--text-primary) 10%, transparent)',
-              transform:   i === simIndex ? 'scale(1.05)' : 'scale(1)',
+              background:  i === simIndex ? 'color-mix(in srgb, var(--docs-indigo) 8%, transparent)' : 'transparent',
               color:       i === simIndex ? 'var(--docs-indigo)' : 'var(--text-secondary)',
             }}
           >
@@ -124,29 +277,28 @@ export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
         ))}
       </div>
 
-      {/* Tick cost breakdown */}
-      <div className="flex items-center gap-3 mb-4 text-[11px] font-mono flex-wrap">
+      <div className="flex items-center gap-3 mb-3 text-[11px] font-mono flex-wrap">
         <span className="text-text-secondary/60">Per tick:</span>
-        {SIMULATE_CMDS[simIndex].cmds.map(cmd => {
+        {activePreset.cmds.map(cmd => {
           const cost = getCost(cmd);
           return (
             <span key={cmd} className="flex items-center gap-1">
               <code className="font-black text-accent">{cmd}</code>
-              <span className="text-text-secondary/50">−{cost}</span>
+              <span className="text-text-secondary/50">-{cost}</span>
             </span>
           );
         })}
         {inStasis && (
           <>
-            <span className="text-text-secondary/40">→</span>
+            <span className="text-text-secondary/40">-&gt;</span>
             <span>
-              <code className="text-indigo-400 font-black">REGEN</code>
+              <code className="font-black" style={{ color: 'var(--docs-indigo)' }}>REGEN</code>
               {' '}
               <span className="text-text-secondary/50">+{REGEN_PER_TICK}</span>
             </span>
           </>
         )}
-        <span 
+        <span
           className="font-mono text-sm tracking-widest font-black ml-auto"
           style={{ color: netPerTick >= 0 ? 'var(--docs-green)' : 'var(--docs-orange)' }}
         >
@@ -154,18 +306,16 @@ export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
         </span>
       </div>
 
-      {/* Note about regen rule */}
       {!inStasis && (
-        <p className="text-[9px] text-text-secondary/40 mb-4 font-mono tracking-wider">
-          ⚡ Active robots do not regenerate. Run out of energy to enter STASIS and regen.
+        <p className="text-[9px] text-text-secondary/40 mb-3 font-mono tracking-wider">
+          Active robots do not regenerate. Run out of energy to enter STASIS and regen.
         </p>
       )}
 
-      {/* Controls */}
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <button
           type="button"
-          className="flex-1 py-3 rounded-lg border font-black tracking-widest hover:opacity-75 uppercase transition-all cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-black tracking-widest hover:opacity-75 uppercase transition-all cursor-pointer"
           style={{
             borderColor: running ? 'var(--docs-red)' : 'var(--docs-indigo)',
             background:  running ? 'color-mix(in srgb, var(--docs-red) 5%, transparent)' : 'color-mix(in srgb, var(--docs-indigo) 5%, transparent)',
@@ -173,14 +323,17 @@ export function EnergyDrainSimulator({ isMobile }: { isMobile: boolean }) {
           }}
           onClick={() => setRunning(!running)}
         >
-          {running ? '⏸ PAUSE' : '▶ SIMULATE'}
+          {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          {running ? 'Pause' : 'Simulate'}
         </button>
         <button
           type="button"
           onClick={handleReset}
-          className="px-5 py-2.5 rounded-xl font-black text-[11px] tracking-[0.2em] uppercase transition-all border border-text-secondary/20 text-text-secondary/60 hover:border-text-secondary/40 cursor-pointer"
+          aria-label="Reset simulator"
+          title="Reset simulator"
+          className="grid w-11 place-items-center rounded-lg transition-all border border-text-secondary/20 text-text-secondary/60 hover:border-text-secondary/40 cursor-pointer"
         >
-          RESET
+          <RotateCcw className="h-4 w-4" />
         </button>
       </div>
     </div>
