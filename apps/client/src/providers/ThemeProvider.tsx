@@ -5,9 +5,9 @@ import { useEffect } from "react";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
 
 const THEME_COLORS: Record<string, string> = {
-  cyberpunk: "#030712",
-  light: "#ffffff",
-  desert: "#fdf6e3",
+  cyberpunk: "#030712", // --bg-primary cyberpunk
+  light: "#f0f2fa",     // --bg-primary light (Violet Sovereign)
+  desert: "#0e0a04",   // --bg-primary desert (Obsidian Ember)
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -28,7 +28,7 @@ function ThemeProviderInner({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Keeps <meta name="theme-color"> AND body background in sync */
+/** Keeps <meta name="theme-color"> (and msapplication variant) in sync with the active theme */
 function ThemeMetaSync() {
   const { resolvedTheme } = useTheme();
 
@@ -39,6 +39,11 @@ function ThemeMetaSync() {
 
     document
       .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", color);
+
+    // Windows / Edge mobile nav bar
+    document
+      .querySelector('meta[name="msapplication-navbutton-color"]')
       ?.setAttribute("content", color);
   }, [resolvedTheme]);
 

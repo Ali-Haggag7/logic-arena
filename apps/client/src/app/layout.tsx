@@ -95,15 +95,26 @@ export default function RootLayout({
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
-        {/* Theme color — updated dynamically by ThemeProvider on theme change */}
+        {/*
+          Theme color — controls the status bar (top) AND the Android nav bar (bottom).
+          ThemeMetaSync in ThemeProvider updates this dynamically on every theme change.
+          Initial value = cyberpunk bg-primary.
+        */}
         <meta name="theme-color" content="#030712" />
+
+        {/* Android: treat as a native app (removes browser chrome when installed) */}
+        <meta name="mobile-web-app-capable" content="yes" />
 
         {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        {/*
+          black-translucent: iOS status bar overlays the app (we pad with
+          env(safe-area-inset-top) so content isn't hidden behind it).
+        */}
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Logic Arena" />
 
-        {/* Viewport with safe-area support */}
+        {/* Viewport with safe-area support — required for notch/home-indicator */}
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"

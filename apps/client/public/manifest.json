@@ -3,6 +3,7 @@
   "short_name": "LogicArena",
   "description": "Competitive real-time robot battle simulator",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
   "orientation": "portrait",
   "start_url": "/dashboard",
   "scope": "/",

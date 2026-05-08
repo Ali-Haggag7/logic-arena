@@ -183,6 +183,40 @@ html, body {
   font-family: var(--font-sans), 'Space Grotesk', system-ui, sans-serif;
 }
 
+/* ─────────────────────────────────────────────────────────
+ *  NATIVE APP FEEL — no browser-like interactions
+ *
+ *  1. user-select: none   → prevents the Google search / copy popup
+ *                           that appears on long-press of any text.
+ *  2. -webkit-touch-callout: none → iOS: suppresses the save/open
+ *                           popup when holding a link or image.
+ *  3. -webkit-tap-highlight-color: transparent → kills the grey
+ *                           flash that appears on tap.
+ *  4. touch-action: pan-y  → allows vertical scrolling but prevents
+ *                           accidental horizontal swipe gestures.
+ *
+ *  Interactive elements (inputs, textareas, [contenteditable]) get
+ *  user-select: text restored so users can still select/copy in fields.
+ * ───────────────────────────────────────────────────────── */
+* {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+  overscroll-behavior-y: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 
 /* ─────────────────────────────────────────────────────────
  *  GLOBAL CYBERPUNK SCROLLBAR
