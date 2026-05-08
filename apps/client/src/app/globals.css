@@ -176,7 +176,15 @@
   --color-yellow-500:  var(--sem-warning);
 }
 
+html {
+  min-height: 100%;
+  background: var(--bg-primary);
+  background-color: var(--bg-primary);
+}
+
 html, body {
+  width: 100%;
+  min-height: 100dvh;
   background: var(--bg-primary);
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -208,6 +216,7 @@ body {
   -webkit-user-select: none;
   touch-action: pan-y;
   overscroll-behavior-y: none;
+  overflow-x: clip;
 }
 
 input,

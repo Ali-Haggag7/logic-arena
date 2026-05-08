@@ -120,7 +120,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-dvh w-full flex flex-col bg-bg-primary">
         <ThemeProvider>
           {/* Mobile-only top bar (self-guards via useMediaQuery) */}
           <MobileHeader />
