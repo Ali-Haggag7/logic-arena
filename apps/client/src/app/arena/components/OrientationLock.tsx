@@ -36,9 +36,27 @@ export function OrientationLock() {
         <p className="text-cyan-500/60 text-xs tracking-[0.3em] font-bold max-w-[240px] uppercase leading-relaxed">
           Combat systems optimized for horizontal field of view.
         </p>
-        <div className="mt-8 px-6 py-4 border border-cyan-500/30 bg-cyan-500/5 rounded-lg">
+        <button 
+          onClick={async () => {
+            try {
+              if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+                if (screen && screen.orientation && 'lock' in screen.orientation) {
+                  await (screen.orientation as any).lock('landscape');
+                }
+              }
+            } catch (err) {
+              console.warn("Fullscreen/Orientation lock failed:", err);
+              alert("Could not force rotation. Please ensure your device's Portrait Orientation Lock is turned OFF in your quick settings, then physically rotate your device.");
+            }
+          }}
+          className="mt-8 flex flex-col items-center px-6 py-4 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/20 active:bg-cyan-500/30 transition-all rounded-lg cursor-pointer"
+        >
           <span className="text-cyan-400 text-sm font-black tracking-[0.4em] uppercase animate-pulse">Rotate Device to Enter</span>
-        </div>
+          <span className="text-cyan-500/50 text-[9px] tracking-[0.2em] font-bold mt-3 max-w-[200px] leading-relaxed">
+            TAP TO FORCE FULLSCREEN, OR DISABLE YOUR PHONE'S ROTATION LOCK.
+          </span>
+        </button>
       </div>
       <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-10 text-[10px] tracking-[1em] text-cyan-500 font-bold whitespace-nowrap">
         v4.2
