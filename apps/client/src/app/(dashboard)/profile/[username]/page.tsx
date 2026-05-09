@@ -1,56 +1,40 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { apiClient }            from "../../../lib/api-client";
-import { ProfileData, CombatStats } from "./types";
-import { EMPTY_STATS, STAT_COLORS } from "./constants";
-import { useMediaQuery }        from "../../../hooks/useMediaQuery";
+import { useParams } from "next/navigation";
+import { apiClient }            from "../../../../lib/api-client";
+import { ProfileData, CombatStats } from "../types";
+import { EMPTY_STATS, STAT_COLORS } from "../constants";
+import { useMediaQuery }        from "../../../../hooks/useMediaQuery";
 
-import { HeroSection }          from "./components/sections/HeroSection";
-import { StatCardsSection }     from "./components/sections/StatCardsSection";
-import { AnalyticsSection }     from "./components/sections/AnalyticsSection";
-import { MatchHistorySection }  from "./components/sections/MatchHistorySection";
-import { ProfileErrorState }    from "./components/sections/ProfileErrorState";
+import { HeroSection }          from "../components/sections/HeroSection";
+import { StatCardsSection }     from "../components/sections/StatCardsSection";
+import { AnalyticsSection }     from "../components/sections/AnalyticsSection";
+import { MatchHistorySection }  from "../components/sections/MatchHistorySection";
+import { ProfileErrorState }    from "../components/sections/ProfileErrorState";
 
 type ErrorKind = "NOT_FOUND" | "NETWORK" | "UNKNOWN" | null;
 
-// ─── Fallback for guest / unauthenticated visitors ───────────────────────────
-function makeAnonProfile(): ProfileData {
-  return {
-    id:           "",
-    username:     "GUEST",
-    avatarUrl:    null,
-    rank:         0,
-    memberSince:  new Date().toISOString(),
-    totalMatches: 0,
-    wins:         0,
-    losses:       0,
-    winRate:      0,
-    combatStats:  EMPTY_STATS,
-    matchHistory: [],
-  };
-}
-
 // ─── Root page ────────────────────────────────────────────────────────────────
-export default function ProfilePage() {
+export default function PublicProfilePage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const params = useParams<{ username: string }>();
+  const usernameParam = params?.username ?? "";
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [errKind, setErrKind] = useState<ErrorKind>(null);
-  const [isGuest, setIsGuest] = useState(false);
 
   const load = async () => {
     setLoading(true);
     setErrKind(null);
     try {
-      const res = await apiClient.get("/users/profile");
+      const res = await apiClient.get(`/users/${encodeURIComponent(usernameParam)}/public`);
       setProfile(res.data);
     } catch (err: unknown) {
       const e = err as { response?: { status?: number }; message?: string };
-      if (e.response?.status === 401) {
-        setIsGuest(true);
-        setProfile(makeAnonProfile());
+      if (e.response?.status === 404) {
+        setErrKind("NOT_FOUND");
       } else if (e.message?.includes("Network") || e.message?.includes("timeout")) {
         setErrKind("NETWORK");
       } else {
@@ -62,8 +46,8 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (usernameParam) load();
+  }, [usernameParam]);
 
   const stats = profile?.combatStats ?? EMPTY_STATS;
 
@@ -127,6 +111,7 @@ export default function ProfilePage() {
           {errKind ? (
             <ProfileErrorState
               isMobile={isMobile}
+              username={usernameParam}
               errorType={errKind}
               onRetry={load}
             />
@@ -152,7 +137,7 @@ export default function ProfilePage() {
                 profile={profile}
                 loading={loading}
                 isMobile={isMobile}
-                isGuest={isGuest}
+                isGuest={false}
               />
             </>
           )}

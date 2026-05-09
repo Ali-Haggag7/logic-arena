@@ -9,12 +9,12 @@ interface NavLinkProps {
   label: string;
   icon?: string;
   iconNode?: ReactNode;
+  exact?: boolean;
 }
 
-export default function NavLink({ href, label, icon, iconNode }: NavLinkProps) {
+export default function NavLink({ href, label, icon, iconNode, exact }: NavLinkProps) {
   const pathname = usePathname();
-  const isActive =
-    href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+  const isActive = exact ? pathname === href : pathname.startsWith(href);
 
   return (
     <Link

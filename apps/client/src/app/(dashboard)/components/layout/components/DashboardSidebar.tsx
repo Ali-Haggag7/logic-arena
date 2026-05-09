@@ -11,7 +11,7 @@ const navItems = [
   { href: "/leaderboard", label: "LEADERBOARD", iconNode: <Trophy className="w-3.5 h-3.5" /> },
   { href: "/lobby", label: "BATTLE LOBBY", iconNode: <Swords className="w-3.5 h-3.5" /> },
   { href: "/campaign", label: "CAMPAIGN MODE", iconNode: <Zap className="w-3.5 h-3.5" /> },
-  { href: "/profile", label: "MY PROFILE", iconNode: <User className="w-3.5 h-3.5" /> },
+  { href: "/profile", label: "MY PROFILE", iconNode: <User className="w-3.5 h-3.5" />, exact: true },
   { href: "/garage", label: "ROBOT GARAGE", iconNode: <Cpu className="w-3.5 h-3.5" /> },
   { href: "/docs", label: "ALISCRIPT DOCS", iconNode: <BookOpen className="w-3.5 h-3.5" /> },
   { href: "/tournaments", label: "TOURNAMENT HUB", iconNode: <Award className="w-3.5 h-3.5" /> },
@@ -78,12 +78,22 @@ export function DashboardSidebar({ username, avatarUrl, onLogout }: DashboardSid
 
             {/* PILOT_ID + username */}
             <div className="text-[6.5px] tracking-[0.35em] text-accent/20 mb-[3px] uppercase">USERNAME://</div>
-            <div
-              className="text-[11px] font-black tracking-[0.1em] text-accent uppercase truncate font-mono"
-              style={{ textShadow: '0 0 12px rgba(var(--accent-rgb), 0.7)' }}
-            >
-              {username ?? 'GUEST'}
-            </div>
+            {username ? (
+              <Link
+                href="/profile"
+                className="text-[11px] font-black tracking-[0.1em] text-accent uppercase truncate font-mono hover:opacity-80 transition-opacity"
+                style={{ textShadow: '0 0 12px rgba(var(--accent-rgb), 0.7)' }}
+              >
+                {username}
+              </Link>
+            ) : (
+              <div
+                className="text-[11px] font-black tracking-[0.1em] text-accent uppercase truncate font-mono"
+                style={{ textShadow: '0 0 12px rgba(var(--accent-rgb), 0.7)' }}
+              >
+                GUEST
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -94,7 +104,7 @@ export function DashboardSidebar({ username, avatarUrl, onLogout }: DashboardSid
           navigation
         </div>
         {navItems.map((item) => (
-          <NavLink key={item.href} href={item.href} label={item.label} iconNode={item.iconNode} />
+          <NavLink key={item.href} {...item} />
         ))}
         <div className="mt-auto">
           <div className="mb-2 mt-2 h-px bg-accent/[0.06]" />
@@ -102,27 +112,45 @@ export function DashboardSidebar({ username, avatarUrl, onLogout }: DashboardSid
             href="/settings"
             label="SETTINGS"
             iconNode={<Settings size={13} strokeWidth={2.5} />}
+            exact
           />
         </div>
       </nav>
 
       {/* ── USER + LOGOUT ── */}
       <div className="p-[14px_12px] border-t border-accent/[0.08] relative z-10">
-        <div className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-accent/[0.04] rounded-md border border-accent/10 hover:border-accent/30 transition-colors group cursor-default">
-          <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)] transition-all duration-300 overflow-hidden">
-            {avatarUrl ? (
-              <Image src={avatarUrl} alt="Avatar" width={24} height={24} className="w-full h-full object-cover" />
-            ) : (
+        {username ? (
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-accent/[0.04] rounded-md border border-accent/10 hover:border-accent/30 transition-colors group"
+          >
+            <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)] transition-all duration-300 overflow-hidden">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt="Avatar" width={24} height={24} className="w-full h-full object-cover" />
+              ) : (
+                <User size={14} />
+              )}
+            </span>
+            <div className="overflow-hidden">
+              <div className="text-[9px] text-accent/35 tracking-[0.18em] mb-[2px]">PLAYER</div>
+              <div className="text-[10px] text-accent/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
+                {username}
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-2 mb-2.5 p-[8px_10px] bg-accent/[0.04] rounded-md border border-accent/10 cursor-default">
+            <span className="w-6 h-6 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center text-[10px] text-accent shrink-0 shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] overflow-hidden">
               <User size={14} />
-            )}
-          </span>
-          <div className="overflow-hidden">
-            <div className="text-[9px] text-accent/35 tracking-[0.18em] mb-[2px]">PLAYER</div>
-            <div className="text-[10px] text-accent/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
-              {username || "GUEST"}
+            </span>
+            <div className="overflow-hidden">
+              <div className="text-[9px] text-accent/35 tracking-[0.18em] mb-[2px]">PLAYER</div>
+              <div className="text-[10px] text-accent/80 font-bold tracking-[0.1em] overflow-hidden text-ellipsis whitespace-nowrap">
+                GUEST
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {username ? (
           <button

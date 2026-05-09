@@ -7,6 +7,7 @@ import { EfficiencyBadge } from "./ui/EfficiencyBadge";
 import { getRankColor, deriveEfficiency } from "./utils";
 import type { LeaderboardViewProps } from "./types";
 import { RANK_BAR_MAX } from "../types";
+import { UserLink } from "../../../../components/ui/UserLink";
 
 export function DesktopTable({
   users,
@@ -93,9 +94,10 @@ export function DesktopTable({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <OnlineDot isOnline={user.isOnline} />
-                        <span className="text-text-primary text-base font-bold tracking-wider group-hover:text-text-primary transition-colors truncate max-w-[200px]">
-                          {user.username}
-                        </span>
+                        <UserLink
+                          username={user.username}
+                          className="text-text-primary text-base font-bold tracking-wider group-hover:text-text-primary transition-colors truncate max-w-[200px]"
+                        />
                         {isSelf && <YouBadge />}
                       </div>
                     </td>

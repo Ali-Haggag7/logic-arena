@@ -150,6 +150,18 @@ export class UsersController {
     return result;
   }
 
+  // ── Public Profile (no auth, username-based) ────────────────────────────
+  @Get(':username/public')
+  async getPublicProfile(@Param('username') username: string) {
+    const profile = await this.queryService.getPublicProfile(username);
+
+    if (!profile) {
+      throw new NotFoundException('User not found');
+    }
+
+    return profile;
+  }
+
   // ── My Profile (auth-gated, Redis-first via service) ─────────────────────
   @UseGuards(AuthGuard)
   @Get('profile')

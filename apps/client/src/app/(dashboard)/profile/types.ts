@@ -3,6 +3,7 @@ export interface MatchEntry {
   date: string;        // ISO string (serialised from server Date)
   type: string;
   opponent: string;
+  opponentId: string | null;
   result: "WIN" | "LOSS";
   duration: number | null; // seconds; null if match ended abnormally
 }
@@ -16,6 +17,7 @@ export interface CombatStats {
 }
 
 export interface ProfileData {
+  id: string;
   username: string;
   avatarUrl: string | null;
   rank: number;

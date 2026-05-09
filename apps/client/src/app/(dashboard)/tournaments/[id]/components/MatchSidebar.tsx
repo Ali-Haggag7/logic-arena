@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Tournament, TMatch, Player } from "../../types";
 import { Trophy } from "lucide-react";
+import { UserLink } from "../../../../../components/ui/UserLink";
 
 const ROUND_LABELS: Record<number, Record<number, string>> = {
   3: { 1: "QUARTER FINALS", 2: "SEMI FINALS", 3: "GRAND FINAL" },
@@ -47,8 +48,12 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
             
             <div className="flex justify-between items-end mb-5">
                 <div>
-                    <div className="text-[13px] font-black text-yellow-500 tracking-[0.1em] uppercase">
-                        VS_{myOpponent.username.toUpperCase()}
+                    <div className="text-[13px] font-black text-yellow-500 tracking-[0.1em] uppercase flex items-center gap-1">
+                        <span>VS_</span>
+                        <UserLink
+                          username={myOpponent.username}
+                          className="hover:text-yellow-400 transition-colors"
+                        />
                     </div>
                     <div className="text-[8px] text-yellow-500/30 tracking-[0.2em] mt-1 font-bold">
                         PHASE: {roundLabels[myMatch.round] ?? `PHASE_${myMatch.round}`}
@@ -128,12 +133,11 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${isChampion ? "bg-emerald-500 shadow-[0_0_8px_rgba(var(--color-emerald-500),0.8)] animate-pulse" : isEliminated ? "bg-red-500/40" : "bg-accent/40"
                         }`}
                     />
-                    <span
+                    <UserLink
+                    username={p.username}
                     className={`text-[10px] font-black tracking-[0.15em] flex-1 uppercase ${isChampion ? "text-emerald-500" : isEliminated ? "text-accent/30 line-through" : "text-accent/70"
                         }`}
-                    >
-                    {p.username}
-                    </span>
+                    />
                     {isChampion && <Trophy size={14} className="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] shrink-0" />}
                     {isEliminated && !isChampion && (
                     <span className="text-[8px] text-red-500/30 tracking-[0.25em] font-black uppercase">

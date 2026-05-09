@@ -5,6 +5,7 @@ import { MatchEntry } from "../../types";
 import { fmtDate, fmtDuration } from "../../utils";
 import { ResultBadge } from "../ui/ResultBadge";
 import { ReplayButton } from "./ReplayButton";
+import { UserLink } from "../../../../../components/ui/UserLink";
 
 interface Props {
   m: MatchEntry;
@@ -20,7 +21,12 @@ export function DesktopRow({ m, isLast, isGuest }: Props) {
       style={{ borderBottom: isLast ? "none" : "1px solid rgba(var(--accent-rgb),0.06)" }}
     >
       <td className="hidden lg:table-cell p-[12px_16px] text-accent/45">{fmtDate(m.date)}</td>
-      <td className="p-[12px_16px] text-accent/90 font-bold truncate max-w-[200px]">{m.opponent}</td>
+      <td className="p-[12px_16px] text-accent/90 font-bold truncate max-w-[200px]">
+        <UserLink
+          username={m.opponent}
+          className="hover:text-accent transition-colors"
+        />
+      </td>
       <td className="hidden sm:table-cell p-[12px_16px] text-accent/70">{m.type}</td>
       <td className="p-[12px_16px]"><ResultBadge isWin={isWin} /></td>
       <td className="hidden lg:table-cell p-[12px_16px] text-accent/45">{fmtDuration(m.duration)}</td>

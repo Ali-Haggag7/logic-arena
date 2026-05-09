@@ -3,6 +3,8 @@ export const COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
 export const PROFILE_TTL = 600; // 10 minutes
 
 export const profileKey = (id: string) => `user:profile:${id}`;
+export const publicProfileKey = (username: string) => `user:public:${username}`;
+export const PUBLIC_PROFILE_TTL = 300; // 5 minutes
 export const loadoutKey = (id: string) => `user:loadout:${id}`;
 export const preferencesKey = (id: string) => `user:preferences:${id}`;
 export const blackMarketKey = (id: string) => `user:black-market:${id}`;
@@ -74,6 +76,7 @@ export interface MatchSummary {
   date: Date; // Prisma DateTime; serialised to ISO string by Axios on the client
   type: string;
   opponent: string;
+  opponentId: string | null;
   result: 'WIN' | 'LOSS';
   duration: number | null;
 }
@@ -81,6 +84,21 @@ export interface MatchSummary {
 export interface UserLoadout {
   selectedRobotId: string | null;
   selectedColor: string | null;
+}
+
+/** Public-facing profile (no sensitive fields) */
+export interface PublicProfile {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  rank: number;
+  memberSince: Date;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  matchHistory: MatchSummary[];
+  combatStats: CombatStats;
 }
 
 /** Shape returned by GET /users/leaderboard */

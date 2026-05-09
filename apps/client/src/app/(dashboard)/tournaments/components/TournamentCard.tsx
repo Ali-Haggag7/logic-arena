@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Player, Tournament } from "../types";
+import { UserLink } from "../../../../components/ui/UserLink";
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; border: string; glow: string }> = {
   WAITING: {
@@ -52,8 +53,12 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
           <div className={`${isMobile ? "text-[13px]" : "text-[14px]"} font-black tracking-[0.15em] text-accent mb-1.5 transition-all group-hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.5)] uppercase leading-tight`}>
             {t.name}
           </div>
-          <div className="text-[8px] text-accent/25 tracking-[0.2em] font-bold uppercase">
-            ID: {t.id.slice(0, 8)} // OP: {t.creator.username.toUpperCase()}
+          <div className="text-[8px] text-accent/25 tracking-[0.2em] font-bold uppercase flex items-center gap-1 flex-wrap">
+            <span>ID: {t.id.slice(0, 8)} // OP:</span>
+            <UserLink
+              username={t.creator.username}
+              className="hover:text-accent transition-colors"
+            />
           </div>
         </div>
         {/* Status badge */}
@@ -92,13 +97,11 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
       {/* Participant avatars */}
       <div className="flex gap-1.5 flex-wrap">
         {t.participants.map((p) => (
-          <span
+          <UserLink
             key={p.id}
-            title={p.username}
-            className="px-2 py-1 rounded-md bg-accent/5 border border-accent/10 text-[8px] text-accent/50 tracking-[0.1em] font-black uppercase hover:bg-accent/10 transition-colors"
-          >
-            {p.username}
-          </span>
+            username={p.username}
+            className="px-2 py-1 rounded-md bg-accent/5 border border-accent/10 text-[8px] text-accent/50 tracking-[0.1em] font-black uppercase hover:bg-accent/10 transition-colors inline-block"
+          />
         ))}
       </div>
 

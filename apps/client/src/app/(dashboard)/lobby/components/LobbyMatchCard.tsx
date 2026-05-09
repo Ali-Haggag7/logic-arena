@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useMediaQuery } from "../../../../hooks/useMediaQuery";
+import { UserLink } from "../../../../components/ui/UserLink";
 
 export interface LobbyMatch {
   hostId: string;
@@ -25,7 +26,11 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
     >
       <div>
         <h3 className="text-[14px] font-black tracking-[0.14em] text-accent transition-all group-hover:drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.5)]">
-          HOST: {match.hostName}
+          HOST:{" "}
+          <UserLink
+            username={match.hostName}
+            className="hover:text-accent/80 transition-colors"
+          />
         </h3>
         <p className="text-[10px] text-accent/70 tracking-[0.18em] uppercase mt-2">
           ID: {match.matchId} <span className="opacity-50 mx-2">|</span> DETECTED: {new Date(match.createdAt).toLocaleTimeString()}
@@ -51,7 +56,10 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
     >
       <div className="flex flex-col gap-2">
         <h3 className="text-[14px] font-black tracking-[0.14em] text-accent">
-          {match.hostName}
+          <UserLink
+            username={match.hostName}
+            className="hover:text-accent/80 transition-colors"
+          />
         </h3>
         <div className="flex items-center gap-1 text-[9px] text-accent/70 tracking-[0.15em] uppercase w-full">
           <span>ID: </span>

@@ -5,6 +5,7 @@ import { OnlineDot } from "./ui/OnlineDot";
 import { YouBadge } from "./ui/YouBadge";
 import { getRankColor } from "./utils";
 import type { LeaderboardViewProps } from "./types";
+import { UserLink } from "../../../../components/ui/UserLink";
 
 export function MobileList({
   users,
@@ -53,7 +54,10 @@ export function MobileList({
                   <div className="flex flex-col gap-1">
                     <span className="text-text-primary text-[15px] font-bold tracking-wider flex items-center gap-2 flex-wrap">
                       <OnlineDot isOnline={user.isOnline} />
-                      {user.username}
+                      <UserLink
+                        username={user.username}
+                        className="hover:text-accent transition-colors"
+                      />
                       {isSelf && <YouBadge />}
                     </span>
                   </div>

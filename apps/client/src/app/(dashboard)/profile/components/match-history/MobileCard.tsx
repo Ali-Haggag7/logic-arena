@@ -5,6 +5,7 @@ import { MatchEntry } from "../../types";
 import { fmtDate, fmtDuration } from "../../utils";
 import { ResultBadge } from "../ui/ResultBadge";
 import { ReplayButton } from "./ReplayButton";
+import { UserLink } from "../../../../../components/ui/UserLink";
 
 interface Props {
   m: MatchEntry;
@@ -22,9 +23,10 @@ export function MobileCard({ m, isGuest }: Props) {
       }}
     >
       <div className="flex items-center justify-between">
-        <span className="font-bold text-[13px] text-accent tracking-[0.15em] uppercase">
-          {m.opponent}
-        </span>
+        <UserLink
+          username={m.opponent}
+          className="font-bold text-[13px] text-accent tracking-[0.15em] uppercase hover:text-accent/80 transition-colors"
+        />
         <ResultBadge isWin={isWin} />
       </div>
 
