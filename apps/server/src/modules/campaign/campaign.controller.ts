@@ -86,16 +86,18 @@ export class CampaignController {
       throw new ForbiddenException('Missing completion token');
     }
 
-    // ── Verify single-use Redis token issued by the fight endpoint ──
-    const tokenKey = completionTokenKey(userId, id);
-    const storedToken = await this.redis.get<string>(tokenKey);
+    if (this.redis.healthy) {
+      // ── Verify single-use Redis token issued by the fight endpoint ──
+      const tokenKey = completionTokenKey(userId, id);
+      const storedToken = await this.redis.get<string>(tokenKey);
 
-    if (!storedToken || storedToken !== completionToken) {
-      throw new ForbiddenException('Invalid or expired completion token');
+      if (!storedToken || storedToken !== completionToken) {
+        throw new ForbiddenException('Invalid or expired completion token');
+      }
+
+      // Consume the token immediately (single-use)
+      await this.redis.del(tokenKey);
     }
-
-    // Consume the token immediately (single-use)
-    await this.redis.del(tokenKey);
 
     try {
       return await this.campaignService.completeLevel(userId, id);

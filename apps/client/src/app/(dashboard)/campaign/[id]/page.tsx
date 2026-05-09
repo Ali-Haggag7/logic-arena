@@ -60,13 +60,29 @@ export default function CampaignLevelPage() {
       });
 
       if (fightRes.data.won) {
+        const completionToken = fightRes.data.completionToken;
+
+        if (!completionToken) {
+          setModal("defeat");
+          return;
+        }
+
         try {
-          await apiClient.post(`/campaign/levels/${levelId}/complete`, {
-            completionToken: fightRes.data.completionToken
+          const completionRes = await apiClient.post(`/campaign/levels/${levelId}/complete`, {
+            completionToken,
           });
-        } catch { }
-        setReward(level?.pointsReward ?? 0);
-        setModal("victory");
+
+          const pointsAwarded =
+            completionRes.data?.pointsAwarded ??
+            level?.pointsReward ??
+            0;
+
+          setReward(pointsAwarded);
+          setModal("victory");
+          window.dispatchEvent(new Event("global-refresh"));
+        } catch {
+          setModal("defeat");
+        }
       } else if (fightRes.data.draw) {
         setModal("draw");
       } else {
