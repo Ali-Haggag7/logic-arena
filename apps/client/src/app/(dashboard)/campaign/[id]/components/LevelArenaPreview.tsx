@@ -22,6 +22,8 @@ interface LevelArenaPreviewProps {
   userScript?: string;
   enemyScript?: string;
   onBattleEnd?: (winner: 'player' | 'enemy' | 'draw') => void;
+  replayFrames?: any[];
+  waitingForReplay?: boolean;
 }
 
 export const LevelArenaPreview = memo(function LevelArenaPreview({
@@ -31,6 +33,8 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
   userScript,
   enemyScript,
   onBattleEnd,
+  replayFrames,
+  waitingForReplay,
 }: LevelArenaPreviewProps) {
   const scene = getSceneForLevel(levelId);
 
@@ -85,7 +89,9 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
         userScript={userScript}
         enemyScript={enemyScript}
         onBattleEnd={onBattleEnd}
+        replayFrames={replayFrames}
         aspectRatio={compact ? 16 / 6 : 16 / 7}
+        waitingForReplay={waitingForReplay}
       />
 
       {/* Deploy badge — minimal overlay, arena visible underneath */}

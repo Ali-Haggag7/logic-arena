@@ -5,7 +5,6 @@ const FIRE_DAMAGE = 25; // HP per FIRE hit
 const BURST_DAMAGE = 8; // HP per BURST_FIRE shot (3 shots × 8 = 24 total)
 const BURST_COUNT = 3;
 const BURST_SPREAD_RAD = (8 * Math.PI) / 180; // 8° between shots
-const BURST_DELAY_MS = 150; // ms between shots
 
 export class CombatExecutor {
   constructor(
@@ -64,27 +63,18 @@ export class CombatExecutor {
           (i - Math.floor(BURST_COUNT / 2)) * BURST_SPREAD_RAD;
         const shotAngle = baseAngle + spreadOffset;
 
-        const originSnapshot = { ...robot.position };
-        const targetSnapshot = {
-          x: robot.position.x + Math.cos(shotAngle) * PROJECTILE_RANGE,
-          y: robot.position.y + Math.sin(shotAngle) * PROJECTILE_RANGE,
-        };
-
-        setTimeout(() => {
-          // Guard: robot must still be alive when delayed shots fire
-          const currentRobot = this.gameLoop
-            .getRobots()
-            .find((r) => r.id === robotId);
-          if (!currentRobot || currentRobot.health <= 0) return;
-
-          this.gameLoop.spawnProjectile(
-            robotId,
-            originSnapshot,
-            targetSnapshot,
-            currentRobot.tracerColor,
-          );
-          this.energyManager.recordDamage(currentRobot, BURST_DAMAGE);
-        }, i * BURST_DELAY_MS);
+        // Spawn all burst shots synchronously so they fire in headless simulations
+        // where setTimeout callbacks are never executed between physics steps.
+        this.gameLoop.spawnProjectile(
+          robotId,
+          { ...robot.position },
+          {
+            x: robot.position.x + Math.cos(shotAngle) * PROJECTILE_RANGE,
+            y: robot.position.y + Math.sin(shotAngle) * PROJECTILE_RANGE,
+          },
+          robot.tracerColor,
+        );
+        this.energyManager.recordDamage(robot, BURST_DAMAGE);
       }
     }
   }

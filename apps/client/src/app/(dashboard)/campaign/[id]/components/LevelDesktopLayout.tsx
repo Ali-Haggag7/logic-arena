@@ -13,10 +13,12 @@ interface LevelDesktopLayoutProps {
   modal: ModalState;
   handleFight: () => void;
   onBattleEnd: (winner: 'player' | 'enemy' | 'draw') => void;
+  replayFrames?: any[];
+  waitingForReplay?: boolean;
   router: AppRouterInstance;
 }
 
-export function LevelDesktopLayout({ level, script, setScript, modal, handleFight, onBattleEnd, router }: LevelDesktopLayoutProps) {
+export function LevelDesktopLayout({ level, script, setScript, modal, handleFight, onBattleEnd, replayFrames, waitingForReplay, router }: LevelDesktopLayoutProps) {
   const dc = DIFFICULTY_CONFIG[level.difficulty];
 
   return (
@@ -59,6 +61,8 @@ export function LevelDesktopLayout({ level, script, setScript, modal, handleFigh
             mode={modal === "loading" ? "loading" : "preview"}
             userScript={modal === "loading" ? script : undefined}
             onBattleEnd={onBattleEnd}
+            replayFrames={replayFrames}
+            waitingForReplay={waitingForReplay}
           />
 
           <div className="border border-accent/15 rounded-xl p-5 bg-accent/[0.02]">

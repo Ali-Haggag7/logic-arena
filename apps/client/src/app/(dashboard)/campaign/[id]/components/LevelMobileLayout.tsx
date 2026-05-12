@@ -13,10 +13,12 @@ interface LevelMobileLayoutProps {
   modal: ModalState;
   handleFight: () => void;
   onBattleEnd: (winner: 'player' | 'enemy' | 'draw') => void;
+  replayFrames?: any[];
+  waitingForReplay?: boolean;
   router: AppRouterInstance;
 }
 
-export function LevelMobileLayout({ level, script, setScript, modal, handleFight, onBattleEnd, router }: LevelMobileLayoutProps) {
+export function LevelMobileLayout({ level, script, setScript, modal, handleFight, onBattleEnd, replayFrames, waitingForReplay, router }: LevelMobileLayoutProps) {
   const dc = DIFFICULTY_CONFIG[level.difficulty];
 
   return (
@@ -79,6 +81,8 @@ export function LevelMobileLayout({ level, script, setScript, modal, handleFight
           mode={modal === "loading" ? "loading" : "preview"}
           userScript={modal === "loading" ? script : undefined}
           onBattleEnd={onBattleEnd}
+          replayFrames={replayFrames}
+          waitingForReplay={waitingForReplay}
           compact
         />
       </div>

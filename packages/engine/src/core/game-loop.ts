@@ -39,7 +39,9 @@ export class GameLoop {
     this.config = config;
     this.fovCalculator = new FovCalculator(this.spatialGrid);
 
-    if (this.config?.mode === 'RACING') {
+    if (this.config?.obstacles) {
+      this.obstacles = this.config.obstacles;
+    } else if (this.config?.mode === 'RACING') {
       this.obstacles = RACING_OBSTACLES;
     } else if (this.config?.mode === 'TRAINING_SOLO' || this.config?.mode === ('SANDBOX' as GameMode)) {
       this.obstacles = [];

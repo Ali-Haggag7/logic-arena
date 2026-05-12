@@ -8,6 +8,8 @@ import { LevelDetail, ModalState } from "./types";
 import { LevelDesktopLayout } from "./components/LevelDesktopLayout";
 import { LevelMobileLayout } from "./components/LevelMobileLayout";
 import { LevelModal } from "./components/LevelModal";
+import { useCampaignFight } from '../hooks/useCampaignFight';
+import { getSceneForLevel } from './components/arenaScenes';
 
 export default function CampaignLevelPage() {
   const router = useRouter();
@@ -21,6 +23,8 @@ export default function CampaignLevelPage() {
   const [script, setScript] = useState("");
   const [modal, setModal] = useState<ModalState>("idle");
   const [reward, setReward] = useState<number>(0);
+  const [replayFrames, setReplayFrames] = useState<any[]>([]);
+  const { fight, status: fightStatus, result: fightResult } = useCampaignFight();
 
   useEffect(() => {
     if (invalidLevelId) return;
@@ -49,57 +53,41 @@ export default function CampaignLevelPage() {
     };
   }, [invalidLevelId, levelId]);
 
-  // ── Step 1: User clicks DEPLOY — just start the canvas simulation ──────────
   const handleFight = useCallback(() => {
     if (!script.trim()) return;
     setModal("loading");
-  }, [script]);
+    const scene = getSceneForLevel(levelId);
+    const obstacles = scene?.init().obstacles ?? [];
+    fight(levelId, script, obstacles);
+  }, [script, levelId, fight]);
 
-  // ── Step 2: Canvas fires this when the battle concludes ────────────────────
-  const handleBattleEnd = useCallback(async (winner: 'player' | 'enemy' | 'draw') => {
-    if (winner === 'draw') {
-      setModal("draw");
-      return;
-    }
+  useEffect(() => {
+    if (fightStatus === 'done' && fightResult) {
+      setReplayFrames(fightResult.replayFrames ?? []);
+      const { winner, completionToken } = fightResult;
 
-    if (winner === 'enemy') {
-      setModal("defeat");
-      return;
-    }
+      if (winner === 'draw') { setModal("draw"); return; }
+      if (winner === 'enemy') { setModal("defeat"); return; }
 
-    // Player won — show victory immediately, then validate with server in bg
-    setModal("victory");
+      setModal("victory");
 
-    // Fire-and-forget: server validation + point awarding
-    try {
-      const fightRes = await apiClient.post("/matches/campaign", {
-        levelId,
-        userScript: script,
-      });
-
-      const completionToken = fightRes.data.completionToken;
       if (completionToken) {
-        try {
-          const completionRes = await apiClient.post(`/campaign/levels/${levelId}/complete`, {
-            completionToken,
-          });
-          const pointsAwarded =
-            completionRes.data?.pointsAwarded ??
-            level?.pointsReward ??
-            0;
-          setReward(pointsAwarded);
-          window.dispatchEvent(new Event("global-refresh"));
-        } catch {
-          setReward(level?.pointsReward ?? 0);
-        }
+        apiClient.post(`/campaign/levels/${levelId}/complete`, { completionToken })
+          .then((res) => {
+            const pts = res.data?.pointsAwarded ?? level?.pointsReward ?? 0;
+            setReward(pts);
+            window.dispatchEvent(new Event("global-refresh"));
+          })
+          .catch(() => setReward(level?.pointsReward ?? 0));
       }
-    } catch {
-      // Server unreachable — victory already shown, points handled on next sync
-      setReward(0);
     }
-  }, [script, levelId, level]);
+    if (fightStatus === 'error') {
+      setModal("defeat");
+    }
+  }, [fightStatus, fightResult, levelId, level]);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const waitingForReplay = modal === 'loading' && replayFrames.length === 0;
 
   const displayError = invalidLevelId ? "Invalid level ID." : error;
 
@@ -147,7 +135,9 @@ export default function CampaignLevelPage() {
           setScript={setScript}
           modal={modal}
           handleFight={handleFight}
-          onBattleEnd={handleBattleEnd}
+          onBattleEnd={() => {}}
+          replayFrames={replayFrames}
+          waitingForReplay={waitingForReplay}
           router={router}
         />
       ) : (
@@ -157,7 +147,9 @@ export default function CampaignLevelPage() {
           setScript={setScript}
           modal={modal}
           handleFight={handleFight}
-          onBattleEnd={handleBattleEnd}
+          onBattleEnd={() => {}}
+          replayFrames={replayFrames}
+          waitingForReplay={waitingForReplay}
           router={router}
         />
       )}

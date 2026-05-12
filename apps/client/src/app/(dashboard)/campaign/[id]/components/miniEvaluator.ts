@@ -285,23 +285,21 @@ function executeStatement(
 
       switch (cmd) {
         case 'FIRE': {
+          // Aim directly at the foe — compute angle to target
           const dx = enemy.x - robot.x;
           const dy = enemy.y - robot.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < SCAN_RANGE) {
-            const angle = Math.atan2(dy, dx);
-            return { type: 'fire', value: angle, fast: false };
-          }
-          return null;
+          const aimAngle = Math.atan2(dy, dx);
+          return { type: 'fire', value: aimAngle, fast: false };
         }
         case 'MOVE': {
           const dir = action.consequence.args?.[0];
-          if (dir && 'value' in dir && typeof dir.value === 'string') {
-            const d = dir.value.toUpperCase();
-            if (d === 'LEFT') return { type: 'move', value: -1, fast: false };
-            if (d === 'RIGHT') return { type: 'move', value: 1, fast: false };
+          if (dir && 'value' in dir) {
+            const d = String(dir.value).toUpperCase();
+            if (d === 'LEFT')    return { type: 'move', value: -1, fast: false };
+            if (d === 'RIGHT')   return { type: 'move', value:  1, fast: false };
+            if (d === 'BACKUP')  return { type: 'move', value: -2, fast: false };
           }
-          return { type: 'move', value: 0, fast: false };
+          return { type: 'move', value: 0, fast: false }; // FORWARD default
         }
         case 'MOVE_FAST':
           return { type: 'move', value: 0, fast: true };
@@ -310,14 +308,10 @@ function executeStatement(
         case 'STOP':
           return { type: 'stop', value: 0 };
         case 'BURST_FIRE': {
-          const dx = enemy.x - robot.x;
-          const dy = enemy.y - robot.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < SCAN_RANGE) {
-            const angle = Math.atan2(dy, dx);
-            return { type: 'burst', value: angle };
-          }
-          return null;
+          // Aim directly at the foe
+          const bx = enemy.x - robot.x;
+          const by = enemy.y - robot.y;
+          return { type: 'burst', value: Math.atan2(by, bx) };
         }
         case 'SCAN': {
           const dx = enemy.x - robot.x;
@@ -376,9 +370,51 @@ function executeStatement(
     case 'AssignmentStatement': {
       const assignStmt = stmt as AssignmentStatement;
       const name = assignStmt.name.value;
-      const value = evalExpr(assignStmt.value, state.vars, robot, enemy);
+
+      // Handle SET x = SCAN as a special case
+      if (
+        assignStmt.value &&
+        'type' in assignStmt.value &&
+        (assignStmt.value as any).type === 'ScanStatement'
+      ) {
+        const cost = ENERGY_COST['SCAN'] ?? 0;
+        if (robot.energy < cost) return null;
+        robot.energy -= cost;
+        const dx = enemy.x - robot.x;
+        const dy = enemy.y - robot.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const diff = Math.abs(angle - robot.angle);
+        const visible =
+          dist < SCAN_RANGE &&
+          (diff < SCAN_FOV || diff > Math.PI * 2 - SCAN_FOV);
+        state.vars[name] = visible ? 1 : 0;
+        return { type: 'scan', value: visible ? 1 : 0 };
+      }
+
+      // Handle SET x = RAYCAST()
+      if (
+        assignStmt.value &&
+        'type' in assignStmt.value &&
+        (assignStmt.value as any).type === 'FunctionCallExpression' &&
+        (assignStmt.value as any).name === 'RAYCAST'
+      ) {
+        const dx = enemy.x - robot.x;
+        const dy = enemy.y - robot.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const diff = Math.abs(angle - robot.angle);
+        const visible =
+          dist < SCAN_RANGE &&
+          (diff < SCAN_FOV || diff > Math.PI * 2 - SCAN_FOV);
+        state.vars[name] = visible && enemy.isAlive ? dist : 0;
+        return null;
+      }
+
+      // Normal assignment
+      const value = evalExpr(assignStmt.value as Expression, state.vars, robot, enemy);
+
       if (assignStmt.index) {
-        // SET arr[i] = x
         const idx = evalExpr(assignStmt.index, state.vars, robot, enemy);
         const obj = state.vars[name];
         if (Array.isArray(obj) && typeof idx === 'number') {
@@ -387,7 +423,6 @@ function executeStatement(
           (obj as Record<string, unknown>)[String(idx)] = value;
         }
       } else if (assignStmt.property) {
-        // SET obj.prop = x
         const obj = state.vars[name];
         if (typeof obj === 'object' && obj !== null) {
           (obj as Record<string, unknown>)[assignStmt.property] = value;

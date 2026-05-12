@@ -16,8 +16,19 @@ export class CooldownManager {
   private readonly FIRE_COOLDOWN_MS = 500;
   private readonly ACTION_COOLDOWN_MS = 500;
 
+  /** When non-null, used instead of Date.now() — enables headless simulation mode. */
+  private virtualTime: number | null = null;
+
+  setVirtualTime(ms: number): void {
+    this.virtualTime = ms;
+  }
+
+  private now(): number {
+    return this.virtualTime !== null ? this.virtualTime : Date.now();
+  }
+
   isOffCooldown(robotId: string, actionCommand: string): boolean {
-    const now = Date.now();
+    const now = this.now();
     const robotCooldowns = this.actionCooldowns.get(robotId) ?? new Map();
     if (!this.actionCooldowns.has(robotId))
       this.actionCooldowns.set(robotId, robotCooldowns);
@@ -27,7 +38,7 @@ export class CooldownManager {
   }
 
   markExecuted(robotId: string, actionCommand: string): void {
-    const now = Date.now();
+    const now = this.now();
     const robotCooldowns = this.actionCooldowns.get(robotId) ?? new Map();
     if (!this.actionCooldowns.has(robotId))
       this.actionCooldowns.set(robotId, robotCooldowns);
@@ -36,13 +47,13 @@ export class CooldownManager {
 
   isFireOffCooldown(robotId: string): boolean {
     return (
-      Date.now() - (this.lastFireTime.get(robotId) ?? 0) >=
+      this.now() - (this.lastFireTime.get(robotId) ?? 0) >=
       this.FIRE_COOLDOWN_MS
     );
   }
 
   markFired(robotId: string): void {
-    this.lastFireTime.set(robotId, Date.now());
+    this.lastFireTime.set(robotId, this.now());
   }
 
   /**
@@ -61,7 +72,7 @@ export class CooldownManager {
 
     const key = `${robotId}\0${actionCommand}`;
     const lastEmit = this.lastNonContinuousEmit.get(key) ?? 0;
-    return Date.now() - lastEmit >= 1000;
+    return this.now() - lastEmit >= 1000;
   }
 
   shouldEmitQuery(robotId: string, queryName: string): boolean {
@@ -75,7 +86,7 @@ export class CooldownManager {
   markQueryEmitted(robotId: string, queryName: string): void {
     const key = `${robotId}-${queryName}`;
     this.queryEmits.add(key);
-    const now = Date.now();
+    const now = this.now();
     const robotCooldowns = this.actionCooldowns.get(robotId) ?? new Map();
     if (!this.actionCooldowns.has(robotId))
       this.actionCooldowns.set(robotId, robotCooldowns);
@@ -92,9 +103,9 @@ export class CooldownManager {
       this.lastExecutedAction.set(robotId, actionCommand);
     } else {
       const key = `${robotId}\0${actionCommand}`;
-      this.lastNonContinuousEmit.set(key, Date.now());
+      this.lastNonContinuousEmit.set(key, this.now());
     }
-    this.lastLogicEmitTime.set(robotId, Date.now());
+    this.lastLogicEmitTime.set(robotId, this.now());
   }
 
   clearState(robotId: string, fullReset: boolean = true): void {

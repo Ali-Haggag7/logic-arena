@@ -31,28 +31,30 @@ interface ArenaCanvasProps {
   userScript?: string;
   enemyScript?: string;
   onBattleEnd?: (winner: 'player' | 'enemy' | 'draw') => void;
+  replayFrames?: any[];
   aspectRatio?: number;
   className?: string;
+  waitingForReplay?: boolean;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const FIRE_DAMAGE          = 25;
-const BURST_DAMAGE         = 8;
-const BURST_SPREAD         = 0.12;
-const PROJ_SPEED           = 0.014;
-const PROJ_LIFE            = 70;
-const ROBOT_SIZE           = 0.035;
-const RESPAWN_DELAY        = 90;
-const INVULN_TICKS         = 30;
-const ENERGY_REGEN         = 0.5;
-const FOV_HALF             = 0.9;    // radians — half-angle of FOV cone
-const FOV_RANGE            = 0.55;   // normalised
-const FLASH_DURATION       = 24;     // frames of white kill-flash
+const FIRE_DAMAGE = 15;
+const BURST_DAMAGE = 5;
+const BURST_SPREAD = 0.12;
+const PROJ_SPEED = 0.006;  // slower, more readable projectiles
+const PROJ_LIFE = 70;     // shorter life = fewer bullets on screen
+const ROBOT_SIZE = 0.035;
+const RESPAWN_DELAY = 90;
+const INVULN_TICKS = 30;
+const ENERGY_REGEN = 0.5;
+const FOV_HALF = 0.9;    // radians — half-angle of FOV cone
+const FOV_RANGE = 0.55;   // normalised
+const FLASH_DURATION = 24;     // frames of white kill-flash
 const PREVIEW_EVAL_INTERVAL = 6;     // preview: eval every 6 frames ≈ 10 Hz
-const BATTLE_EVAL_INTERVAL  = 18;    // battle: eval every 18 frames ≈ 3.3 Hz (matches 3D arena)
-const MAX_BATTLE_EVAL_TICKS = 300;   // ≈90 s at ~3.3 Hz → draw
-const BATTLE_END_DELAY_MS   = 800;   // ms after kill-flash before showing result
+const BATTLE_EVAL_INTERVAL = 6;     // battle: eval every 6 frames ≈ 10 Hz
+const MAX_BATTLE_EVAL_TICKS = 180;   // ≈90 s at ~2 Hz → draw
+const BATTLE_END_DELAY_MS = 800;   // ms after kill-flash before showing result
 
 // ── Drawing helpers ──────────────────────────────────────────────────────────
 
@@ -61,38 +63,38 @@ function drawGrid(ctx: CanvasRenderingContext2D, W: number, H: number, rgb: stri
   ctx.strokeStyle = `rgba(${rgb},0.04)`;
   ctx.lineWidth = 0.5;
   const step = Math.min(W, H) / 10;
-  for (let x = 0; x <= W; x += step) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for (let y = 0; y <= H; y += step) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  for (let x = 0; x <= W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
   ctx.restore();
 }
 
 function drawScanLine(ctx: CanvasRenderingContext2D, W: number, H: number, tick: number, rgb: string): void {
   const y = (tick * 1.4) % H;
   ctx.save();
-  const g = ctx.createLinearGradient(0, y-4, 0, y+4);
+  const g = ctx.createLinearGradient(0, y - 4, 0, y + 4);
   g.addColorStop(0, 'transparent');
   g.addColorStop(0.5, `rgba(${rgb},0.03)`);
   g.addColorStop(1, 'transparent');
   ctx.fillStyle = g;
-  ctx.fillRect(0, y-4, W, 8);
+  ctx.fillRect(0, y - 4, W, 8);
   ctx.restore();
 }
 
 function drawObstacle(ctx: CanvasRenderingContext2D, obs: ArenaObstacle, W: number, H: number): void {
-  const px = obs.x*W, py = obs.y*H, pw = obs.w*W, ph = obs.h*H;
+  const px = obs.x * W, py = obs.y * H, pw = obs.w * W, ph = obs.h * H;
   ctx.save();
   ctx.translate(px, py);
-  const cm: Record<string,{fill:string;stroke:string}> = {
-    SOLID: { fill:'rgba(100,120,140,0.25)', stroke:'rgba(100,140,180,0.4)' },
-    TRAP:  { fill:'rgba(245,158,11,0.12)',  stroke:'rgba(245,158,11,0.35)' },
-    LAVA:  { fill:'rgba(239,68,68,0.15)',   stroke:'rgba(239,68,68,0.45)' },
+  const cm: Record<string, { fill: string; stroke: string }> = {
+    SOLID: { fill: 'rgba(100,120,140,0.25)', stroke: 'rgba(100,140,180,0.4)' },
+    TRAP: { fill: 'rgba(245,158,11,0.12)', stroke: 'rgba(245,158,11,0.35)' },
+    LAVA: { fill: 'rgba(239,68,68,0.15)', stroke: 'rgba(239,68,68,0.45)' },
   };
   const c = cm[obs.type];
   ctx.fillStyle = c.fill;
   ctx.strokeStyle = c.stroke;
   ctx.lineWidth = 1;
-  ctx.fillRect(-pw/2, -ph/2, pw, ph);
-  ctx.strokeRect(-pw/2, -ph/2, pw, ph);
+  ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+  ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
   ctx.restore();
 }
 
@@ -131,9 +133,9 @@ function drawRobot(
   fovAlpha: number,
 ): void {
   if (!robot.isAlive) return;
-  const px = robot.x*W, py = robot.y*H;
-  const r = robot.size * Math.min(W,H);
-  const invPulse = robot.invulnerableTimer > 0 ? 0.3 + Math.sin(tick*0.3)*0.3 : 0;
+  const px = robot.x * W, py = robot.y * H;
+  const r = robot.size * Math.min(W, H);
+  const invPulse = robot.invulnerableTimer > 0 ? 0.3 + Math.sin(tick * 0.3) * 0.3 : 0;
   const a = robot.invulnerableTimer > 0 ? 0.4 + invPulse : 1;
 
   // FOV cone first (behind robot)
@@ -144,20 +146,20 @@ function drawRobot(
   ctx.globalAlpha = a;
 
   // Glow
-  const glowR = r*(1.8 + Math.sin(tick*0.05)*0.15);
-  const grd = ctx.createRadialGradient(0,0,r*0.3,0,0,glowR);
+  const glowR = r * (1.8 + Math.sin(tick * 0.05) * 0.15);
+  const grd = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, glowR);
   grd.addColorStop(0, `${robot.color}30`);
   grd.addColorStop(1, 'transparent');
   ctx.fillStyle = grd;
-  ctx.beginPath(); ctx.arc(0,0,glowR,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, glowR, 0, Math.PI * 2); ctx.fill();
 
   // Hull
   ctx.rotate(robot.angle);
   ctx.beginPath();
-  for (let i=0; i<6; i++) {
-    const ang = (i/6)*Math.PI*2 - Math.PI/6;
-    const rx=Math.cos(ang)*r, ry=Math.sin(ang)*r*0.8;
-    i===0 ? ctx.moveTo(rx,ry) : ctx.lineTo(rx,ry);
+  for (let i = 0; i < 6; i++) {
+    const ang = (i / 6) * Math.PI * 2 - Math.PI / 6;
+    const rx = Math.cos(ang) * r, ry = Math.sin(ang) * r * 0.8;
+    i === 0 ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry);
   }
   ctx.closePath();
   ctx.fillStyle = `${robot.color}22`;
@@ -168,63 +170,63 @@ function drawRobot(
   // Barrel
   ctx.strokeStyle = robot.color;
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(r*0.2,0); ctx.lineTo(r*1.4,0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(r * 0.2, 0); ctx.lineTo(r * 1.4, 0); ctx.stroke();
 
   // Core
   ctx.fillStyle = robot.color;
-  ctx.beginPath(); ctx.arc(0,0,r*0.28,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.28, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 
   // Health bar
-  const bw=r*3, bh=3, bx=px-bw/2, by=py-r*2-bh;
-  const hp = robot.health/robot.maxHealth;
-  ctx.save(); ctx.globalAlpha=a;
-  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(bx,by,bw,bh);
-  ctx.fillStyle = hp>0.5 ? '#22d3ee' : hp>0.25 ? '#f59e0b' : '#ef4444';
-  ctx.fillRect(bx,by,bw*hp,bh);
+  const bw = r * 3, bh = 3, bx = px - bw / 2, by = py - r * 2 - bh;
+  const hp = robot.health / robot.maxHealth;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = hp > 0.5 ? '#22d3ee' : hp > 0.25 ? '#f59e0b' : '#ef4444';
+  ctx.fillRect(bx, by, bw * hp, bh);
   // Energy bar
-  const ep = robot.energy/robot.maxEnergy;
-  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(bx,by-5,bw,2);
-  ctx.fillStyle = ep>0.5?'#a78bfa':ep>0.25?'#f59e0b':'#ef4444';
-  ctx.fillRect(bx,by-5,bw*ep,2);
+  const ep = robot.energy / robot.maxEnergy;
+  ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(bx, by - 5, bw, 2);
+  ctx.fillStyle = ep > 0.5 ? '#a78bfa' : ep > 0.25 ? '#f59e0b' : '#ef4444';
+  ctx.fillRect(bx, by - 5, bw * ep, 2);
   ctx.restore();
 }
 
 function drawProjectile(ctx: CanvasRenderingContext2D, p: ArenaProjectile, W: number, H: number): void {
-  const px=p.x*W, py=p.y*H;
+  const px = p.x * W, py = p.y * H;
   ctx.save();
-  const g = ctx.createRadialGradient(px,py,0,px,py,6);
+  const g = ctx.createRadialGradient(px, py, 0, px, py, 6);
   g.addColorStop(0, p.color);
   g.addColorStop(0.5, `${p.color}80`);
-  g.addColorStop(1,'transparent');
-  ctx.fillStyle=g;
-  ctx.beginPath(); ctx.arc(px,py,6,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#ffffff';
-  ctx.beginPath(); ctx.arc(px,py,2,0,Math.PI*2); ctx.fill();
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
 
 function drawGraphNet(ctx: CanvasRenderingContext2D, W: number, H: number, tick: number, rgb: string): void {
-  const nodes=[{x:0.5,y:0.5},{x:0.65,y:0.3},{x:0.8,y:0.55},{x:0.7,y:0.75},{x:0.55,y:0.8},{x:0.75,y:0.2}];
+  const nodes = [{ x: 0.5, y: 0.5 }, { x: 0.65, y: 0.3 }, { x: 0.8, y: 0.55 }, { x: 0.7, y: 0.75 }, { x: 0.55, y: 0.8 }, { x: 0.75, y: 0.2 }];
   ctx.save();
-  ctx.strokeStyle=`rgba(${rgb},0.08)`; ctx.lineWidth=0.8;
-  for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
-    ctx.beginPath(); ctx.moveTo(nodes[i].x*W,nodes[i].y*H); ctx.lineTo(nodes[j].x*W,nodes[j].y*H); ctx.stroke();
+  ctx.strokeStyle = `rgba(${rgb},0.08)`; ctx.lineWidth = 0.8;
+  for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+    ctx.beginPath(); ctx.moveTo(nodes[i].x * W, nodes[i].y * H); ctx.lineTo(nodes[j].x * W, nodes[j].y * H); ctx.stroke();
   }
-  nodes.forEach((n,i)=>{
-    const p=0.5+Math.sin(tick*0.04+i*1.2)*0.3;
-    ctx.strokeStyle=`rgba(${rgb},${p*0.4})`; ctx.beginPath(); ctx.arc(n.x*W,n.y*H,4,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle=`rgba(${rgb},${0.5+Math.sin(tick*0.04)*0.3})`; ctx.fill();
+  nodes.forEach((n, i) => {
+    const p = 0.5 + Math.sin(tick * 0.04 + i * 1.2) * 0.3;
+    ctx.strokeStyle = `rgba(${rgb},${p * 0.4})`; ctx.beginPath(); ctx.arc(n.x * W, n.y * H, 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = `rgba(${rgb},${0.5 + Math.sin(tick * 0.04) * 0.3})`; ctx.fill();
   });
   ctx.restore();
 }
 
 function drawLabel(ctx: CanvasRenderingContext2D, label: string, W: number, H: number, rgb: string): void {
   ctx.save();
-  ctx.font=`500 ${Math.max(9,W*0.018)}px monospace`;
-  ctx.fillStyle=`rgba(${rgb},0.35)`;
-  ctx.textAlign='right';
-  ctx.fillText(label.toUpperCase(), W-8, H-7);
+  ctx.font = `500 ${Math.max(9, W * 0.018)}px monospace`;
+  ctx.fillStyle = `rgba(${rgb},0.35)`;
+  ctx.textAlign = 'right';
+  ctx.fillText(label.toUpperCase(), W - 8, H - 7);
   ctx.restore();
 }
 
@@ -232,8 +234,8 @@ function drawLabel(ctx: CanvasRenderingContext2D, label: string, W: number, H: n
 
 function hitCheck(p: ArenaProjectile, robot: ArenaRobot): boolean {
   if (!robot.isAlive) return false;
-  const dx=p.x-robot.x, dy=p.y-robot.y;
-  return Math.sqrt(dx*dx+dy*dy) < ROBOT_SIZE*2;
+  const dx = p.x - robot.x, dy = p.y - robot.y;
+  return Math.sqrt(dx * dx + dy * dy) < ROBOT_SIZE * 2;
 }
 
 function applyAction(
@@ -244,28 +246,63 @@ function applyAction(
 ): void {
   switch (action.type) {
     case 'fire': {
-      const a=action.value, d=robot.size*2;
-      projs.push({ id:nextId.current++, x:robot.x+Math.cos(a)*d, y:robot.y+Math.sin(a)*d,
-        vx:Math.cos(a)*PROJ_SPEED, vy:Math.sin(a)*PROJ_SPEED,
-        color:robot.trailColor, ownerId:robot.id, life:PROJ_LIFE, damage:FIRE_DAMAGE });
+      if ((robot as any)._fireCooldown > 0) break;
+      (robot as any)._fireCooldown = 30;
+      const a = action.value, d = robot.size * 2;
+      projs.push({
+        id: nextId.current++,
+        x: robot.x + Math.cos(a) * d,
+        y: robot.y + Math.sin(a) * d,
+        vx: Math.cos(a) * PROJ_SPEED,
+        vy: Math.sin(a) * PROJ_SPEED,
+        color: robot.trailColor,
+        ownerId: robot.id,
+        life: PROJ_LIFE,
+        damage: FIRE_DAMAGE,
+      });
       break;
     }
     case 'burst': {
-      const d=robot.size*2;
-      for(let i=-1;i<=1;i++){
-        const a=action.value+BURST_SPREAD*i;
-        projs.push({ id:nextId.current++, x:robot.x+Math.cos(a)*d, y:robot.y+Math.sin(a)*d,
-          vx:Math.cos(a)*PROJ_SPEED, vy:Math.sin(a)*PROJ_SPEED,
-          color:robot.trailColor, ownerId:robot.id, life:PROJ_LIFE, damage:BURST_DAMAGE });
+      if ((robot as any)._fireCooldown > 0) break;
+      (robot as any)._fireCooldown = 50;
+      const d = robot.size * 2;
+      for (let i = -1; i <= 1; i++) {
+        const a = action.value + BURST_SPREAD * i;
+        projs.push({
+          id: nextId.current++,
+          x: robot.x + Math.cos(a) * d,
+          y: robot.y + Math.sin(a) * d,
+          vx: Math.cos(a) * PROJ_SPEED,
+          vy: Math.sin(a) * PROJ_SPEED,
+          color: robot.trailColor,
+          ownerId: robot.id,
+          life: PROJ_LIFE,
+          damage: BURST_DAMAGE,
+        });
       }
       break;
     }
     case 'move': {
       const spd = action.fast ? 0.025 : 0.012;
-      if (action.value===-1) { robot.x-=Math.cos(robot.angle)*spd; robot.y-=Math.sin(robot.angle)*spd; }
-      else { robot.x+=Math.cos(robot.angle)*spd; robot.y+=Math.sin(robot.angle)*spd; }
-      robot.x=Math.max(ROBOT_SIZE,Math.min(1-ROBOT_SIZE,robot.x));
-      robot.y=Math.max(ROBOT_SIZE,Math.min(1-ROBOT_SIZE,robot.y));
+      switch (action.value) {
+        case -2: // BACKUP
+          robot.x -= Math.cos(robot.angle) * spd;
+          robot.y -= Math.sin(robot.angle) * spd;
+          break;
+        case -1: // LEFT strafe
+          robot.x -= Math.cos(robot.angle + Math.PI / 2) * spd;
+          robot.y -= Math.sin(robot.angle + Math.PI / 2) * spd;
+          break;
+        case 1: // RIGHT strafe
+          robot.x += Math.cos(robot.angle + Math.PI / 2) * spd;
+          robot.y += Math.sin(robot.angle + Math.PI / 2) * spd;
+          break;
+        default: // FORWARD
+          robot.x += Math.cos(robot.angle) * spd;
+          robot.y += Math.sin(robot.angle) * spd;
+      }
+      robot.x = Math.max(ROBOT_SIZE, Math.min(1 - ROBOT_SIZE, robot.x));
+      robot.y = Math.max(ROBOT_SIZE, Math.min(1 - ROBOT_SIZE, robot.y));
       break;
     }
   }
@@ -279,31 +316,35 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   userScript,
   enemyScript: enemyScriptProp,
   onBattleEnd,
-  aspectRatio = 16/7,
+  replayFrames,
+  aspectRatio = 16 / 7,
   className = "",
+  waitingForReplay = false,
 }: ArenaCanvasProps) {
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
-  const stateRef    = useRef<SceneState>(scene.init());
-  const evalRef     = useRef<Map<string, EvalState|null>>(new Map());
-  const rafRef      = useRef<number>(0);
-  const visibleRef  = useRef(true);
-  const nextIdRef   = useRef({ current: 0 });
-  const errRef         = useRef<Set<string>>(new Set());
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stateRef = useRef<SceneState>(scene.init());
+  const evalRef = useRef<Map<string, EvalState | null>>(new Map());
+  const rafRef = useRef<number>(0);
+  const visibleRef = useRef(true);
+  const nextIdRef = useRef({ current: 0 });
+  const errRef = useRef<Set<string>>(new Set());
   const scriptStateRef = useRef<ScriptState | null>(null);
 
   // Preview-mode state (enemy FOV + blue-death reset loop)
-  const fovTimerRef    = useRef(0);   // frames remaining to show FOV cone
-  const flashTimerRef  = useRef(0);   // kill-flash frames remaining
+  const fovTimerRef = useRef(0);   // frames remaining to show FOV cone
+  const flashTimerRef = useRef(0);   // kill-flash frames remaining
   const fovScanTimerRef = useRef(0);  // frames since scan started (counts up)
-  const fovFadeRef      = useRef(0);  // frames into scan fade-out
+  const fovFadeRef = useRef(0);  // frames into scan fade-out
 
   // Battle-mode state
-  const battleEndedRef   = useRef(false);  // prevents double-firing onBattleEnd
+  const battleEndedRef = useRef(false);  // prevents double-firing onBattleEnd
   const battleEvalTickRef = useRef(0);     // draw-timeout counter
-  const onBattleEndRef   = useRef(onBattleEnd);
+  const onBattleEndRef = useRef(onBattleEnd);
   useEffect(() => { onBattleEndRef.current = onBattleEnd; }, [onBattleEnd]);
 
   const previewMode = !userScript;
+  const replayMode = !!replayFrames && replayFrames.length > 0;
+  const replayIndexRef = useRef(0);
 
   useEffect(() => {
     const s = scene.init();
@@ -321,7 +362,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       scriptStateRef.current = null;
     }
 
-    const evals = new Map<string, EvalState|null>();
+    const evals = new Map<string, EvalState | null>();
     const errors = new Set<string>();
 
     if (!previewMode) {
@@ -338,7 +379,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
 
     evalRef.current = evals;
     errRef.current = errors;
-  }, [scene, levelId, userScript, enemyScriptProp, previewMode]);
+  }, [scene, levelId, userScript, enemyScriptProp, previewMode, replayFrames]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -351,24 +392,25 @@ export const ArenaCanvas = memo(function ArenaCanvas({
     io.observe(canvas);
 
     let lastTime = 0;
-    const FRAME_MS = 1000/60;
+    const FRAME_MS = 1000 / 60;
     let evalTick = 0;
 
     const render = (now: number) => {
       rafRef.current = requestAnimationFrame(render);
       if (!visibleRef.current) return;
+      if (waitingForReplay) return;
       if (now - lastTime < FRAME_MS - 2) return;
       lastTime = now;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      const W=canvas.width, H=canvas.height;
-      const state=stateRef.current;
-      const evals=evalRef.current;
-      const nextId=nextIdRef.current;
-      const errors=errRef.current;
-      const css=getComputedStyle(document.documentElement);
-      const rgb=css.getPropertyValue('--accent-rgb').trim()||'34,211,238';
+      const W = canvas.width, H = canvas.height;
+      const state = stateRef.current;
+      const evals = evalRef.current;
+      const nextId = nextIdRef.current;
+      const errors = errRef.current;
+      const css = getComputedStyle(document.documentElement);
+      const rgb = css.getPropertyValue('--accent-rgb').trim() || '34,211,238';
 
       let scanAlpha = 0;
 
@@ -377,6 +419,44 @@ export const ArenaCanvas = memo(function ArenaCanvas({
         scene.tick(state);
       }
       state.tick++;
+
+      // ── Replay mode — play back server frames ──────────────────────────────
+      if (replayMode && replayFrames) {
+        const idx = Math.min(replayIndexRef.current, replayFrames.length - 1);
+        const frame = replayFrames[idx];
+        const arenaW = 800, arenaH = 600;
+        if (frame?.robots) {
+          for (const robot of state.robots) {
+            const src = frame.robots.find((r: any) => r.id === robot.id);
+            if (!src) continue;
+            robot.x = (src.position?.x ?? 0) / arenaW;
+            robot.y = (src.position?.y ?? 0) / arenaH;
+            robot.angle = src.rotation ?? robot.angle;
+            robot.health = src.health ?? robot.health;
+            robot.energy = src.energy ?? robot.energy;
+            robot.isAlive = (src.health ?? 0) > 0;
+          }
+        }
+        if (frame?.projectiles) {
+          state.projectiles = frame.projectiles.map((p: any) => ({
+            id: p.id,
+            x: (p.position?.x ?? 0) / arenaW,
+            y: (p.position?.y ?? 0) / arenaH,
+            vx: 0,
+            vy: 0,
+            color: p.color ?? '#ffffff',
+            ownerId: p.ownerId ?? '',
+            life: 99,
+            damage: 0,
+          }));
+        }
+        if (replayIndexRef.current < replayFrames.length - 1) {
+          replayIndexRef.current++;
+        } else if (!battleEndedRef.current) {
+          battleEndedRef.current = true;
+          // winner already signalled by server — no action needed here
+        }
+      }
 
       // ── Script tick (every frame, preview mode) ────────────────────────────
       if (previewMode && scriptStateRef.current) {
@@ -421,49 +501,58 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       }
 
       // ── Evaluator tick ─────────────────────────────────────────────────────
-      const evalInterval = previewMode ? PREVIEW_EVAL_INTERVAL : BATTLE_EVAL_INTERVAL;
-      evalTick++;
-      if (evalTick >= evalInterval) {
-        evalTick = 0;
-        const useEval = !previewMode || !scene.script;
+      if (!replayMode) {
+        const evalInterval = previewMode ? PREVIEW_EVAL_INTERVAL : BATTLE_EVAL_INTERVAL;
+        evalTick++;
+        if (evalTick >= evalInterval) {
+          evalTick = 0;
+          const useEval = !previewMode || !scene.script;
 
-        // Battle-mode draw timeout
-        if (!previewMode && !battleEndedRef.current) {
-          battleEvalTickRef.current++;
-          if (battleEvalTickRef.current >= MAX_BATTLE_EVAL_TICKS) {
-            battleEndedRef.current = true;
-            onBattleEndRef.current?.('draw');
-          }
-        }
-
-        for (const robot of state.robots) {
-          if (previewMode && robot.id === 'player') continue;
-          if (!robot.isAlive) {
-            if (robot.respawnTimer > 0) {
-              robot.respawnTimer--;
+          // Battle-mode draw timeout
+          if (!previewMode && !battleEndedRef.current) {
+            battleEvalTickRef.current++;
+            if (battleEvalTickRef.current >= MAX_BATTLE_EVAL_TICKS) {
+              battleEndedRef.current = true;
+              onBattleEndRef.current?.('draw');
             }
-            continue;
           }
-          // Stop running evals once battle is decided
-          if (!previewMode && battleEndedRef.current) continue;
 
-          if (robot.invulnerableTimer > 0) robot.invulnerableTimer--;
-          if (robot.energy < robot.maxEnergy) robot.energy = Math.min(robot.maxEnergy, robot.energy+ENERGY_REGEN);
+          for (const robot of state.robots) {
+            if (previewMode && robot.id === 'player') continue;
+            if (!robot.isAlive) {
+              if (robot.respawnTimer > 0) {
+                robot.respawnTimer--;
+              }
+              continue;
+            }
+            // Stop running evals once battle is decided
+            if (!previewMode && battleEndedRef.current) continue;
 
-          if (useEval) {
-            const es = evals.get(robot.id);
-            const hasErr = errors.has(robot.id);
-            if (es && !hasErr) {
-              const foe = state.robots.find(r=>r.id!==robot.id)!;
-              const action = tickEvaluator(es, robot, foe, state.projectiles, nextId);
-              if (action) {
-                if (action.type==='scan' && robot.id==='enemy') {
-                  fovTimerRef.current = 30;
+            if (robot.invulnerableTimer > 0) robot.invulnerableTimer--;
+            if (robot.energy < robot.maxEnergy) robot.energy = Math.min(robot.maxEnergy, robot.energy + ENERGY_REGEN);
+
+            if (useEval) {
+              const es = evals.get(robot.id);
+              const hasErr = errors.has(robot.id);
+              if (es && !hasErr) {
+                const foe = state.robots.find(r => r.id !== robot.id)!;
+                const action = tickEvaluator(es, robot, foe, state.projectiles, nextId);
+                if (action) {
+                  if (action.type === 'scan' && robot.id === 'enemy') {
+                    fovTimerRef.current = 30;
+                  }
+                  applyAction(action, robot, state.projectiles, nextId);
                 }
-                applyAction(action, robot, state.projectiles, nextId);
               }
             }
           }
+        }
+      }
+
+      // ── Fire cooldown decay ───────────────────────────────────────────────────
+      for (const robot of state.robots) {
+        if ((robot as any)._fireCooldown > 0) {
+          (robot as any)._fireCooldown--;
         }
       }
 
@@ -472,27 +561,27 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       if (flashTimerRef.current > 0) flashTimerRef.current--;
 
       // ── Projectile physics ────────────────────────────────────────────────
-      for (let i=state.projectiles.length-1;i>=0;i--) {
-        const p=state.projectiles[i];
-        p.x+=p.vx; p.y+=p.vy; p.life--;
-        let hit=false;
+      for (let i = state.projectiles.length - 1; i >= 0; i--) {
+        const p = state.projectiles[i];
+        p.x += p.vx; p.y += p.vy; p.life--;
+        let hit = false;
         for (const robot of state.robots) {
-          if (robot.id===p.ownerId || !robot.isAlive || robot.invulnerableTimer>0) continue;
-          if (hitCheck(p,robot)) {
-            if (previewMode && robot.id==='player') {
+          if (robot.id === p.ownerId || !robot.isAlive || robot.invulnerableTimer > 0) continue;
+          if (hitCheck(p, robot)) {
+            if (previewMode && robot.id === 'player') {
               // Preview mode: player is immune, just remove projectile
-              state.projectiles.splice(i,1);
-              hit=true;
+              state.projectiles.splice(i, 1);
+              hit = true;
               break;
             }
-            robot.health=Math.max(0,robot.health-(p.damage??FIRE_DAMAGE));
-            state.projectiles.splice(i,1);
-            hit=true;
-            if (robot.health<=0) {
-              robot.isAlive=false;
-              flashTimerRef.current=FLASH_DURATION;
-              robot.respawnTimer=RESPAWN_DELAY;
-              robot.energy=0;
+            robot.health = Math.max(0, robot.health - (p.damage ?? FIRE_DAMAGE));
+            state.projectiles.splice(i, 1);
+            hit = true;
+            if (robot.health <= 0) {
+              robot.isAlive = false;
+              flashTimerRef.current = FLASH_DURATION;
+              robot.respawnTimer = RESPAWN_DELAY;
+              robot.energy = 0;
 
               // ── Battle mode: first kill ends the match ─────────────────
               if (!previewMode && !battleEndedRef.current) {
@@ -500,8 +589,8 @@ export const ArenaCanvas = memo(function ArenaCanvas({
                 const otherRobot = state.robots.find(r => r.id !== robot.id);
                 const winner: 'player' | 'enemy' | 'draw' =
                   (otherRobot && !otherRobot.isAlive) ? 'draw'
-                  : robot.id === 'player' ? 'enemy'
-                  : 'player';
+                    : robot.id === 'player' ? 'enemy'
+                      : 'player';
                 // Brief pause after kill-flash so player sees the death
                 const delay = BATTLE_END_DELAY_MS;
                 setTimeout(() => onBattleEndRef.current?.(winner), delay);
@@ -510,29 +599,45 @@ export const ArenaCanvas = memo(function ArenaCanvas({
             break;
           }
         }
-        if (!hit && (p.life<=0||p.x<-0.05||p.x>1.05||p.y<-0.05||p.y>1.05)) {
-          state.projectiles.splice(i,1);
+        if (!hit) {
+          // Check obstacle collision (SOLID only)
+          for (const obs of state.obstacles) {
+            if (obs.type !== 'SOLID') continue;
+            const left   = obs.x - obs.w / 2;
+            const right  = obs.x + obs.w / 2;
+            const top    = obs.y - obs.h / 2;
+            const bottom = obs.y + obs.h / 2;
+            if (p.x >= left && p.x <= right && p.y >= top && p.y <= bottom) {
+              state.projectiles.splice(i, 1);
+              hit = true;
+              break;
+            }
+          }
+        }
+
+        if (!hit && (p.life <= 0 || p.x < -0.05 || p.x > 1.05 || p.y < -0.05 || p.y > 1.05)) {
+          state.projectiles.splice(i, 1);
         }
       }
 
       // ── Render ────────────────────────────────────────────────────────────
-      ctx.clearRect(0,0,W,H);
-      ctx.fillStyle='rgba(3,7,18,0.92)';
-      ctx.fillRect(0,0,W,H);
-      drawGrid(ctx,W,H,rgb);
-      drawScanLine(ctx,W,H,state.tick,rgb);
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(3,7,18,0.92)';
+      ctx.fillRect(0, 0, W, H);
+      drawGrid(ctx, W, H, rgb);
+      drawScanLine(ctx, W, H, state.tick, rgb);
 
       if (/PATHFIND|gfx|GRAPH|NODE|EDGE|BREADTH|DEPTH|CYCLE|SPANNING|TOPOLOGICAL|DIJKSTRA|ORACLE/.test(scene.label)) {
-        drawGraphNet(ctx,W,H,state.tick,rgb);
+        drawGraphNet(ctx, W, H, state.tick, rgb);
       }
 
-      state.obstacles.forEach(obs=>drawObstacle(ctx,obs,W,H));
+      state.obstacles.forEach(obs => drawObstacle(ctx, obs, W, H));
 
       // Preview FOV cone (red, 60°, drawn before robots)
       if (previewMode) {
-        const enemy = state.robots.find(r=>r.id==='enemy');
+        const enemy = state.robots.find(r => r.id === 'enemy');
         if (enemy && enemy.isAlive && scanAlpha > 0) {
-          const px = enemy.x*W, py = enemy.y*H;
+          const px = enemy.x * W, py = enemy.y * H;
           const range = 0.45 * Math.min(W, H);
           const halfAngle = Math.PI / 6;
           ctx.save();
@@ -547,45 +652,45 @@ export const ArenaCanvas = memo(function ArenaCanvas({
         }
       }
 
-      state.projectiles.forEach(p=>drawProjectile(ctx,p,W,H));
+      state.projectiles.forEach(p => drawProjectile(ctx, p, W, H));
 
-      const enemy = state.robots.find(r=>r.id==='enemy');
-      const player = state.robots.find(r=>r.id==='player');
-      const fovA = fovTimerRef.current/30;
+      const enemy = state.robots.find(r => r.id === 'enemy');
+      const player = state.robots.find(r => r.id === 'player');
+      const fovA = fovTimerRef.current / 30;
 
-      if (enemy) drawRobot(ctx,enemy,W,H,state.tick, fovA);
-      if (player) drawRobot(ctx,player,W,H,state.tick, 0);
+      if (enemy) drawRobot(ctx, enemy, W, H, state.tick, fovA);
+      if (player) drawRobot(ctx, player, W, H, state.tick, 0);
 
       // Kill flash
       if (flashTimerRef.current > 0) {
-        const fa = (flashTimerRef.current/FLASH_DURATION)*0.35;
+        const fa = (flashTimerRef.current / FLASH_DURATION) * 0.35;
         ctx.save();
-        ctx.globalAlpha=fa;
-        ctx.fillStyle='#ffffff';
-        ctx.fillRect(0,0,W,H);
+        ctx.globalAlpha = fa;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
         ctx.restore();
       }
 
       // Error indicators
       if (errors.has('player') && !previewMode) {
-        ctx.save(); ctx.fillStyle='#f59e0b';
-        ctx.font=`bold ${Math.max(10,W*0.022)}px monospace`;
-        ctx.textAlign='left'; ctx.globalAlpha=0.5+Math.sin(state.tick*0.08)*0.3;
-        ctx.fillText('⚠ PLAYER SCRIPT ERROR',8,H-7); ctx.restore();
+        ctx.save(); ctx.fillStyle = '#f59e0b';
+        ctx.font = `bold ${Math.max(10, W * 0.022)}px monospace`;
+        ctx.textAlign = 'left'; ctx.globalAlpha = 0.5 + Math.sin(state.tick * 0.08) * 0.3;
+        ctx.fillText('⚠ PLAYER SCRIPT ERROR', 8, H - 7); ctx.restore();
       }
       if (errors.has('enemy')) {
-        ctx.save(); ctx.fillStyle='#ef4444';
-        ctx.font=`bold ${Math.max(10,W*0.022)}px monospace`;
-        ctx.textAlign='left'; ctx.globalAlpha=0.5+Math.sin(state.tick*0.08)*0.3;
-        ctx.fillText('⚠ ENEMY SCRIPT ERROR',8,14); ctx.restore();
+        ctx.save(); ctx.fillStyle = '#ef4444';
+        ctx.font = `bold ${Math.max(10, W * 0.022)}px monospace`;
+        ctx.textAlign = 'left'; ctx.globalAlpha = 0.5 + Math.sin(state.tick * 0.08) * 0.3;
+        ctx.fillText('⚠ ENEMY SCRIPT ERROR', 8, 14); ctx.restore();
       }
 
-      drawLabel(ctx,scene.label,W,H,rgb);
+      drawLabel(ctx, scene.label, W, H, rgb);
     };
 
     rafRef.current = requestAnimationFrame(render);
     return () => { cancelAnimationFrame(rafRef.current); io.disconnect(); };
-  }, [scene, levelId, userScript, enemyScriptProp, previewMode]);
+  }, [scene, levelId, userScript, enemyScriptProp, previewMode, replayMode, replayFrames]);
 
   return (
     <div
@@ -598,7 +703,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
         height={280}
         className="absolute inset-0 w-full h-full"
         aria-hidden="true"
-        style={{ imageRendering:'crisp-edges' }}
+        style={{ imageRendering: 'crisp-edges' }}
       />
       {/* Corner accents */}
       <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-accent/30 pointer-events-none" />
@@ -609,7 +714,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       <div className="absolute top-2 left-2 flex items-center gap-1.5 pointer-events-none">
         <span
           className="w-1.5 h-1.5 rounded-full bg-accent"
-          style={{ animation:'pulse 1.5s ease-in-out infinite', boxShadow:'0 0 6px var(--accent)' }}
+          style={{ animation: 'pulse 1.5s ease-in-out infinite', boxShadow: '0 0 6px var(--accent)' }}
         />
         <span className="text-[10px] md:text-[8px] font-mono font-bold tracking-[0.2em] text-accent/60 uppercase">LIVE</span>
       </div>

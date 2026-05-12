@@ -175,6 +175,7 @@ export interface GameState {
 export type GameMode = 'COMBAT' | 'RACING' | 'TRAINING_SOLO';
 
 export interface GameConfig {
-  mode: GameMode;
+  mode?: GameMode;
   disableProjectiles?: boolean;
-}
+  obstacles?: Obstacle[];
+}

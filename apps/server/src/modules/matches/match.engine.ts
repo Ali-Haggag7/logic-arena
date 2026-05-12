@@ -36,6 +36,8 @@ export class MatchEngine {
       color?: string;
       model?: string;
       tracerColor?: string;
+      spawnPosition?: { x: number; y: number };
+      initialFovDirection?: number;
     }[],
     config?: GameConfig,
     private onEvent?: (event: string, payload: any) => void,
@@ -49,7 +51,7 @@ export class MatchEngine {
 
     initialPlayers.forEach((p, i) => {
       this.gameLoop.addRobot(
-        createRobot(p.id, p.script, i, p.color, p.model, p.tracerColor),
+        createRobot(p.id, p.script, i, p.color, p.model, p.tracerColor, p.spawnPosition, p.initialFovDirection),
       );
       parseAndSetLogic(p.id, p.script, this.deps.logicEvaluator);
     });
@@ -92,7 +94,7 @@ export class MatchEngine {
   // Per-tick logic evaluation
   // ---------------------------------------------------------------------------
 
-  private tick(): void {
+  tick(): void {
     this.gameLoop.getRobots().forEach((robot) => {
       if (!robot.isAlive) return;
       // Clear flag so logic executor can set it if an action is performed

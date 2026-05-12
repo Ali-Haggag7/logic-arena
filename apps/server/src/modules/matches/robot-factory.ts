@@ -1,11 +1,12 @@
-import { Robot } from '@logic-arena/engine';
+import { Robot, Vector2 } from '@logic-arena/engine';
 import { Parser } from '../../../../../packages/logic-parser/src';
 import { LogicEvaluator } from '../../game/core/evaluator/logic-facade';
 
 const ROBOT_COLORS = ['#00ffff', '#ff00ff'];
 
 /**
- * Spawn positions spread apart so robots don't overlap at match start.
+ * Default spawn positions for arena / lobby matches.
+ * These corners are intentionally spread apart for strategic play.
  */
 const SPAWN_POSITIONS = [
   { x: 150, y: 150 },
@@ -21,8 +22,11 @@ export function createRobot(
   colorOverride?: string,
   modelOverride?: string,
   tracerColorOverride?: string,
+  spawnPositionOverride?: Vector2,
+  initialFovDirection?: number,
 ): Robot {
-  const spawn = SPAWN_POSITIONS[index % SPAWN_POSITIONS.length];
+  const spawn = spawnPositionOverride ?? SPAWN_POSITIONS[index % SPAWN_POSITIONS.length];
+  const facing = initialFovDirection ?? 0;
   return {
     id,
     position: { ...spawn },
@@ -31,7 +35,7 @@ export function createRobot(
     model: modelOverride || 'unit-01',
     tracerColor: tracerColorOverride || '#ff0000',
     velocity: { x: 0, y: 0 },
-    rotation: 0,
+    rotation: facing,
     isAlive: true,
     team: index % 2 === 0 ? 'A' : 'B',
     lastActionTime: 0,
@@ -46,7 +50,7 @@ export function createRobot(
     totalDamageDealt: 0,
     // FOV fields
     fov: { angle: 120, range: 300 },
-    fovDirection: 0,
+    fovDirection: facing,
     visibleEntities: { robots: [], projectiles: [], obstacles: [] },
   };
 }
