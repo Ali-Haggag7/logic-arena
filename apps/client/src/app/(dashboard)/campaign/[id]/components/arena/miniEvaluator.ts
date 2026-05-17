@@ -1,15 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Mini Evaluator — browser-based AliScript AST interpreter.
-//
-// Walks the output of @logic-arena/logic-parser to execute script commands
-// on ArenaRobot instances in the 2D preview canvas. Designed to be called
-// once per tick from the render loop.
-//
-// Limitations vs the real server evaluator:
-//   • Simplified SCAN (distance + angle check, no FOV cone)
-//   • No PATHFIND or CALL/BROADCAST/RECEIVE
-//   • Max 20 ops/tick guard
-// ─────────────────────────────────────────────────────────────────────────────
 import { Parser } from '@logic-arena/logic-parser';
 import type {
   Program,
@@ -25,9 +13,7 @@ import type {
   BreakStatement,
   ContinueStatement,
 } from '@logic-arena/logic-parser';
-import type { ArenaRobot, ArenaProjectile } from './arenaScenes';
-
-// ── Constants ───────────────────────────────────────────────────────────────
+import type { ArenaRobot, ArenaProjectile } from './scenes';
 
 const ENERGY_COST: Record<string, number> = {
   FIRE: 8,
@@ -62,17 +48,12 @@ function canSeeEnemy(
   const dist = Math.hypot(dx, dy);
   if (dist >= SCAN_RANGE) return false;
 
-  // Internal campaign scripts can request a 360° system scan. This is not a
-  // user-facing command; it lets mission robots scan around a graph node while
-  // still using normal AliScript control flow.
   if (Number(vars['_SYS_SCAN_SWEEP_DEG'] ?? 0) >= 360) return true;
 
   const angle = Math.atan2(dy, dx);
   const diff = wrapAngle(angle - self.angle);
   return Math.abs(diff) < SCAN_FOV;
 }
-
-// ── Eval Context ────────────────────────────────────────────────────────────
 
 interface EvalFrame {
   body: Statement[];
@@ -87,8 +68,6 @@ export interface EvalState {
   done: boolean;
 }
 
-// ── Parsing ─────────────────────────────────────────────────────────────────
-
 export function createEvalState(script: string): EvalState | null {
   try {
     const parser = new Parser(script);
@@ -101,12 +80,10 @@ export function createEvalState(script: string): EvalState | null {
       done: false,
     };
   } catch (err) {
-    console.error(`[EVAL-INIT] ❌ PARSE FAILED:`, err, `script starts: "${script.slice(0, 80)}..."`);
+    console.error(`[EVAL-INIT] PARSE FAILED:`, err, `script starts: "${script.slice(0, 80)}..."`);
     return null;
   }
 }
-
-// ── Expression evaluation ───────────────────────────────────────────────────
 
 function evalExpr(
   expr: Expression,
@@ -230,20 +207,12 @@ function evalExpr(
   }
 }
 
-// ── Tick evaluation ─────────────────────────────────────────────────────────
-
 export interface EvalAction {
   type: 'fire' | 'move' | 'scan' | 'burst' | 'stop';
-  /** For fire/burst: angle to shoot. For move: -1=left, 0=none, 1=right */
   value: number;
-  /** Speed multiplier for move */
   fast?: boolean;
 }
 
-/**
- * Tick the evaluator for one robot. Returns an action to execute or null.
- * Modifies `state` and `robot` in place (deducts energy, sets wait ticks).
- */
 export function tickEvaluator(
   state: EvalState,
   robot: ArenaRobot,
@@ -262,7 +231,6 @@ export function tickEvaluator(
   let result: EvalAction | null = null;
 
   while (ops < MAX_OPS_PER_TICK && result === null) {
-    // Auto-restart when program finishes (continuous loop)
     if (state.frames.length === 0) {
       state.frames = [{ body: state.ast.body, pc: 0 }];
       state.waitRemaining = 0;
@@ -305,7 +273,6 @@ function executeStatement(
 
       switch (cmd) {
         case 'FIRE': {
-          // Aim directly at the foe — compute angle to target
           const dx = enemy.x - robot.x;
           const dy = enemy.y - robot.y;
           const aimAngle = Math.atan2(dy, dx);
@@ -313,16 +280,13 @@ function executeStatement(
         }
         case 'MOVE':
         case 'MOVE_FAST': {
-          // --- SECRET RAIL SYSTEM FOR CAMPAIGN ROBOT ---
-          // _SYS_TARGET_X/Y are in pixel space (0-800, 0-600)
-          // robot.x/y are in normalized space (0-1), so we divide
           if (state.vars['_SYS_TARGET_X'] !== undefined && state.vars['_SYS_TARGET_Y'] !== undefined) {
             const tx = Number(state.vars['_SYS_TARGET_X']) / 800;
             const ty = Number(state.vars['_SYS_TARGET_Y']) / 600;
             const dx = tx - robot.x;
             const dy = ty - robot.y;
             const dist = Math.hypot(dx, dy);
-            const RAIL_SNAP = 0.02; // ~16px in normalized space — forgiving enough to snap reliably
+            const RAIL_SNAP = 0.02;
 
             if (dist < RAIL_SNAP) {
               robot.x = tx;
@@ -343,7 +307,7 @@ function executeStatement(
             if (d === 'RIGHT') return { type: 'move', value: 1, fast: cmd === 'MOVE_FAST' };
             if (d === 'BACKUP') return { type: 'move', value: -2, fast: cmd === 'MOVE_FAST' };
           }
-          return { type: 'move', value: 0, fast: cmd === 'MOVE_FAST' }; // FORWARD default
+          return { type: 'move', value: 0, fast: cmd === 'MOVE_FAST' };
         }
 
         case 'BACKUP':
@@ -351,7 +315,6 @@ function executeStatement(
         case 'STOP':
           return { type: 'stop', value: 0 };
         case 'BURST_FIRE': {
-          // Aim directly at the foe
           const bx = enemy.x - robot.x;
           const by = enemy.y - robot.y;
           return { type: 'burst', value: Math.atan2(by, bx) };
@@ -401,7 +364,6 @@ function executeStatement(
       const whileStmt = stmt as WhileStatement;
       const cond = evalExpr(whileStmt.condition, state.vars, robot, enemy);
       if (cond) {
-        // Push the while body, then re-push the while statement itself
         state.frames.push({ body: whileStmt.body, pc: 0 });
         state.frames.push({ body: [stmt], pc: 0 });
       }
@@ -412,7 +374,6 @@ function executeStatement(
       const assignStmt = stmt as AssignmentStatement;
       const name = assignStmt.name.value;
 
-      // Handle SET x = SCAN as a special case
       if (
         assignStmt.value &&
         'type' in assignStmt.value &&
@@ -430,7 +391,6 @@ function executeStatement(
         return { type: 'scan', value: visible ? 1 : 0 };
       }
 
-      // Handle SET x = RAYCAST()
       if (
         assignStmt.value &&
         'type' in assignStmt.value &&
@@ -447,7 +407,6 @@ function executeStatement(
         return null;
       }
 
-      // Normal assignment
       const value = evalExpr(assignStmt.value as Expression, state.vars, robot, enemy);
 
       if (assignStmt.index) {
@@ -478,13 +437,12 @@ function executeStatement(
     }
 
     case 'BreakStatement':
-      // Pop frames until we find a While/For
       while (state.frames.length > 0) {
         const f = state.frames[state.frames.length - 1];
         if (f.body.length > 0) {
           const s = f.body[0];
           if (s.type === 'WhileStatement' || s.type === 'ForStatement') {
-            state.frames.pop(); // pop the loop restatement
+            state.frames.pop();
             break;
           }
         }
@@ -493,7 +451,6 @@ function executeStatement(
       return null;
 
     case 'ContinueStatement':
-      // Pop just the while body, leave the restatement
       if (state.frames.length >= 2) {
         state.frames.splice(state.frames.length - 2, 1);
       }

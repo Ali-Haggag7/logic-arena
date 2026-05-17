@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import type { ApiLevelInfo } from "../types/campaign.types";
 import { DIFFICULTY_CONFIG } from "../constants/difficulty.constants";
-import { LevelArenaPreview } from "../[id]/components/LevelArenaPreview";
+import { LevelArenaPreview } from "../[id]/components/arena/LevelArenaPreview";
 
 interface LevelDetailModalProps {
   level: ApiLevelInfo | null;

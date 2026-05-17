@@ -5,11 +5,11 @@ import { useRouter, useParams } from "next/navigation";
 import { apiClient } from "../../../../lib/api-client";
 import { useMediaQuery } from "../../../../hooks/useMediaQuery";
 import { LevelDetail, ModalState } from "./types";
-import { LevelDesktopLayout } from "./components/LevelDesktopLayout";
-import { LevelMobileLayout } from "./components/LevelMobileLayout";
-import { LevelModal } from "./components/LevelModal";
+import { LevelDesktopLayout } from "./components/layout/LevelDesktopLayout";
+import { LevelMobileLayout } from "./components/layout/LevelMobileLayout";
+import { LevelModal } from "./components/layout/LevelModal";
 import { useCampaignFight } from '../hooks/useCampaignFight';
-import { getSceneForLevel } from './components/arenaScenes';
+import { getSceneForLevel } from './components/arena/scenes';
 
 export default function CampaignLevelPage() {
   const router = useRouter();

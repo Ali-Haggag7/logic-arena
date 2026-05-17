@@ -1,13 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// SceneScript Engine — generic phase-based enemy behaviour driver.
-//
-// Used in preview mode to animate the red robot through a sequence of phases
-// that mirror each level's problem description.  Replaces the AliScript
-// evaluator with a declarative, per-level choreography.
-// ─────────────────────────────────────────────────────────────────────────────
-import type { ArenaRobot, ArenaProjectile } from './arenaScenes';
-
-// ── Types ────────────────────────────────────────────────────────────────────
+import type { ArenaRobot, ArenaProjectile } from './scenes';
 
 export type PhaseAction =
   | { type: 'moveTo'; x: number; y?: number }
@@ -20,13 +11,11 @@ export type PhaseAction =
 
 export interface ScriptPhase {
   action: PhaseAction;
-  /** Duration in frames (at 60 fps) */
   ticks: number;
 }
 
 export interface SceneScript {
   phases: ScriptPhase[];
-  /** Restart from phase 0 when all phases are exhausted */
   loop: boolean;
 }
 
@@ -35,8 +24,6 @@ export interface ScriptState {
   phaseTick: number;
   script: SceneScript;
 }
-
-// ── Constants ────────────────────────────────────────────────────────────────
 
 const MOVE_SPEED = 0.004;
 const PROJ_SPEED = 0.014;
@@ -53,8 +40,6 @@ const ENERGY_COST: Record<string, number> = {
   rotate: 5,
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
@@ -62,8 +47,6 @@ function clamp(v: number, lo: number, hi: number): number {
 function angleTo(a: number, b: number, ax: number, ay: number): number {
   return Math.atan2(b - ay, a - ax);
 }
-
-// ── Tick ─────────────────────────────────────────────────────────────────────
 
 export function tickScript(
   st: ScriptState,
@@ -170,7 +153,6 @@ export function tickScript(
       break;
   }
 
-  // Advance to next phase when duration is exhausted
   if (st.phaseTick >= phase.ticks) {
     st.phaseIdx++;
     st.phaseTick = 0;

@@ -1,17 +1,6 @@
 "use client";
-// ─────────────────────────────────────────────────────────────────────────────
-// LevelArenaPreview — resolves the correct arena scene for a given level ID
-// and renders the ArenaCanvas with a polished iPhone-style chrome frame.
-//
-// Two display modes:
-//   "preview" — looping demo animation shown in the brief / modal.
-//   "loading" — same animation but with a "COMBAT IN PROGRESS" overlay.
-//
-// Accepts optional userScript to simulate the player's actual code in the
-// mini arena, and optional enemyScript to override the built-in script.
-// ─────────────────────────────────────────────────────────────────────────────
 import React, { memo } from "react";
-import { getSceneForLevel } from "./arenaScenes";
+import { getSceneForLevel } from "./scenes";
 import { ArenaCanvas } from "./ArenaCanvas";
 import { Loader2 } from "lucide-react";
 
@@ -63,7 +52,6 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
         boxShadow: '0 0 40px rgba(var(--accent-rgb),0.08), inset 0 0 30px rgba(var(--accent-rgb),0.02)',
       }}
     >
-      {/* Top chrome bar — iPhone-style pill notch */}
       <div
         className="flex items-center justify-between px-3 py-1.5 border-b border-accent/10"
         style={{ background: 'rgba(var(--accent-rgb),0.03)' }}
@@ -86,7 +74,6 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
         </div>
       </div>
 
-      {/* Arena Canvas */}
       <ArenaCanvas
         scene={scene}
         levelId={levelId}
@@ -100,8 +87,6 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
         waitingForReplay={waitingForReplay}
       />
 
-
-      {/* Bottom chrome */}
       <div
         className="flex items-center justify-between px-3 py-1 border-t border-accent/10"
         style={{ background: 'rgba(var(--accent-rgb),0.02)' }}

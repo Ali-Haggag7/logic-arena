@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useRef, memo } from "react";
-import type { SceneDef, SceneState, ArenaRobot, ArenaProjectile, ArenaObstacle } from "./arenaScenes";
+import type { SceneDef, SceneState, ArenaRobot, ArenaProjectile, ArenaObstacle } from "./scenes";
 import { createEvalState, tickEvaluator } from "./miniEvaluator";
 import type { EvalState, EvalAction } from "./miniEvaluator";
-import { getEnemyScript } from "./levelScripts";
+import { getEnemyScript } from "../levelScripts";
 
 interface CampaignFrameRobot {
   id: 'player' | 'enemy';
@@ -116,7 +116,6 @@ function drawFovCone(
   const px = robot.x * W, py = robot.y * H;
   const range = FOV_RANGE * Math.min(W, H);
 
-  // As alpha goes from 1.0 down to 0, spin goes from 0 to 2PI (360 deg)
   const spinAngle = Math.PI * 2 * (1.0 - alpha);
   const currentAngle = robot.angle + spinAngle;
 
@@ -368,13 +367,11 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   const fightResultRef = useRef(fightResult);
   useEffect(() => { fightResultRef.current = fightResult; }, [fightResult]);
 
-  // Keep latest scripts in refs so they can be read without triggering re-init
   const userScriptRef = useRef(userScript);
   useEffect(() => { userScriptRef.current = userScript; }, [userScript]);
   const enemyScriptPropRef = useRef(enemyScriptProp);
   useEffect(() => { enemyScriptPropRef.current = enemyScriptProp; }, [enemyScriptProp]);
 
-  // Keep previewMode in a ref so the render loop can read it without being in deps
   const previewMode = !userScript;
   const prevPreviewMode = useRef(previewMode);
   const previewModeRef = useRef(previewMode);
@@ -383,7 +380,6 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   }, [previewMode]);
 
   useEffect(() => {
-    // Only re-init when scene/level changes, or battle mode flips (preview <-> fight)
     const modeChanged = previewMode !== prevPreviewMode.current;
     prevPreviewMode.current = previewMode;
 
@@ -412,10 +408,9 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       evals.set('enemy', enemyState);
     }
 
-    void modeChanged; // used for clarity — mode flip is implicit from previewMode dep
+    void modeChanged;
     evalRef.current = evals;
     errRef.current = errors;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, levelId, previewMode]);
 
   useEffect(() => {
@@ -452,13 +447,11 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       const streamingFrame = isReplaying ? latestFrameRef?.current ?? null : null;
       const streamingMode = streamingFrame !== null;
 
-      // Scene tick — only in preview mode without streaming
       if (previewModeRef.current && !streamingMode) {
         scene.tick(state);
       }
       state.tick++;
 
-      // Streaming mode — apply latest server frame
       if (streamingMode) {
         const frame = streamingFrame;
         for (const robot of state.robots) {
@@ -492,7 +485,6 @@ export const ArenaCanvas = memo(function ArenaCanvas({
         }
       }
 
-      // Evaluator tick — skipped in streaming mode
       if (!streamingMode) {
         const evalInterval = previewModeRef.current ? PREVIEW_EVAL_INTERVAL : BATTLE_EVAL_INTERVAL;
         evalTick++;
@@ -548,7 +540,6 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       }
       if (flashTimerRef.current > 0) flashTimerRef.current--;
 
-      // Projectile physics — skipped in streaming mode
       if (!streamingMode) {
         for (let i = state.projectiles.length - 1; i >= 0; i--) {
           const p = state.projectiles[i];
@@ -640,13 +631,13 @@ export const ArenaCanvas = memo(function ArenaCanvas({
         ctx.save(); ctx.fillStyle = '#f59e0b';
         ctx.font = `bold ${Math.max(10, W * 0.022)}px monospace`;
         ctx.textAlign = 'left'; ctx.globalAlpha = 0.5 + Math.sin(state.tick * 0.08) * 0.3;
-        ctx.fillText('⚠ PLAYER SCRIPT ERROR', 8, H - 7); ctx.restore();
+        ctx.fillText('\u26a0 PLAYER SCRIPT ERROR', 8, H - 7); ctx.restore();
       }
       if (errors.has('enemy')) {
         ctx.save(); ctx.fillStyle = '#ef4444';
         ctx.font = `bold ${Math.max(10, W * 0.022)}px monospace`;
         ctx.textAlign = 'left'; ctx.globalAlpha = 0.5 + Math.sin(state.tick * 0.08) * 0.3;
-        ctx.fillText('⚠ ENEMY SCRIPT ERROR', 8, 14); ctx.restore();
+        ctx.fillText('\u26a0 ENEMY SCRIPT ERROR', 8, 14); ctx.restore();
       }
 
       drawLabel(ctx, scene.label, W, H, rgb);

@@ -1,10 +1,10 @@
 import React, { useCallback, useRef, useState } from "react";
-import { sanitizeHtml } from "../../../../../lib/client-security";
+import { sanitizeHtml } from "../../../../../../lib/client-security";
 import { highlightCode } from "./highlight";
-import { useParserWorker } from "../../../../arena/components/CommandConsole/ScriptEditor/useParserWorker";
+import { useParserWorker } from "./useParserWorker";
 import { useAutocomplete } from "./useAutocomplete";
 import { AutocompleteDropdown } from "./AutocompleteDropdown";
-import { WarningPanel } from "../../../../arena/components/CommandConsole/ScriptEditor/WarningPanel";
+import { WarningPanel } from "../../../../../arena/components/CommandConsole/ScriptEditor/WarningPanel";
 
 interface CampaignScriptEditorProps {
   value: string;
