@@ -7,18 +7,18 @@ import {
 import {
   Statement,
   NodeType,
-  IfStatement,
-  WhileStatement,
-  ForStatement,
   AssignmentStatement,
   ActionStatement,
   ActionExpression,
+  IfStatement,
+  WhileStatement,
+  ForStatement,
   CallStatement,
+  QueryStatement,
   WaitStatement,
   ScanStatement,
-  FunctionDeclaration,
-  QueryStatement,
   ReturnStatement,
+  FunctionDeclaration,
 } from '@logic-arena/logic-parser';
 import { ActionExecutor } from '../executor';
 import { ExpressionEvaluator } from './expression-facade';
@@ -38,6 +38,9 @@ import {
   ALLOWED_NODE_TYPES,
   STASIS_BLOCKED_ACTION_CMDS,
 } from './block-executor/sandbox-rules';
+import { executeIfStatement } from './block-executor/if-handler';
+import { executeWhileStatement, executeForStatement } from './block-executor/loop-handler';
+import { executeCallStatement } from './block-executor/call-handler';
 import { YieldInterrupt } from './yield-interrupt';
 
 export type { BlockResult } from './block-executor/control-flow';
@@ -178,137 +181,54 @@ export class BlockExecutor {
             break;
           }
 
-          // IF always evaluates — stasis check is inside the action itself
           case NodeType.IfStatement: {
-            const ifStmt = stmt as IfStatement;
-            const cond = this.expressionEvaluator.evaluateCondition(
+            const result = executeIfStatement(
+              (id, rbt, stmts, mem, ops, dispatched) =>
+                this.executeBlock(id, rbt, stmts, mem, ops, dispatched),
+              this.expressionEvaluator,
+              robotId,
               robot,
-              ifStmt.condition,
+              stmt as IfStatement,
               memory,
-              () => this.gameLoop.getRobots(),
-              () => this.gameLoop.getGameState().obstacles,
+              opsCounter,
+              dispatchedActions,
+              this.gameLoop,
             );
-            const result = cond
-              ? this.executeBlock(
-                robotId,
-                robot,
-                ifStmt.consequence,
-                memory,
-                opsCounter,
-                dispatchedActions,
-              )
-              : ifStmt.alternate
-                ? this.executeBlock(
-                  robotId,
-                  robot,
-                  ifStmt.alternate,
-                  memory,
-                  opsCounter,
-                  dispatchedActions,
-                )
-                : {};
-
-            // Propagate control flow signals (BREAK, CONTINUE, RETURN) up through IF
-            if (result.signal) return result;
+            if (result) return result;
             break;
           }
 
-          // WHILE — condition and body still execute during STASIS
-          // so scripts can loop on IN_STASIS checks.
           case NodeType.WhileStatement: {
-            const whileStmt = stmt as WhileStatement;
-            let iters = 0;
-            while (iters < CONSTANTS.MAX_WHILE_ITERS) {
-              const cond = this.expressionEvaluator.evaluateCondition(
-                robot,
-                whileStmt.condition,
-                memory,
-                () => this.gameLoop.getRobots(),
-                () => this.gameLoop.getGameState().obstacles,
-              );
-              if (!cond) break;
-              const result = this.executeBlock(
-                robotId,
-                robot,
-                whileStmt.body,
-                memory,
-                opsCounter,
-                dispatchedActions,
-              );
-              if (result.signal === BREAK_SIGNAL) break;
-              if (result.signal === RETURN_SIGNAL) return result;
-              // CONTINUE_SIGNAL — just continue to next iteration
-              iters++;
-            }
+            const result = executeWhileStatement(
+              (id, rbt, stmts, mem, ops, dispatched) =>
+                this.executeBlock(id, rbt, stmts, mem, ops, dispatched),
+              this.expressionEvaluator,
+              robotId,
+              robot,
+              stmt as WhileStatement,
+              memory,
+              opsCounter,
+              dispatchedActions,
+              this.gameLoop,
+            );
+            if (result) return result;
             break;
           }
 
-          // FOR i = start TO end DO ... END
           case NodeType.ForStatement: {
-            const forStmt = stmt as ForStatement;
-            const startVal = this.expressionEvaluator.evaluateExpression(
+            const result = executeForStatement(
+              (id, rbt, stmts, mem, ops, dispatched) =>
+                this.executeBlock(id, rbt, stmts, mem, ops, dispatched),
+              this.expressionEvaluator,
+              robotId,
               robot,
-              forStmt.start,
+              stmt as ForStatement,
               memory,
-              () => this.gameLoop.getRobots(),
-              () => this.gameLoop.getGameState().obstacles,
+              opsCounter,
+              dispatchedActions,
+              this.gameLoop,
             );
-            const endVal = this.expressionEvaluator.evaluateExpression(
-              robot,
-              forStmt.end,
-              memory,
-              () => this.gameLoop.getRobots(),
-              () => this.gameLoop.getGameState().obstacles,
-            );
-
-            if (typeof startVal !== 'number' || typeof endVal !== 'number')
-              break;
-
-            const varName = forStmt.variable.value;
-            // Cap iterations to prevent infinite loops
-            const maxIter = Math.min(
-              Math.abs(endVal - startVal),
-              CONSTANTS.MAX_WHILE_ITERS * 10,
-            );
-            let iterCount = 0;
-
-            if (startVal <= endVal) {
-              for (
-                let i = startVal;
-                i <= endVal && iterCount < maxIter;
-                i++, iterCount++
-              ) {
-                memory[varName] = i;
-                const result = this.executeBlock(
-                  robotId,
-                  robot,
-                  forStmt.body,
-                  memory,
-                  opsCounter,
-                  dispatchedActions,
-                );
-                if (result.signal === BREAK_SIGNAL) break;
-                if (result.signal === RETURN_SIGNAL) return result;
-              }
-            } else {
-              for (
-                let i = startVal;
-                i >= endVal && iterCount < maxIter;
-                i--, iterCount++
-              ) {
-                memory[varName] = i;
-                const result = this.executeBlock(
-                  robotId,
-                  robot,
-                  forStmt.body,
-                  memory,
-                  opsCounter,
-                  dispatchedActions,
-                );
-                if (result.signal === BREAK_SIGNAL) break;
-                if (result.signal === RETURN_SIGNAL) return result;
-              }
-            }
+            if (result) return result;
             break;
           }
 
@@ -350,61 +270,20 @@ export class BlockExecutor {
             break;
           }
 
-          // CALL with optional arguments — supports parameterized functions
           case NodeType.CallStatement: {
-            const callStmt = stmt as CallStatement;
-            const funcName = callStmt.functionName.value;
-            const funcMap = this.functions.get(robotId);
-            if (funcMap) {
-              const func = funcMap.get(funcName);
-              if (func) {
-                // Create a scoped memory for function execution
-                const scopedMemory = { ...memory };
-
-                // Bind arguments to parameter names
-                if (func.params && callStmt.args) {
-                  for (let i = 0; i < func.params.length; i++) {
-                    const paramName = func.params[i].value;
-                    const argValue =
-                      i < callStmt.args.length
-                        ? this.expressionEvaluator.evaluateExpression(
-                          robot,
-                          callStmt.args[i],
-                          memory,
-                          () => this.gameLoop.getRobots(),
-                          () => this.gameLoop.getGameState().obstacles,
-                        )
-                        : undefined;
-                    scopedMemory[paramName] = argValue;
-                  }
-                }
-
-                const result = this.executeBlock(
-                  robotId,
-                  robot,
-                  func.body,
-                  scopedMemory,
-                  opsCounter,
-                  dispatchedActions,
-                );
-
-                // Copy back non-parameter variables (side effects like SET x = ...)
-                // but DO NOT copy parameter names back (they are local-scoped)
-                const paramNames = new Set(
-                  func.params?.map((p) => p.value) ?? [],
-                );
-                for (const key of Object.keys(scopedMemory)) {
-                  if (!paramNames.has(key)) {
-                    memory[key] = scopedMemory[key];
-                  }
-                }
-
-                // If function returned a value, store it in __return for the caller
-                if (result.signal === RETURN_SIGNAL) {
-                  memory['__return'] = result.returnValue;
-                }
-              }
-            }
+            executeCallStatement(
+              (id, rbt, stmts, mem, ops, dispatched) =>
+                this.executeBlock(id, rbt, stmts, mem, ops, dispatched),
+              this.expressionEvaluator,
+              robotId,
+              robot,
+              stmt as CallStatement,
+              memory,
+              opsCounter,
+              dispatchedActions,
+              this.gameLoop,
+              this.functions,
+            );
             break;
           }
 
