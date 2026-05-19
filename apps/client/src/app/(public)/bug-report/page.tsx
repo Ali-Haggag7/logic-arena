@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, Bug, CheckCircle, Loader2, Send } from "lucide-react";
 import { CyberSelect, type CyberSelectOption } from "../../../components/ui/CyberSelect";
+import { FieldLabel, StyledInput, StyledTextarea } from "../../../components/ui/FormHelpers";
 
 type Severity = "" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
@@ -13,36 +14,6 @@ const BUG_OPTIONS: CyberSelectOption[] = [
   { value: "HIGH",     label: "HIGH",     description: "Combat logic affected, data loss possible" },
   { value: "CRITICAL", label: "CRITICAL", description: "Platform crash or security vulnerability", colorClass: "text-red-500" },
 ];
-
-const INPUT_BASE = "w-full rounded-xl p-3.5 text-[13px] outline-none transition-all duration-200 font-mono resize-none";
-
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
-  return (
-    <label htmlFor={htmlFor} className="block text-[9px] font-black tracking-[0.35em] uppercase mb-2" style={{ color: "rgba(var(--accent-rgb),0.55)", fontFamily: "var(--font-mono)" }}>
-      {children}
-    </label>
-  );
-}
-
-function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input {...props} className={INPUT_BASE}
-      style={{ background: "rgba(var(--bg-primary,#030712),0.8)", border: "1px solid rgba(var(--accent-rgb),0.25)", color: "var(--text-primary)" }}
-      onFocus={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.6)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.04)"; }}
-      onBlur={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.25)"; e.currentTarget.style.background = "rgba(var(--bg-primary,#030712),0.8)"; }}
-    />
-  );
-}
-
-function StyledTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea {...props} className={INPUT_BASE}
-      style={{ background: "rgba(var(--bg-primary,#030712),0.8)", border: "1px solid rgba(var(--accent-rgb),0.25)", color: "var(--text-primary)" }}
-      onFocus={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.6)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.04)"; }}
-      onBlur={e => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.25)"; e.currentTarget.style.background = "rgba(var(--bg-primary,#030712),0.8)"; }}
-    />
-  );
-}
 
 export default function BugReportPage() {
   const [title, setTitle] = useState("");

@@ -5,76 +5,15 @@ import Link from "next/link";
 import {
   ArrowLeft, CheckCircle, ExternalLink, Code2, Link2, Loader2, MessageSquare, Send, Globe,
 } from "lucide-react";
+import { FieldLabel, StyledInput, StyledTextarea } from "../../../components/ui/FormHelpers";
 
 /* ─── Constants ─────────────────────────────────────────── */
-
-const LABEL_CLASS = "block text-[9px] font-black tracking-[0.35em] uppercase mb-2" as const;
-const INPUT_CLASS =
-  "w-full rounded-xl p-3.5 text-[13px] outline-none transition-all duration-200 font-mono resize-none" as const;
 
 const SOCIAL_LINKS = [
   { icon: <Code2 size={15} />, label: "GitHub", href: "https://github.com/Ali-Haggag7/logic-arena" },
   { icon: <Link2 size={15} />, label: "LinkedIn", href: "https://www.linkedin.com/in/ali-haggag7" },
   { icon: <Globe size={15} />, label: "Portfolio", href: "https://alihaggag.me" },
 ] as const;
-
-/* ─── Sub-components ────────────────────────────────────── */
-
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className={LABEL_CLASS}
-      style={{ color: "rgba(var(--accent-rgb),0.55)", fontFamily: "var(--font-mono)" }}
-    >
-      {children}
-    </label>
-  );
-}
-
-function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className={INPUT_CLASS}
-      style={{
-        background: "rgba(var(--bg-primary,#030712),0.8)",
-        border: "1px solid rgba(var(--accent-rgb),0.25)",
-        color: "var(--text-primary)",
-      }}
-      onFocus={e => {
-        e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.6)";
-        e.currentTarget.style.background = "rgba(var(--accent-rgb),0.04)";
-      }}
-      onBlur={e => {
-        e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.25)";
-        e.currentTarget.style.background = "rgba(var(--bg-primary,#030712),0.8)";
-      }}
-    />
-  );
-}
-
-function StyledTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      className={INPUT_CLASS}
-      style={{
-        background: "rgba(var(--bg-primary,#030712),0.8)",
-        border: "1px solid rgba(var(--accent-rgb),0.25)",
-        color: "var(--text-primary)",
-      }}
-      onFocus={e => {
-        e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.6)";
-        e.currentTarget.style.background = "rgba(var(--accent-rgb),0.04)";
-      }}
-      onBlur={e => {
-        e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.25)";
-        e.currentTarget.style.background = "rgba(var(--bg-primary,#030712),0.8)";
-      }}
-    />
-  );
-}
 
 /* ─── Page ──────────────────────────────────────────────── */
 
