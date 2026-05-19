@@ -40,10 +40,6 @@ interface RobotMeshProps {
 function RobotMesh({ chassisId, paintColor, tracerColor, animate }: RobotMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
 
-  const isUnit01 = chassisId === 'chassis-unit-01';
-  const isUnit02 = chassisId === 'chassis-unit-02';
-  const isWraith = chassisId === 'chassis-wraith';
-  const isTitan = chassisId === 'chassis-titan';
   const modelPath = CHASSIS_MODEL_PATHS[chassisId];
 
   // Load only the active GLTF model instead of all chassis models per showroom.
@@ -60,22 +56,38 @@ function RobotMesh({ chassisId, paintColor, tracerColor, animate }: RobotMeshPro
     }
   });
 
-  // Used for any fallback primitive logic, though now only phantom uses it
-  const isTitanPrimitive = chassisId.includes('titan') && !activeScene;
-  const isWraithPrimitive = chassisId.includes('wraith') && !activeScene;
+  // Auto-normalize: compute bounding box and derive scale + Y-offset so every
+  // GLB — regardless of export units — fills the same viewport height.
+  const TARGET_MODEL_HEIGHT = 2.0;
+  const { modelScale, modelOffsetY } = useMemo(() => {
+    if (!activeScene) return { modelScale: 1.5, modelOffsetY: -0.85 };
+    const box = new THREE.Box3().setFromObject(activeScene);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    if (size.y === 0) return { modelScale: 1.5, modelOffsetY: -0.85 };
+    const scale = TARGET_MODEL_HEIGHT / size.y;
+    const offsetY = -center.y * scale;
+    return { modelScale: scale, modelOffsetY: offsetY };
+  }, [activeScene]);
 
   // Primitive meshes need a valid hex colour — use grey when factory spec (DEFAULT).
   // The GLB path uses useRobotColorTint which handles DEFAULT by restoring originals.
   const PRIMITIVE_DEFAULT_COLOR = '#888888';
   const safePaintColor = paintColor === 'DEFAULT' ? PRIMITIVE_DEFAULT_COLOR : paintColor;
 
+  // Boolean flags for fallback primitive geometry (used when no GLB loaded)
+  const isTitanPrimitive = chassisId.includes('titan') && !activeScene;
+  const isWraithPrimitive = chassisId.includes('wraith') && !activeScene;
+
   return (
     <group ref={groupRef} position={[0, 0.3, 0]}>
       {activeScene ? (
         <primitive
           object={activeScene}
-          position={[0, isTitan ? 0 : -0.85, 0]}
-          scale={isUnit01 ? 1.6 : isUnit02 ? 0.7 : isWraith ? 1.5 : isTitan ? 1.7 : 1.2}
+          position={[0, modelOffsetY, 0]}
+          scale={modelScale}
         />
       ) : (
         <>
@@ -169,7 +181,7 @@ function RobotMesh({ chassisId, paintColor, tracerColor, animate }: RobotMeshPro
       )}
 
       {/* ── Laser (Tracer Round) ALWAYS present in front of the model ── */}
-      <mesh position={isUnit01 ? [0, -0.05, 1.4] : isUnit02 ? [0, 0.3, 1.1] : isTitan ? [0, 0.45, 1.8] : isWraith ? [0, 0.32, 1.5] : [0, 0.38, 1.6]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.38, 1.6]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.015, 0.015, 1.2, 8]} />
         <meshStandardMaterial color={tracerColor} emissive={tracerColor} emissiveIntensity={4.0} toneMapped={false} />
       </mesh>
