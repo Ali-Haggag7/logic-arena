@@ -11,8 +11,8 @@ export const GRAPH_THEORY_LEVELS: CampaignLevel[] = [
     difficulty: 'EASY',
     pointsReward: D.EASY,
     description:
-      'It traverses a directed acyclic graph (DAG) of 4 nodes: A → B → C → D. At each node, it scans and fires. Pure Breadth-First Search on a linear chain. The graph is hardcoded into its memory.',
-    hint: 'It travels from (100, 300) to (700, 300). It only fires when it snaps to a node. Attack it while it moves between nodes.',
+      'It traverses a directed acyclic graph (DAG) of 3 nodes: A → B → C. At each node, it scans and fires. Pure Breadth-First Search on a linear chain. The graph is hardcoded into its memory.',
+    hint: 'It bounces between nodes at (400, 300), (520, 180), and (640, 330). It only fires when it snaps to a node. Attack it while it moves between nodes.',
     enemyScript: `IF NOT init THEN
   SET nodes_x = [400, 520, 640]
   SET nodes_y = [300, 180, 330]
@@ -299,7 +299,7 @@ MOVE`,
     pointsReward: D.HARD,
     description:
       'It visits dependency nodes. Node 1 unlocks Node 2. Node 2 unlocks Node 3. It must visit them in order. As it unlocks higher nodes, its weapon power increases from single to burst to sustained barrage. A directed progression of power.',
-    hint: 'Node 3 is its maximum power state (at coordinates 600, 300). Ambush it at Node 1 (200, 300) before it scales up.',
+    hint: 'Node 3 is its maximum power state. Ambush it at Node 1 (400, 300) before it scales up.',
     enemyScript: `IF NOT init THEN
   SET nodes_x = [400, 520, 640, 560, 440, 600]
   SET nodes_y = [300, 180, 330, 450, 480, 120]

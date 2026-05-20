@@ -47,8 +47,8 @@ END`,
     difficulty: 'EASY',
     pointsReward: D.EASY,
     description:
-      'It simulates recursion with depth 3. Wind up: moves left, then right, then reaches base case (depth 3) to FIRE. Unwind: fires again, moves right, moves left. A perfectly mirrored execution stack.',
-    hint: 'The base case at depth 3 is the only time it fires. It fires twice in a row (once winding in, once winding out).',
+      'It simulates recursion with depth 3. Wind up: moves left (depth 1), then right (depth 2), then reaches base case (depth 3) to FIRE. Unwind: fires again at depth 3, moves right, moves left. A perfectly mirrored execution stack.',
+    hint: 'It fires twice in a row at the base case — once winding in, once winding out. The only move-safe ticks are the two steps between fire pairs.',
     enemyScript: `IF NOT init THEN
   SET depth = 1
   SET ddir = 1
@@ -62,7 +62,7 @@ IF depth == 3 THEN
     SCAN
   END
 ELSE
-  IF ddir == 1 THEN
+  IF depth == 1 THEN
     MOVE LEFT
   ELSE
     MOVE RIGHT
@@ -70,7 +70,7 @@ ELSE
 END
 SET depth = depth + ddir
 IF depth > 3 THEN
-  SET depth = 2
+  SET depth = 3
   SET ddir = -1
 END
 IF depth < 1 THEN
@@ -153,7 +153,7 @@ IF depth > 4 THEN
   SET ddir = -1
 END
 IF depth < 1 THEN
-  SET depth = 2
+  SET depth = 1
   SET ddir = 1
 END`,
   },
@@ -169,7 +169,7 @@ END`,
     hint: 'Spacing sequence: 1, 1, 2, 3, 5 ticks between shots. The gaps get larger. Wait for the 3 and 5 gaps to counterattack.',
     enemyScript: `IF NOT init THEN
   SET n = 1
-  SET a = 1
+  SET a = 0
   SET b = 1
   SET step = 0
   SET init = 1
@@ -192,7 +192,7 @@ ELSE
   SET step = 0
   IF n > 5 THEN
     SET n = 1
-    SET a = 1
+    SET a = 0
     SET b = 1
   END
 END`,
@@ -237,7 +237,7 @@ IF depth > 4 THEN
   SET ddir = -1
 END
 IF depth < 1 THEN
-  SET depth = 2
+  SET depth = 1
   SET ddir = 1
 END`,
   },
