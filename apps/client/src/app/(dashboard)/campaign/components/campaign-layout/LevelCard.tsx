@@ -6,6 +6,7 @@ import { Check, Info, Lock, Zap } from "lucide-react";
 
 import { DIFFICULTY_CONFIG } from "../../constants/difficulty.constants";
 import type { ApiLevelInfo } from "../../types/campaign.types";
+import { useCampaignPrefetch } from "../../hooks/useCampaignPrefetch";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const STAR_FILLED = "★";
@@ -47,7 +48,13 @@ export const LevelCard = memo(function LevelCard({
   onInfoClick,
 }: LevelCardProps) {
   const router = useRouter();
+  const { prefetchLevel } = useCampaignPrefetch();
   const dc = DIFFICULTY_CONFIG[level.difficulty] ?? DIFFICULTY_CONFIG.EASY;
+
+  const handlePrefetch = useCallback((): void => {
+    if (!level.unlocked) return;
+    void prefetchLevel(level.id);
+  }, [level.id, level.unlocked, prefetchLevel]);
 
   const handleCardClick = useCallback(() => {
     if (!level.unlocked) return;
@@ -109,6 +116,8 @@ export const LevelCard = memo(function LevelCard({
     <button
       type="button"
       onClick={handleCardClick}
+      onMouseEnter={handlePrefetch}
+      onTouchStart={handlePrefetch}
       aria-label={`${level.title} — ${level.difficulty} — ${level.completed ? "Completed" : "Not completed"}`}
       className={`level-card level-card--unlocked ${level.completed ? "level-card--completed" : "level-card--active"} ${isMobile ? "level-card--mobile" : "level-card--desktop"} group`}
       style={{ "--diff-color": dc.color } as React.CSSProperties}

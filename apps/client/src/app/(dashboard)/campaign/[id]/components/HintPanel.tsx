@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 const HINT_COSTS: Record<1 | 2, number> = { 1: 10, 2: 25 };
 const TYPEWRITER_SPEED_MS = 18;
+const PRIMARY_HAPTIC_MS = 50;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlot
   const cost = HINT_COSTS[index];
 
   async function handleConfirm() {
+    navigator.vibrate?.(PRIMARY_HAPTIC_MS);
     setConfirm("loading");
     try {
       await onReveal(index);
@@ -222,6 +224,7 @@ export function HintPanel({
           border: 1px solid rgba(var(--accent-rgb), 0.2);
           border-radius: 10px;
           padding: 10px 12px;
+          min-height: 48px;
           background: rgba(var(--accent-rgb), 0.04);
         }
 
@@ -341,6 +344,7 @@ export function HintPanel({
           font-weight: 900;
           text-transform: uppercase;
           padding: 4px 12px;
+          min-height: 48px;
           border-radius: 5px;
           cursor: pointer;
           transition: background 0.15s, color 0.15s;

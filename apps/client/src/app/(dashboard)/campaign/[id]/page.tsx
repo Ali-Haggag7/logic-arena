@@ -10,10 +10,12 @@ import { LevelMobileLayout } from "./components/layout/LevelMobileLayout";
 import { LevelModal } from "./components/layout/LevelModal";
 import { useCampaignFight } from '../hooks/useCampaignFight';
 import { getSceneForLevel } from './components/arena/scenes';
+import { cacheCampaignLevel, getCachedCampaignLevel, useCampaignPrefetch } from "../hooks/useCampaignPrefetch";
 
 const SIMULATION_TICKS_PER_SECOND = 60;
 const DEFAULT_REWARD = 0;
 const DEFAULT_STARS = 0;
+const PRIMARY_HAPTIC_MS = 50;
 
 interface CompleteLevelResponse {
   pointsAwarded?: number;
@@ -36,6 +38,7 @@ export default function CampaignLevelPage() {
   const [pendingWinner, setPendingWinner] = useState<'player' | 'enemy' | 'draw' | null>(null);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
   const { fight, status: fightStatus, result: fightResult, latestFrameRef } = useCampaignFight();
+  const { prefetchNextLevel } = useCampaignPrefetch();
   const fightStartTimeMsRef = useRef<number>(0);
   const fightStartTickRef = useRef<number>(0);
   const fightEndTickRef = useRef<number>(0);
@@ -44,11 +47,26 @@ export default function CampaignLevelPage() {
     if (invalidLevelId) return;
 
     let cancelled = false;
+    const cachedLevel = getCachedCampaignLevel(levelId);
+
+    if (cachedLevel) {
+      setLevel(cachedLevel);
+      setFetching(false);
+      void prefetchNextLevel(cachedLevel);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     apiClient
       .get(`/campaign/levels/${levelId}`)
       .then((r) => {
-        if (!cancelled) setLevel(r.data);
+        if (!cancelled) {
+          const nextLevel = r.data as LevelDetail;
+          setLevel(nextLevel);
+          cacheCampaignLevel(nextLevel);
+          void prefetchNextLevel(nextLevel);
+        }
       })
       .catch((err) => {
         if (cancelled) return;
@@ -65,10 +83,11 @@ export default function CampaignLevelPage() {
     return () => {
       cancelled = true;
     };
-  }, [invalidLevelId, levelId]);
+  }, [invalidLevelId, levelId, prefetchNextLevel]);
 
   const handleFight = useCallback(() => {
     if (!script.trim()) return;
+    navigator.vibrate?.(PRIMARY_HAPTIC_MS);
     setModal("loading");
     setReward(DEFAULT_REWARD);
     setStars(DEFAULT_STARS);

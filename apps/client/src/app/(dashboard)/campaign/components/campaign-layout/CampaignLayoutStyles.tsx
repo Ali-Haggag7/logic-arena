@@ -19,7 +19,8 @@ export function CampaignLayoutStyles() {
         to   { opacity: 1; transform: translateY(0); }
       }
       @keyframes progressFill {
-        from { width: 0; }
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
       }
       @keyframes tabUnderlineIn {
         from { transform: scaleX(0); }
@@ -112,7 +113,8 @@ export function CampaignLayoutStyles() {
         border-radius: 99px;
         background: var(--accent);
         box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.8);
-        transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        transform-origin: left center;
+        transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         animation: progressFill 1s cubic-bezier(0.25, 1, 0.5, 1);
       }
       .desktop-layout__star-counter {
@@ -348,7 +350,8 @@ export function CampaignLayoutStyles() {
         border-radius: 99px;
         background: var(--accent);
         box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.8);
-        transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        transform-origin: left center;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
       }
       .mobile-layout__tab-progress-label {
         font-size: 8px;
@@ -381,6 +384,7 @@ export function CampaignLayoutStyles() {
         border: 1px solid rgba(var(--accent-rgb), 0.12);
         background: var(--bg-primary);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        will-change: transform, opacity;
         text-align: left;
         width: 100%;
         font-family: inherit;
@@ -501,9 +505,9 @@ export function CampaignLayoutStyles() {
         font-weight: 900;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: #4ade80;
-        background: rgba(74, 222, 128, 0.1);
-        border: 1px solid rgba(74, 222, 128, 0.2);
+        color: var(--sem-success);
+        background: color-mix(in srgb, var(--sem-success) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--sem-success) 20%, transparent);
         padding: 2px 7px;
         border-radius: 99px;
       }
@@ -513,6 +517,8 @@ export function CampaignLayoutStyles() {
         justify-content: center;
         width: 22px;
         height: 22px;
+        min-width: 48px;
+        min-height: 48px;
         border-radius: 6px;
         border: 1px solid rgba(var(--accent-rgb), 0.18);
         color: rgba(var(--accent-rgb), 0.45);
@@ -612,7 +618,7 @@ export function CampaignLayoutStyles() {
         color: inherit;
       }
       .level-card__points-icon--lit {
-        color: rgba(245, 158, 11, 0.8);
+        color: var(--sem-warning);
       }
 
       /* ── Hover glow overlay ───────────────────────────────────────────── */

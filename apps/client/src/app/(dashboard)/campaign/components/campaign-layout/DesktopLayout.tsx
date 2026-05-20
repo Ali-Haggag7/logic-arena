@@ -56,7 +56,7 @@ export const DesktopLayout = memo(function DesktopLayout({
             <div className="desktop-layout__progress-track">
               <div
                 className="desktop-layout__progress-fill"
-                style={{ width: `${missionProgress}%` }}
+                style={{ width: "100%", transform: `scaleX(${missionProgress / 100})` }}
                 role="progressbar"
                 aria-valuenow={completedCount}
                 aria-valuemin={0}

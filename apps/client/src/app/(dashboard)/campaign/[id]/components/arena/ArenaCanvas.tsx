@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useRef, memo } from "react";
+import React, { useCallback, useEffect, useRef, memo, useState } from "react";
+import { Pause, Play } from "lucide-react";
 import type { SceneDef, SceneState } from "./scenes";
 import { createEvalState } from "./miniEvaluator";
 import type { EvalState } from "./miniEvaluator";
@@ -14,6 +15,23 @@ import type { RuntimeArenaRobot } from "./combat/applyAction";
 import { tickFovTimers, ensureEnemyFov } from "./combat/fovSystem";
 import { runEvalTick } from "./battle/battleOrchestrator";
 import { syncReplayFrame, type CampaignFrame } from "./battle/replaySync";
+
+const TARGET_FPS = 60;
+const FRAME_MS = 1000 / TARGET_FPS;
+const FRAME_THROTTLE_TOLERANCE_MS = 2;
+const CANVAS_WIDTH = 640;
+const CANVAS_HEIGHT = 280;
+const DEFAULT_ACCENT_RGB = "34,211,238";
+const DEFAULT_WARNING_COLOR = "#f59e0b";
+const DEFAULT_DANGER_COLOR = "#ef4444";
+const PLAYER_SCRIPT_ERROR_Y_OFFSET = 7;
+const ENEMY_SCRIPT_ERROR_Y = 14;
+const ERROR_TEXT_X = 8;
+const ERROR_FONT_SCALE = 0.022;
+const ERROR_MIN_FONT_SIZE = 10;
+const ERROR_ALPHA_BASE = 0.5;
+const ERROR_ALPHA_RANGE = 0.3;
+const ERROR_ALPHA_SPEED = 0.08;
 
 interface ArenaCanvasProps {
   scene: SceneDef;
@@ -49,6 +67,11 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   const visibleRef = useRef(true);
   const nextIdRef = useRef({ current: 0 });
   const errRef = useRef<Set<string>>(new Set());
+  const accentRgbRef = useRef(DEFAULT_ACCENT_RGB);
+  const warningColorRef = useRef(DEFAULT_WARNING_COLOR);
+  const dangerColorRef = useRef(DEFAULT_DANGER_COLOR);
+  const pausedRef = useRef(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const fovTimerRef = useRef<Map<string, number>>(new Map());
   const flashTimerRef = useRef(0);
@@ -65,6 +88,31 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   useEffect(() => { userScriptRef.current = userScript; }, [userScript]);
   const enemyScriptPropRef = useRef(enemyScriptProp);
   useEffect(() => { enemyScriptPropRef.current = enemyScriptProp; }, [enemyScriptProp]);
+
+  useEffect(() => {
+    const updateAccentRgb = (): void => {
+      const css = getComputedStyle(document.documentElement);
+      accentRgbRef.current = css.getPropertyValue('--accent-rgb').trim() || DEFAULT_ACCENT_RGB;
+      warningColorRef.current = css.getPropertyValue('--sem-warning').trim() || DEFAULT_WARNING_COLOR;
+      dangerColorRef.current = css.getPropertyValue('--sem-danger').trim() || DEFAULT_DANGER_COLOR;
+    };
+
+    updateAccentRgb();
+    const observer = new MutationObserver(updateAccentRgb);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "style", "class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    pausedRef.current = false;
+    setIsPaused(false);
+  }, [isReplaying, levelId]);
+
+  const toggleReplayPause = useCallback((): void => {
+    if (!isReplaying) return;
+    pausedRef.current = !pausedRef.current;
+    setIsPaused(pausedRef.current);
+  }, [isReplaying]);
 
   const previewMode = !userScript;
   const prevPreviewMode = useRef(previewMode);
@@ -110,6 +158,8 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     const io = new IntersectionObserver(
       ([e]) => { visibleRef.current = e.isIntersecting; },
@@ -118,25 +168,22 @@ export const ArenaCanvas = memo(function ArenaCanvas({
     io.observe(canvas);
 
     let lastTime = 0;
-    const FRAME_MS = 1000 / 60;
     let evalTick = 0;
 
     const render = (now: number) => {
       rafRef.current = requestAnimationFrame(render);
       if (!visibleRef.current) return;
+      if (pausedRef.current) return;
       if (waitingForReplay) return;
-      if (now - lastTime < FRAME_MS - 2) return;
+      if (now - lastTime < FRAME_MS - FRAME_THROTTLE_TOLERANCE_MS) return;
       lastTime = now;
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
       const W = canvas.width, H = canvas.height;
       const state = stateRef.current;
       const evals = evalRef.current;
       const nextId = nextIdRef.current;
       const errors = errRef.current;
-      const css = getComputedStyle(document.documentElement);
-      const rgb = css.getPropertyValue('--accent-rgb').trim() || '34,211,238';
+      const rgb = accentRgbRef.current;
 
       const streamingFrame = isReplaying ? latestFrameRef?.current ?? null : null;
       const streamingMode = streamingFrame !== null;
@@ -213,16 +260,16 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       }
 
       if (errors.has('player') && !previewModeRef.current) {
-        ctx.save(); ctx.fillStyle = '#f59e0b';
-        ctx.font = `bold ${Math.max(10, W * 0.022)}px monospace`;
-        ctx.textAlign = 'left'; ctx.globalAlpha = 0.5 + Math.sin(state.tick * 0.08) * 0.3;
-        ctx.fillText('\u26a0 PLAYER SCRIPT ERROR', 8, H - 7); ctx.restore();
+        ctx.save(); ctx.fillStyle = warningColorRef.current;
+        ctx.font = `bold ${Math.max(ERROR_MIN_FONT_SIZE, W * ERROR_FONT_SCALE)}px monospace`;
+        ctx.textAlign = 'left'; ctx.globalAlpha = ERROR_ALPHA_BASE + Math.sin(state.tick * ERROR_ALPHA_SPEED) * ERROR_ALPHA_RANGE;
+        ctx.fillText('\u26a0 PLAYER SCRIPT ERROR', ERROR_TEXT_X, H - PLAYER_SCRIPT_ERROR_Y_OFFSET); ctx.restore();
       }
       if (errors.has('enemy')) {
-        ctx.save(); ctx.fillStyle = '#ef4444';
-        ctx.font = `bold ${Math.max(10, W * 0.022)}px monospace`;
-        ctx.textAlign = 'left'; ctx.globalAlpha = 0.5 + Math.sin(state.tick * 0.08) * 0.3;
-        ctx.fillText('\u26a0 ENEMY SCRIPT ERROR', 8, 14); ctx.restore();
+        ctx.save(); ctx.fillStyle = dangerColorRef.current;
+        ctx.font = `bold ${Math.max(ERROR_MIN_FONT_SIZE, W * ERROR_FONT_SCALE)}px monospace`;
+        ctx.textAlign = 'left'; ctx.globalAlpha = ERROR_ALPHA_BASE + Math.sin(state.tick * ERROR_ALPHA_SPEED) * ERROR_ALPHA_RANGE;
+        ctx.fillText('\u26a0 ENEMY SCRIPT ERROR', ERROR_TEXT_X, ENEMY_SCRIPT_ERROR_Y); ctx.restore();
       }
 
       drawLabel(ctx, scene.label, W, H, rgb);
@@ -235,16 +282,28 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   return (
     <div
       className={`relative w-full overflow-hidden rounded-xl ${className}`}
-      style={{ aspectRatio: `${aspectRatio}` }}
+      style={{ aspectRatio: `${aspectRatio}`, contain: "layout paint" }}
     >
       <canvas
         ref={canvasRef}
-        width={640}
-        height={280}
+        width={CANVAS_WIDTH}
+        height={CANVAS_HEIGHT}
         className="absolute inset-0 w-full h-full"
         aria-hidden="true"
         style={{ imageRendering: 'crisp-edges' }}
       />
+      {isReplaying && (
+        <button
+          type="button"
+          onClick={toggleReplayPause}
+          aria-label={isPaused ? "Resume replay" : "Pause replay"}
+          className="absolute inset-0 z-20 flex items-center justify-center bg-transparent text-accent/0 transition-colors duration-150 hover:text-accent/80 focus-visible:text-accent/80 focus-visible:outline-none"
+        >
+          <span className={`flex h-12 w-12 items-center justify-center rounded-full border border-accent/25 bg-bg-primary/60 text-accent shadow-[0_0_18px_rgba(var(--accent-rgb),0.16)] transition-opacity duration-150 ${isPaused ? "opacity-100" : "opacity-0"}`}>
+            {isPaused ? <Play className="h-5 w-5" aria-hidden="true" /> : <Pause className="h-5 w-5" aria-hidden="true" />}
+          </span>
+        </button>
+      )}
       <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-accent/30 pointer-events-none" />
       <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-accent/30 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-accent/30 pointer-events-none" />

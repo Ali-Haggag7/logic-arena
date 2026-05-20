@@ -81,7 +81,7 @@ export const MobileLayout = memo(function MobileLayout({
           <div className="mobile-layout__tab-progress-bar">
             <div
               className="mobile-layout__tab-progress-fill"
-              style={{ width: `${tabProg}%` }}
+              style={{ width: "100%", transform: `scaleX(${tabProg / 100})` }}
               role="progressbar"
               aria-valuenow={tabDone}
               aria-valuemin={0}

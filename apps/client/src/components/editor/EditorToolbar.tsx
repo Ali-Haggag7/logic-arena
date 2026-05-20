@@ -3,6 +3,8 @@
 import React from "react";
 import { Lightbulb, Play, Wand2 } from "lucide-react";
 
+const PRIMARY_HAPTIC_MS = 50;
+
 interface EditorToolbarProps {
   onRun: () => void;
   onHint?: () => void;
@@ -12,13 +14,19 @@ interface EditorToolbarProps {
 }
 
 export function EditorToolbar({ onRun, onHint, onFormat, disabled, isMobile }: EditorToolbarProps) {
-  const buttonHeightClass = isMobile ? "h-[44px]" : "h-9";
+  const buttonHeightClass = isMobile ? "h-12" : "h-9";
+  const iconButtonWidthClass = isMobile ? "min-w-[48px]" : "min-w-[44px]";
+
+  const handleRun = (): void => {
+    navigator.vibrate?.(PRIMARY_HAPTIC_MS);
+    onRun();
+  };
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/[0.03] p-2">
       <button
         type="button"
-        onClick={onRun}
+        onClick={handleRun}
         disabled={disabled}
         title="Run script with Ctrl+Enter"
         className={`flex flex-1 items-center justify-center gap-2 rounded-md border px-3 ${buttonHeightClass} text-[10px] font-black uppercase tracking-[0.24em] transition-all duration-150 ${
@@ -39,7 +47,7 @@ export function EditorToolbar({ onRun, onHint, onFormat, disabled, isMobile }: E
           disabled={disabled}
           title="Show hint"
           aria-label="Show hint"
-          className={`flex ${buttonHeightClass} min-w-[44px] items-center justify-center rounded-md border border-accent/25 bg-accent/5 px-3 text-accent/70 transition-all duration-150 hover:border-accent/50 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40`}
+          className={`flex ${buttonHeightClass} ${iconButtonWidthClass} items-center justify-center rounded-md border border-accent/25 bg-accent/5 px-3 text-accent/70 transition-all duration-150 hover:border-accent/50 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40`}
         >
           <Lightbulb className="h-4 w-4" />
         </button>
@@ -52,7 +60,7 @@ export function EditorToolbar({ onRun, onHint, onFormat, disabled, isMobile }: E
           disabled={disabled}
           title="Format script"
           aria-label="Format script"
-          className={`flex ${buttonHeightClass} min-w-[44px] items-center justify-center rounded-md border border-accent/25 bg-accent/5 px-3 text-accent/70 transition-all duration-150 hover:border-accent/50 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40`}
+          className={`flex ${buttonHeightClass} ${iconButtonWidthClass} items-center justify-center rounded-md border border-accent/25 bg-accent/5 px-3 text-accent/70 transition-all duration-150 hover:border-accent/50 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40`}
         >
           <Wand2 className="h-4 w-4" />
         </button>
@@ -60,4 +68,3 @@ export function EditorToolbar({ onRun, onHint, onFormat, disabled, isMobile }: E
     </div>
   );
 }
-

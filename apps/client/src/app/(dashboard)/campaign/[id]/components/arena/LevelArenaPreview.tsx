@@ -1,13 +1,28 @@
 "use client";
 import React, { memo } from "react";
+import dynamic from "next/dynamic";
 import { getSceneForLevel } from "./scenes";
-import { ArenaCanvas } from "./ArenaCanvas";
 import type { CampaignFrame, FightResult } from "../../../hooks/useCampaignFight";
 import { BattleHUD } from "../layout/BattleHUD";
 
 const HUD_UPDATE_INTERVAL_MS = 100;
 const DEFAULT_STAT_VALUE = 100;
 const DEFAULT_MAX_TICKS = 1500;
+
+const ArenaCanvas = dynamic(
+  () => import("./ArenaCanvas").then((module) => module.ArenaCanvas),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="relative w-full overflow-hidden rounded-xl border border-accent/15 bg-accent/[0.03]"
+        style={{ aspectRatio: "16 / 7", contain: "layout paint" }}
+      >
+        <div className="absolute inset-0 animate-pulse bg-accent/[0.04]" />
+      </div>
+    ),
+  },
+);
 
 interface BattleHUDSnapshot {
   playerHealth: number;
@@ -68,11 +83,23 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
       const frame = latestFrameRef?.current;
       const player = frame?.robots?.find((robot) => robot.id === "player");
       const enemy = frame?.robots?.find((robot) => robot.id === "enemy");
-      setHudSnapshot({
+      const nextSnapshot: BattleHUDSnapshot = {
         playerHealth: player?.health ?? DEFAULT_STAT_VALUE,
         enemyHealth: enemy?.health ?? DEFAULT_STAT_VALUE,
         playerEnergy: player?.energy ?? DEFAULT_STAT_VALUE,
         tick: frame?.tick ?? 0,
+      };
+
+      setHudSnapshot((currentSnapshot) => {
+        if (
+          currentSnapshot.playerHealth === nextSnapshot.playerHealth &&
+          currentSnapshot.enemyHealth === nextSnapshot.enemyHealth &&
+          currentSnapshot.playerEnergy === nextSnapshot.playerEnergy &&
+          currentSnapshot.tick === nextSnapshot.tick
+        ) {
+          return currentSnapshot;
+        }
+        return nextSnapshot;
       });
     };
 

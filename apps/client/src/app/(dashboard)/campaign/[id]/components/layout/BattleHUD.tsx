@@ -4,6 +4,7 @@ import React from "react";
 
 const MAX_STAT_VALUE = 100;
 const CRITICAL_HEALTH_PERCENT = 30;
+const PERCENT_SCALE = 100;
 
 interface BattleHUDProps {
   playerHealth: number;
@@ -38,9 +39,9 @@ function StatBlock({ label, health, energy, align }: StatBlockProps) {
       </div>
       <div className={`h-2 rounded-full border border-accent/20 bg-bg-primary/80 overflow-hidden ${isCritical ? "shadow-[0_0_14px_rgba(var(--accent-rgb),0.55)]" : ""}`}>
         <div
-          className="h-full bg-accent transition-[width,box-shadow] duration-300 ease-out"
+          className="h-full w-full origin-left bg-accent transition-[transform,box-shadow] duration-300 ease-out"
           style={{
-            width: `${healthPercent}%`,
+            transform: `scaleX(${healthPercent / PERCENT_SCALE})`,
             boxShadow: isCritical ? "0 0 14px rgba(var(--accent-rgb),0.85)" : "0 0 8px rgba(var(--accent-rgb),0.35)",
           }}
         />
@@ -48,8 +49,8 @@ function StatBlock({ label, health, energy, align }: StatBlockProps) {
       {energyPercent !== null && (
         <div className="mt-1 h-1 rounded-full border border-accent/10 bg-bg-primary/70 overflow-hidden">
           <div
-            className="h-full bg-accent/60 transition-[width] duration-300 ease-out"
-            style={{ width: `${energyPercent}%` }}
+            className="h-full w-full origin-left bg-accent/60 transition-transform duration-300 ease-out"
+            style={{ transform: `scaleX(${energyPercent / PERCENT_SCALE})` }}
           />
         </div>
       )}
@@ -72,7 +73,7 @@ export function BattleHUD({ playerHealth, enemyHealth, playerEnergy, tick, maxTi
         <div className="mt-2 flex items-center gap-2">
           <span className="text-[8px] font-black tracking-[0.18em] text-accent/45 uppercase">TIME</span>
           <div className="h-1.5 flex-1 rounded-full border border-accent/10 bg-bg-primary/80 overflow-hidden">
-            <div className="h-full bg-accent/70 transition-[width] duration-300 ease-out" style={{ width: `${progressPercent}%` }} />
+            <div className="h-full w-full origin-left bg-accent/70 transition-transform duration-300 ease-out" style={{ transform: `scaleX(${progressPercent / PERCENT_SCALE})` }} />
           </div>
           <span className="min-w-[42px] text-right text-[8px] font-black tracking-[0.12em] text-accent/60">{remainingTicks}</span>
         </div>
@@ -94,7 +95,7 @@ export function BattleHUD({ playerHealth, enemyHealth, playerEnergy, tick, maxTi
           <span className="text-[8px] font-black tracking-[0.16em] text-accent/65">{remainingTicks} TICKS</span>
         </div>
         <div className="h-2 rounded-full border border-accent/10 bg-bg-primary/80 overflow-hidden">
-          <div className="h-full bg-accent/70 transition-[width] duration-300 ease-out" style={{ width: `${progressPercent}%` }} />
+          <div className="h-full w-full origin-left bg-accent/70 transition-transform duration-300 ease-out" style={{ transform: `scaleX(${progressPercent / PERCENT_SCALE})` }} />
         </div>
       </div>
     </div>

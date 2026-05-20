@@ -25,6 +25,7 @@ const DESKTOP_FONT_SIZE = 14;
 const MOBILE_FONT_SIZE = 12;
 const EDITOR_PADDING_TOP = 12;
 const EDITOR_PADDING_LEFT = 56;
+const SUGGESTION_MIN_TOUCH_SIZE = 48;
 const APPROX_CHAR_WIDTH_DESKTOP = 8.4;
 const APPROX_CHAR_WIDTH_MOBILE = 7.2;
 const MAX_AUTOCOMPLETE_LEFT = 360;
@@ -310,6 +311,7 @@ export function AliScriptEditor({
                 className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left font-mono transition-colors ${
                   index === activeSuggestionIndex ? "bg-accent/15 text-accent" : "text-accent/70 hover:bg-accent/10 hover:text-accent"
                 }`}
+                style={{ minHeight: isMobile ? `${SUGGESTION_MIN_TOUCH_SIZE}px` : undefined }}
               >
                 <span className="truncate text-[11px] font-black tracking-[0.08em]">{suggestion.label}</span>
                 <span className="shrink-0 text-[8px] uppercase tracking-[0.18em] text-accent/40">{suggestion.category}</span>
@@ -326,4 +328,3 @@ export function AliScriptEditor({
     </div>
   );
 }
-
