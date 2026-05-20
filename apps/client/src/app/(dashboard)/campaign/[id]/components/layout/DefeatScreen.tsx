@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
+import { useSoundEffects } from "../../../../../../hooks/useSoundEffects";
 
 const DEFEAT_MESSAGES = [
   "Analyze the enemy pattern.",
@@ -18,7 +19,12 @@ interface DefeatScreenProps {
 }
 
 export function DefeatScreen({ levelTitle, isMobile, onRetry, onHint, onBack }: DefeatScreenProps) {
+  const { playDefeat } = useSoundEffects();
   const message = useMemo(() => DEFEAT_MESSAGES[Math.floor(Math.random() * DEFEAT_MESSAGES.length)], []);
+
+  useEffect(() => {
+    playDefeat();
+  }, [playDefeat]);
 
   return (
     <div className={`${isMobile ? "min-h-screen w-full rounded-none px-5 py-10" : "w-full max-w-[430px] rounded-2xl p-10"} border border-accent/30 bg-bg-primary text-center font-mono shadow-[0_0_60px_rgba(var(--accent-rgb),0.16)] defeat-border`}>

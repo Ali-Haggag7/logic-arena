@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
+import { Skull } from "lucide-react";
 
 const MAX_STAT_VALUE = 100;
 const CRITICAL_HEALTH_PERCENT = 30;
 const PERCENT_SCALE = 100;
+const BOSS_HEALTH_SEGMENTS = 18;
+const BOSS_WARNING_DURATION_MS = 2600;
 
 interface BattleHUDProps {
   playerHealth: number;
@@ -13,6 +16,7 @@ interface BattleHUDProps {
   tick: number;
   maxTicks: number;
   isMobile: boolean;
+  isBossLevel?: boolean;
 }
 
 interface StatBlockProps {
@@ -58,17 +62,84 @@ function StatBlock({ label, health, energy, align }: StatBlockProps) {
   );
 }
 
-export function BattleHUD({ playerHealth, enemyHealth, playerEnergy, tick, maxTicks, isMobile }: BattleHUDProps) {
+function BossWarning({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={`boss-warning flex items-center justify-center gap-2 rounded-md border border-[var(--sem-danger)] bg-[rgba(var(--sem-danger-rgb),0.12)] px-3 ${compact ? "py-1" : "py-1.5"} text-[var(--sem-danger)] shadow-[0_0_18px_rgba(var(--sem-danger-rgb),0.22)]`}
+      style={{ animationDuration: `${BOSS_WARNING_DURATION_MS}ms` }}
+      aria-live="polite"
+    >
+      <Skull className="h-3.5 w-3.5" aria-hidden="true" />
+      <span className="text-[8px] font-black uppercase tracking-[0.24em]">WARNING: BOSS ENCOUNTER</span>
+    </div>
+  );
+}
+
+function BossHealthBar({ health }: { health: number }) {
+  const healthPercent = clampPercent(health);
+  const activeSegments = Math.ceil((healthPercent / PERCENT_SCALE) * BOSS_HEALTH_SEGMENTS);
+
+  return (
+    <div className="min-w-0">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-[var(--sem-danger)]">
+          <Skull className="h-4 w-4 drop-shadow-[0_0_8px_rgba(var(--sem-danger-rgb),0.7)]" aria-hidden="true" />
+          <span className="text-[8px] font-black uppercase tracking-[0.26em]">BOSS</span>
+        </div>
+        <span className="text-[10px] font-black tracking-[0.12em] text-[var(--sem-danger)]">{Math.ceil(health)}</span>
+      </div>
+      <div
+        className="grid h-4 gap-[2px] rounded-md border border-[var(--sem-danger)] bg-bg-primary/85 p-[2px] shadow-[0_0_22px_rgba(var(--sem-danger-rgb),0.16)]"
+        style={{ gridTemplateColumns: `repeat(${BOSS_HEALTH_SEGMENTS}, minmax(0, 1fr))` }}
+      >
+        {Array.from({ length: BOSS_HEALTH_SEGMENTS }, (_, index) => (
+          <span
+            key={index}
+            className={`h-full rounded-[2px] transition-colors duration-200 ${
+              index < activeSegments
+                ? "bg-[var(--sem-danger)] shadow-[0_0_8px_rgba(var(--sem-danger-rgb),0.55)]"
+                : "bg-[rgba(var(--sem-danger-rgb),0.12)]"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function BattleHUD({ playerHealth, enemyHealth, playerEnergy, tick, maxTicks, isMobile, isBossLevel = false }: BattleHUDProps) {
   const boundedMaxTicks = Math.max(1, maxTicks);
   const progressPercent = clampPercent(tick, boundedMaxTicks);
   const remainingTicks = Math.max(0, boundedMaxTicks - tick);
+  const warningStyles = (
+    <style>{`
+      @keyframes bossWarningFlash {
+        0%, 100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+        10%, 28%, 46%, 64% { opacity: 1; transform: translateY(0) scale(1); }
+        19%, 37%, 55% { opacity: 0.35; transform: translateY(0) scale(1); }
+        82% { opacity: 1; }
+      }
+
+      .boss-warning {
+        animation: bossWarningFlash ease-out both;
+      }
+    `}</style>
+  );
 
   if (isMobile) {
     return (
       <div className="mb-2 rounded-lg border border-accent/15 bg-bg-primary/85 px-3 py-2 shadow-[0_0_24px_rgba(var(--accent-rgb),0.08)]">
+        {warningStyles}
+        {isBossLevel && <div className="mb-2"><BossWarning compact /></div>}
         <div className="grid grid-cols-2 gap-3">
           <StatBlock label="ALLY" health={playerHealth} energy={playerEnergy} align="left" />
-          <StatBlock label="ENEMY" health={enemyHealth} align="right" />
+          {isBossLevel ? (
+            <div className="text-right">
+              <BossHealthBar health={enemyHealth} />
+            </div>
+          ) : (
+            <StatBlock label="ENEMY" health={enemyHealth} align="right" />
+          )}
         </div>
         <div className="mt-2 flex items-center gap-2">
           <span className="text-[8px] font-black tracking-[0.18em] text-accent/45 uppercase">TIME</span>
@@ -83,11 +154,21 @@ export function BattleHUD({ playerHealth, enemyHealth, playerEnergy, tick, maxTi
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
+      {warningStyles}
+      {isBossLevel && (
+        <div className="absolute left-1/2 top-4 w-[min(520px,62%)] -translate-x-1/2">
+          <BossWarning />
+        </div>
+      )}
       <div className="absolute left-4 top-4 rounded-lg border border-accent/15 bg-bg-primary/75 p-3 backdrop-blur-sm shadow-[0_0_28px_rgba(var(--accent-rgb),0.08)]">
         <StatBlock label="ALLY" health={playerHealth} energy={playerEnergy} align="left" />
       </div>
-      <div className="absolute right-4 top-4 rounded-lg border border-accent/15 bg-bg-primary/75 p-3 backdrop-blur-sm shadow-[0_0_28px_rgba(var(--accent-rgb),0.08)]">
-        <StatBlock label="ENEMY" health={enemyHealth} align="right" />
+      <div className={`absolute right-4 ${isBossLevel ? "top-16" : "top-4"} rounded-lg border ${isBossLevel ? "border-[var(--sem-danger)] shadow-[0_0_32px_rgba(var(--sem-danger-rgb),0.18)]" : "border-accent/15 shadow-[0_0_28px_rgba(var(--accent-rgb),0.08)]"} bg-bg-primary/75 p-3 backdrop-blur-sm`}>
+        {isBossLevel ? (
+          <BossHealthBar health={enemyHealth} />
+        ) : (
+          <StatBlock label="ENEMY" health={enemyHealth} align="right" />
+        )}
       </div>
       <div className="absolute bottom-4 left-1/2 w-[46%] -translate-x-1/2 rounded-lg border border-accent/15 bg-bg-primary/75 p-2 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-1">

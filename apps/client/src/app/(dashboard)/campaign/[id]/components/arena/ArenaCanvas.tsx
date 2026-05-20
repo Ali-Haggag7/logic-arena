@@ -1,13 +1,13 @@
 "use client";
 import React, { useCallback, useEffect, useRef, memo, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import type { SceneDef, SceneState } from "./scenes";
+import type { ArenaRobot, SceneDef, SceneState } from "./scenes";
 import { createEvalState } from "./miniEvaluator";
 import type { EvalState } from "./miniEvaluator";
 import { getEnemyScript } from "../levelScripts";
 import { ROBOT_SIZE, FOV_SWEEP_FRAMES, FLASH_DURATION } from "./constants";
 import { drawGrid, drawScanLine, drawLabel, drawGraphNet } from "./rendering/drawBackground";
-import { drawRobot } from "./rendering/drawRobot";
+import { drawFovCone, drawRobot } from "./rendering/drawRobot";
 import { drawProjectile } from "./rendering/drawProjectile";
 import { drawObstacle } from "./rendering/drawObstacle";
 import { updateProjectiles } from "./physics/projectileSystem";
@@ -24,6 +24,8 @@ const CANVAS_HEIGHT = 280;
 const DEFAULT_ACCENT_RGB = "34,211,238";
 const DEFAULT_WARNING_COLOR = "#f59e0b";
 const DEFAULT_DANGER_COLOR = "#ef4444";
+const DEFAULT_WARNING_RGB = "245,158,11";
+const DEFAULT_DANGER_RGB = "239,68,68";
 const PLAYER_SCRIPT_ERROR_Y_OFFSET = 7;
 const ENEMY_SCRIPT_ERROR_Y = 14;
 const ERROR_TEXT_X = 8;
@@ -32,6 +34,27 @@ const ERROR_MIN_FONT_SIZE = 10;
 const ERROR_ALPHA_BASE = 0.5;
 const ERROR_ALPHA_RANGE = 0.3;
 const ERROR_ALPHA_SPEED = 0.08;
+const BOSS_VISUAL_SCALE = 1.32;
+const BOSS_AURA_SCALE = 2.7;
+const BOSS_AURA_PULSE_SCALE = 0.3;
+const BOSS_SPIKE_COUNT = 8;
+const BOSS_SPIKE_LONG_SCALE = 1.18;
+const BOSS_SPIKE_SHORT_SCALE = 0.78;
+const BOSS_CORE_SCALE = 0.34;
+const BOSS_CANNON_START_SCALE = 0.2;
+const BOSS_CANNON_END_SCALE = 1.62;
+const BOSS_TRAIL_COUNT = 3;
+const BOSS_TRAIL_SPACING = 0.9;
+const BOSS_TRAIL_ALPHA = 0.12;
+const BOSS_TRAIL_GROWTH_SCALE = 0.16;
+const BOSS_AURA_INNER_ALPHA = 0.32;
+const BOSS_AURA_MID_STOP = 0.48;
+const BOSS_AURA_MID_ALPHA = 0.12;
+const BOSS_BODY_ALPHA = 0.22;
+const BOSS_BODY_LINE_WIDTH = 2.2;
+const BOSS_BODY_SHADOW_SCALE = 0.75;
+const BOSS_CANNON_SHADOW_SCALE = 0.45;
+const BOSS_CANNON_LINE_WIDTH = 2.8;
 
 interface ArenaCanvasProps {
   scene: SceneDef;
@@ -45,6 +68,85 @@ interface ArenaCanvasProps {
   aspectRatio?: number;
   className?: string;
   waitingForReplay?: boolean;
+  isBossLevel?: boolean;
+}
+
+function drawBossRobot(
+  ctx: CanvasRenderingContext2D,
+  robot: ArenaRobot,
+  W: number,
+  H: number,
+  tick: number,
+  fovAlpha: number,
+  dangerColor: string,
+  warningColor: string,
+  dangerRgb: string,
+  warningRgb: string,
+): void {
+  if (!robot.isAlive) return;
+
+  const bossRobot: ArenaRobot = { ...robot, color: dangerColor };
+  drawFovCone(ctx, bossRobot, W, H, fovAlpha);
+
+  const px = robot.x * W;
+  const py = robot.y * H;
+  const r = robot.size * Math.min(W, H) * BOSS_VISUAL_SCALE;
+  const invPulse = robot.invulnerableTimer > 0 ? 0.3 + Math.sin(tick * 0.3) * 0.3 : 0;
+  const alpha = robot.invulnerableTimer > 0 ? 0.4 + invPulse : 1;
+
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.globalAlpha = alpha;
+
+  for (let index = BOSS_TRAIL_COUNT; index > 0; index--) {
+    const offset = index * r * BOSS_TRAIL_SPACING;
+    ctx.fillStyle = `rgba(${dangerRgb},${BOSS_TRAIL_ALPHA / index})`;
+    ctx.beginPath();
+    ctx.arc(-Math.cos(robot.angle) * offset, -Math.sin(robot.angle) * offset, r * (1 + index * BOSS_TRAIL_GROWTH_SCALE), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const glowRadius = r * (BOSS_AURA_SCALE + Math.sin(tick * 0.075) * BOSS_AURA_PULSE_SCALE);
+  const gradient = ctx.createRadialGradient(0, 0, r * BOSS_CORE_SCALE, 0, 0, glowRadius);
+  gradient.addColorStop(0, `rgba(${dangerRgb},${BOSS_AURA_INNER_ALPHA})`);
+  gradient.addColorStop(BOSS_AURA_MID_STOP, `rgba(${warningRgb},${BOSS_AURA_MID_ALPHA})`);
+  gradient.addColorStop(1, "transparent");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.rotate(robot.angle);
+  ctx.beginPath();
+  for (let index = 0; index < BOSS_SPIKE_COUNT; index++) {
+    const angle = (index / BOSS_SPIKE_COUNT) * Math.PI * 2;
+    const scale = index % 2 === 0 ? BOSS_SPIKE_LONG_SCALE : BOSS_SPIKE_SHORT_SCALE;
+    const rx = Math.cos(angle) * r * scale;
+    const ry = Math.sin(angle) * r * scale;
+    index === 0 ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry);
+  }
+  ctx.closePath();
+  ctx.fillStyle = `rgba(${dangerRgb},${BOSS_BODY_ALPHA})`;
+  ctx.strokeStyle = dangerColor;
+  ctx.lineWidth = BOSS_BODY_LINE_WIDTH;
+  ctx.shadowColor = dangerColor;
+  ctx.shadowBlur = r * BOSS_BODY_SHADOW_SCALE;
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowBlur = r * BOSS_CANNON_SHADOW_SCALE;
+  ctx.strokeStyle = warningColor;
+  ctx.lineWidth = BOSS_CANNON_LINE_WIDTH;
+  ctx.beginPath();
+  ctx.moveTo(r * BOSS_CANNON_START_SCALE, 0);
+  ctx.lineTo(r * BOSS_CANNON_END_SCALE, 0);
+  ctx.stroke();
+
+  ctx.fillStyle = warningColor;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * BOSS_CORE_SCALE, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 export const ArenaCanvas = memo(function ArenaCanvas({
@@ -59,6 +161,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   aspectRatio = 16 / 7,
   className = "",
   waitingForReplay = false,
+  isBossLevel = false,
 }: ArenaCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<SceneState>(scene.init());
@@ -70,6 +173,8 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   const accentRgbRef = useRef(DEFAULT_ACCENT_RGB);
   const warningColorRef = useRef(DEFAULT_WARNING_COLOR);
   const dangerColorRef = useRef(DEFAULT_DANGER_COLOR);
+  const warningRgbRef = useRef(DEFAULT_WARNING_RGB);
+  const dangerRgbRef = useRef(DEFAULT_DANGER_RGB);
   const pausedRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -95,6 +200,8 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       accentRgbRef.current = css.getPropertyValue('--accent-rgb').trim() || DEFAULT_ACCENT_RGB;
       warningColorRef.current = css.getPropertyValue('--sem-warning').trim() || DEFAULT_WARNING_COLOR;
       dangerColorRef.current = css.getPropertyValue('--sem-danger').trim() || DEFAULT_DANGER_COLOR;
+      warningRgbRef.current = css.getPropertyValue('--sem-warning-rgb').trim() || DEFAULT_WARNING_RGB;
+      dangerRgbRef.current = css.getPropertyValue('--sem-danger-rgb').trim() || DEFAULT_DANGER_RGB;
     };
 
     updateAccentRgb();
@@ -247,7 +354,24 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       const enemyFov = (fovTimerRef.current.get('enemy') ?? 0) / FOV_SWEEP_FRAMES;
       const playerFov = (fovTimerRef.current.get('player') ?? 0) / FOV_SWEEP_FRAMES;
 
-      if (enemy) drawRobot(ctx, enemy, W, H, state.tick, enemyFov);
+      if (enemy) {
+        if (isBossLevel) {
+          drawBossRobot(
+            ctx,
+            enemy,
+            W,
+            H,
+            state.tick,
+            enemyFov,
+            dangerColorRef.current,
+            warningColorRef.current,
+            dangerRgbRef.current,
+            warningRgbRef.current,
+          );
+        } else {
+          drawRobot(ctx, enemy, W, H, state.tick, enemyFov);
+        }
+      }
       if (player) drawRobot(ctx, player, W, H, state.tick, playerFov);
 
       if (flashTimerRef.current > 0) {
@@ -277,7 +401,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
 
     rafRef.current = requestAnimationFrame(render);
     return () => { cancelAnimationFrame(rafRef.current); io.disconnect(); };
-  }, [scene, levelId, isReplaying]);
+  }, [scene, levelId, isReplaying, isBossLevel]);
 
   return (
     <div

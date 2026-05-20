@@ -27,10 +27,12 @@ interface LevelMobileLayoutProps {
   isReplaying?: boolean;
   fightResult?: FightResult | null;
   waitingForReplay?: boolean;
+  isBossLevel?: boolean;
+  bossIntroActive?: boolean;
   router: AppRouterInstance;
 }
 
-export function LevelMobileLayout({ level, script, setScript, modal, handleFight, onBattleEnd, latestFrameRef, isReplaying, fightResult, waitingForReplay, router }: LevelMobileLayoutProps) {
+export function LevelMobileLayout({ level, script, setScript, modal, handleFight, onBattleEnd, latestFrameRef, isReplaying, fightResult, waitingForReplay, isBossLevel = false, bossIntroActive = false, router }: LevelMobileLayoutProps) {
   const dc = DIFFICULTY_CONFIG[level.difficulty];
   const fightDisabled = !script.trim() || modal === "loading";
 
@@ -135,6 +137,8 @@ export function LevelMobileLayout({ level, script, setScript, modal, handleFight
           waitingForReplay={waitingForReplay}
           isMobile
           maxTicks={level.maxTicks}
+          isBossLevel={isBossLevel}
+          bossIntroActive={bossIntroActive}
           compact
         />
       </div>

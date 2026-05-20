@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAliScriptSuggestions, type AliScriptSuggestion } from "./aliScriptAutocomplete";
 import { tokenizeAliScript, type AliScriptToken, type TokenType } from "./aliScriptTokenizer";
 
@@ -19,6 +19,26 @@ interface CaretPosition {
   left: number;
 }
 
+interface ConfettiParticle {
+  id: number;
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  rotate: number;
+  size: number;
+  delayMs: number;
+  color: (typeof CONFETTI_COLORS)[number];
+}
+
+type ConfettiParticleStyle = React.CSSProperties & {
+  "--egg-x": string;
+  "--egg-y": string;
+  "--egg-dx": string;
+  "--egg-dy": string;
+  "--egg-rotate": string;
+};
+
 const INDENT = "  ";
 const LINE_HEIGHT = 24;
 const DESKTOP_FONT_SIZE = 14;
@@ -29,6 +49,25 @@ const SUGGESTION_MIN_TOUCH_SIZE = 48;
 const APPROX_CHAR_WIDTH_DESKTOP = 8.4;
 const APPROX_CHAR_WIDTH_MOBILE = 7.2;
 const MAX_AUTOCOMPLETE_LEFT = 360;
+const EASTER_EGG_COMMAND = "// MAKE IT RAIN";
+const CONFETTI_PARTICLE_COUNT = 64;
+const CONFETTI_DURATION_MS = 1200;
+const CONFETTI_MIN_SIZE = 5;
+const CONFETTI_SIZE_RANGE = 7;
+const CONFETTI_X_RANGE = 560;
+const CONFETTI_Y_MIN = 180;
+const CONFETTI_Y_RANGE = 340;
+const CONFETTI_ROTATION_RANGE = 720;
+const CONFETTI_DELAY_STEP_MS = 6;
+const CONFETTI_HEIGHT_RATIO = 1.65;
+const EASTER_EGG_TOAST_MS = 2600;
+const CONFETTI_COLORS = [
+  "var(--accent)",
+  "var(--sem-warning)",
+  "var(--sem-success)",
+  "var(--sem-danger)",
+  "var(--sem-info)",
+] as const;
 
 const TOKEN_CLASS: Record<TokenType, string> = {
   KEYWORD: "text-[color:var(--sem-warning)]",
@@ -106,6 +145,44 @@ function renderHighlightedCode(value: string, tokens: AliScriptToken[]): React.R
   return nodes;
 }
 
+function hasDeveloperModeLine(value: string): boolean {
+  return value.split("\n").some((line) => line === EASTER_EGG_COMMAND);
+}
+
+function createConfettiParticles(originRect: DOMRect): ConfettiParticle[] {
+  const originX = originRect.left + originRect.width / 2;
+  const originY = originRect.top + originRect.height / 3;
+
+  return Array.from({ length: CONFETTI_PARTICLE_COUNT }, (_, index) => {
+    const color = CONFETTI_COLORS[index % CONFETTI_COLORS.length];
+    return {
+      id: Date.now() + index,
+      x: originX,
+      y: originY,
+      dx: (Math.random() - 0.5) * CONFETTI_X_RANGE,
+      dy: -(CONFETTI_Y_MIN + Math.random() * CONFETTI_Y_RANGE),
+      rotate: (Math.random() - 0.5) * CONFETTI_ROTATION_RANGE,
+      size: CONFETTI_MIN_SIZE + Math.random() * CONFETTI_SIZE_RANGE,
+      delayMs: index * CONFETTI_DELAY_STEP_MS,
+      color,
+    };
+  });
+}
+
+function getConfettiStyle(particle: ConfettiParticle): ConfettiParticleStyle {
+  return {
+    "--egg-x": `${particle.x}px`,
+    "--egg-y": `${particle.y}px`,
+    "--egg-dx": `${particle.dx}px`,
+    "--egg-dy": `${particle.dy}px`,
+    "--egg-rotate": `${particle.rotate}deg`,
+    width: `${particle.size}px`,
+    height: `${particle.size * CONFETTI_HEIGHT_RATIO}px`,
+    background: particle.color,
+    animation: `developerConfettiBurst ${CONFETTI_DURATION_MS}ms cubic-bezier(0.15, 0.75, 0.25, 1) ${particle.delayMs}ms both`,
+  };
+}
+
 export function AliScriptEditor({
   value,
   onChange,
@@ -122,12 +199,62 @@ export function AliScriptEditor({
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
   const [caretPosition, setCaretPosition] = useState<CaretPosition>({ top: 0, left: EDITOR_PADDING_LEFT });
   const [placeholderActive, setPlaceholderActive] = useState(false);
+  const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([]);
+  const [toastVisible, setToastVisible] = useState(false);
+  const developerModeActiveRef = useRef(false);
+  const confettiTimerRef = useRef<number | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   const tokens = useMemo(() => tokenizeAliScript(value), [value]);
   const highlightedCode = useMemo(() => renderHighlightedCode(value, tokens), [tokens, value]);
   const lines = useMemo(() => value.split("\n"), [value]);
+  const hasDeveloperModeTrigger = useMemo(() => hasDeveloperModeLine(value), [value]);
   const lineCount = Math.max(lines.length, 1);
   const fontSize = isMobile ? MOBILE_FONT_SIZE : DESKTOP_FONT_SIZE;
+
+  useEffect(() => {
+    if (!hasDeveloperModeTrigger) {
+      developerModeActiveRef.current = false;
+      return;
+    }
+
+    if (developerModeActiveRef.current) return;
+    developerModeActiveRef.current = true;
+
+    const rect = textareaRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    if (confettiTimerRef.current !== null) {
+      window.clearTimeout(confettiTimerRef.current);
+    }
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+
+    setConfettiParticles(createConfettiParticles(rect));
+    setToastVisible(true);
+
+    confettiTimerRef.current = window.setTimeout(() => {
+      setConfettiParticles([]);
+      confettiTimerRef.current = null;
+    }, CONFETTI_DURATION_MS + CONFETTI_PARTICLE_COUNT * CONFETTI_DELAY_STEP_MS);
+
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastVisible(false);
+      toastTimerRef.current = null;
+    }, EASTER_EGG_TOAST_MS);
+  }, [hasDeveloperModeTrigger]);
+
+  useEffect(() => {
+    return () => {
+      if (confettiTimerRef.current !== null) {
+        window.clearTimeout(confettiTimerRef.current);
+      }
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   const syncSuggestions = useCallback((nextValue: string, cursorPosition: number) => {
     const nextSuggestions = getAliScriptSuggestions(nextValue, cursorPosition);
@@ -325,6 +452,46 @@ export function AliScriptEditor({
         <span>{lineCount} Lines</span>
         <span>{value.length} Chars</span>
       </div>
+
+      {(confettiParticles.length > 0 || toastVisible) && (
+        <div className="pointer-events-none fixed inset-0 z-[80]" aria-hidden={!toastVisible}>
+          <style>{`
+            @keyframes developerConfettiBurst {
+              0% {
+                opacity: 1;
+                transform: translate3d(var(--egg-x), var(--egg-y), 0) rotate(0deg) scale(1);
+              }
+              100% {
+                opacity: 0;
+                transform: translate3d(calc(var(--egg-x) + var(--egg-dx)), calc(var(--egg-y) + var(--egg-dy)), 0) rotate(var(--egg-rotate)) scale(0.55);
+              }
+            }
+
+            @keyframes developerToastIn {
+              0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+              15%, 84% { opacity: 1; transform: translateX(-50%) translateY(0); }
+              100% { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+            }
+          `}</style>
+          {confettiParticles.map((particle) => (
+            <span
+              key={particle.id}
+              className="fixed left-0 top-0 rounded-[2px] shadow-[0_0_10px_rgba(var(--accent-rgb),0.28)]"
+              style={getConfettiStyle(particle)}
+            />
+          ))}
+          {toastVisible && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="fixed left-1/2 top-8 rounded-lg border border-accent/40 bg-bg-primary px-5 py-3 text-center font-mono text-[10px] font-black uppercase tracking-[0.28em] text-accent shadow-[0_0_34px_rgba(var(--accent-rgb),0.28)]"
+              style={{ animation: `developerToastIn ${EASTER_EGG_TOAST_MS}ms ease both` }}
+            >
+              DEVELOPER MODE UNLOCKED
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

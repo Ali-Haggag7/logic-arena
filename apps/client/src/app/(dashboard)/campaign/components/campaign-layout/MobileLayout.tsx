@@ -1,11 +1,13 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { GitBranch } from "lucide-react";
 
 import { TAB_ICONS, TAB_SHORT } from "./tabMeta";
 import type { CampaignViewProps } from "./types";
 import { LevelCard } from "./LevelCard";
+import { useSoundEffects } from "../../../../../hooks/useSoundEffects";
+import type { CampaignTabId } from "../../constants/campaign.constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TOTAL_LEVELS = 60;
@@ -17,10 +19,18 @@ export const MobileLayout = memo(function MobileLayout({
   setActiveTabId,
   setSelectedLevel,
 }: CampaignViewProps) {
+  const { playHover, playClick } = useSoundEffects();
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
     [activeTabId, tabs],
   );
+  const handleTabHover = useCallback((): void => {
+    playHover();
+  }, [playHover]);
+  const handleTabClick = useCallback((tabId: CampaignTabId): void => {
+    playClick();
+    setActiveTabId(tabId);
+  }, [playClick, setActiveTabId]);
 
   // ── Global stats ───────────────────────────────────────────────────────────
   const allLevels      = useMemo(() => tabs.flatMap((t) => t.levels), [tabs]);
@@ -61,7 +71,8 @@ export const MobileLayout = memo(function MobileLayout({
                 type="button"
                 aria-pressed={isActive}
                 aria-label={`${tab.label} — ${done} of ${total} complete`}
-                onClick={() => setActiveTabId(tab.id)}
+                onMouseEnter={handleTabHover}
+                onClick={() => handleTabClick(tab.id)}
                 className={`mobile-layout__tab-btn ${isActive ? "mobile-layout__tab-btn--active" : ""}`}
               >
                 <Icon className="mobile-layout__tab-icon" aria-hidden="true" />

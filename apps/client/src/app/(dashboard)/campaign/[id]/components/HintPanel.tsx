@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useSoundEffects } from "../../../../../hooks/useSoundEffects";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -87,10 +88,12 @@ interface LockedHintSlotProps {
 
 function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlotProps) {
   const [confirm, setConfirm] = useState<ConfirmState>("idle");
+  const { playClick } = useSoundEffects();
 
   const cost = HINT_COSTS[index];
 
   async function handleConfirm() {
+    playClick();
     navigator.vibrate?.(PRIMARY_HAPTIC_MS);
     setConfirm("loading");
     try {
@@ -105,7 +108,10 @@ function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlot
       <button
         type="button"
         className="hint-slot hint-slot--locked"
-        onClick={() => setConfirm("confirming")}
+        onClick={() => {
+          playClick();
+          setConfirm("confirming");
+        }}
         disabled={isGloballyRevealing}
         aria-label={`Reveal hint ${index + 1} for ${cost} points`}
       >
@@ -134,7 +140,10 @@ function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlot
           <button
             type="button"
             className="hint-slot__confirm-btn hint-slot__confirm-btn--no"
-            onClick={() => setConfirm("idle")}
+            onClick={() => {
+              playClick();
+              setConfirm("idle");
+            }}
             aria-label="Cancel hint reveal"
           >
             CANCEL

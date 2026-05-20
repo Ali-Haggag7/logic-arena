@@ -28,10 +28,12 @@ interface LevelDesktopLayoutProps {
   isReplaying?: boolean;
   fightResult?: FightResult | null;
   waitingForReplay?: boolean;
+  isBossLevel?: boolean;
+  bossIntroActive?: boolean;
   router: AppRouterInstance;
 }
 
-export function LevelDesktopLayout({ level, script, setScript, modal, handleFight, onBattleEnd, latestFrameRef, isReplaying, fightResult, waitingForReplay, router }: LevelDesktopLayoutProps) {
+export function LevelDesktopLayout({ level, script, setScript, modal, handleFight, onBattleEnd, latestFrameRef, isReplaying, fightResult, waitingForReplay, isBossLevel = false, bossIntroActive = false, router }: LevelDesktopLayoutProps) {
   const dc = DIFFICULTY_CONFIG[level.difficulty];
   const fightDisabled = !script.trim() || modal === "loading";
 
@@ -105,6 +107,8 @@ export function LevelDesktopLayout({ level, script, setScript, modal, handleFigh
               waitingForReplay={waitingForReplay}
               isMobile={false}
               maxTicks={level.maxTicks}
+              isBossLevel={isBossLevel}
+              bossIntroActive={bossIntroActive}
             />
             {modal === "loading" && (
               <div

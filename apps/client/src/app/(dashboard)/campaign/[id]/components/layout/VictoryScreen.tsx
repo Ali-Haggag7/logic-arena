@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Star } from "lucide-react";
+import { useSoundEffects } from "../../../../../../hooks/useSoundEffects";
 
 const STAR_COUNT = 3;
 const COUNT_STEPS = 24;
@@ -26,7 +27,12 @@ function getStarClass(stars: number, index: number): string {
 }
 
 export function VictoryScreen({ reward, stars, levelTitle, isMobile, onNextLevel, onReplay, onBack }: VictoryScreenProps) {
+  const { playVictory } = useSoundEffects();
   const [displayReward, setDisplayReward] = useState(0);
+
+  useEffect(() => {
+    playVictory();
+  }, [playVictory]);
 
   useEffect(() => {
     if (reward <= 0) {

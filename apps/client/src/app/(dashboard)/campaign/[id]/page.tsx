@@ -16,6 +16,8 @@ const SIMULATION_TICKS_PER_SECOND = 60;
 const DEFAULT_REWARD = 0;
 const DEFAULT_STARS = 0;
 const PRIMARY_HAPTIC_MS = 50;
+const BOSS_LEVEL_ORDER = 10;
+const BOSS_INTRO_SHAKE_MS = 560;
 
 interface CompleteLevelResponse {
   pointsAwarded?: number;
@@ -37,11 +39,13 @@ export default function CampaignLevelPage() {
   const [stars, setStars] = useState<number>(0);
   const [pendingWinner, setPendingWinner] = useState<'player' | 'enemy' | 'draw' | null>(null);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [bossIntroActive, setBossIntroActive] = useState(false);
   const { fight, status: fightStatus, result: fightResult, latestFrameRef } = useCampaignFight();
   const { prefetchNextLevel } = useCampaignPrefetch();
   const fightStartTimeMsRef = useRef<number>(0);
   const fightStartTickRef = useRef<number>(0);
   const fightEndTickRef = useRef<number>(0);
+  const bossIntroTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (invalidLevelId) return;
@@ -88,6 +92,19 @@ export default function CampaignLevelPage() {
   const handleFight = useCallback(() => {
     if (!script.trim()) return;
     navigator.vibrate?.(PRIMARY_HAPTIC_MS);
+    if (level?.order === BOSS_LEVEL_ORDER) {
+      if (bossIntroTimerRef.current !== null) {
+        window.clearTimeout(bossIntroTimerRef.current);
+      }
+      setBossIntroActive(false);
+      window.requestAnimationFrame(() => {
+        setBossIntroActive(true);
+        bossIntroTimerRef.current = window.setTimeout(() => {
+          setBossIntroActive(false);
+          bossIntroTimerRef.current = null;
+        }, BOSS_INTRO_SHAKE_MS);
+      });
+    }
     setModal("loading");
     setReward(DEFAULT_REWARD);
     setStars(DEFAULT_STARS);
@@ -104,7 +121,15 @@ export default function CampaignLevelPage() {
     const enemySpawn = e ? { x: e.x * 800, y: e.y * 600, angle: e.angle } : undefined;
 
     fight(levelId, script, obstacles, playerSpawn, enemySpawn);
-  }, [script, levelId, fight]);
+  }, [script, levelId, fight, level?.order]);
+
+  useEffect(() => {
+    return () => {
+      if (bossIntroTimerRef.current !== null) {
+        window.clearTimeout(bossIntroTimerRef.current);
+      }
+    };
+  }, []);
 
   const getFallbackDurationTicks = useCallback((): number => {
     const elapsedMs = Math.max(0, Date.now() - fightStartTimeMsRef.current);
@@ -165,6 +190,7 @@ export default function CampaignLevelPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isReplaying = fightStatus === 'streaming' || fightStatus === 'done';
   const waitingForReplay = modal === 'loading' && !isReplaying;
+  const isBossLevel = level?.order === BOSS_LEVEL_ORDER;
 
   const displayError = invalidLevelId ? "Invalid level ID." : error;
 
@@ -217,6 +243,8 @@ export default function CampaignLevelPage() {
           isReplaying={isReplaying}
           fightResult={fightResult}
           waitingForReplay={waitingForReplay}
+          isBossLevel={isBossLevel}
+          bossIntroActive={bossIntroActive}
           router={router}
         />
       ) : (
@@ -231,6 +259,8 @@ export default function CampaignLevelPage() {
           isReplaying={isReplaying}
           fightResult={fightResult}
           waitingForReplay={waitingForReplay}
+          isBossLevel={isBossLevel}
+          bossIntroActive={bossIntroActive}
           router={router}
         />
       )}

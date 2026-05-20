@@ -44,6 +44,8 @@ interface LevelArenaPreviewProps {
   waitingForReplay?: boolean;
   isMobile?: boolean;
   maxTicks?: number;
+  isBossLevel?: boolean;
+  bossIntroActive?: boolean;
 }
 
 export const LevelArenaPreview = memo(function LevelArenaPreview({
@@ -59,6 +61,8 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
   waitingForReplay,
   isMobile = false,
   maxTicks = DEFAULT_MAX_TICKS,
+  isBossLevel = false,
+  bossIntroActive = false,
 }: LevelArenaPreviewProps) {
   const scene = getSceneForLevel(levelId);
   const [hudSnapshot, setHudSnapshot] = React.useState<BattleHUDSnapshot>({
@@ -123,15 +127,32 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
 
   return (
     <div
-      className="relative w-full rounded-xl overflow-hidden border border-accent/20"
+      className={`relative w-full rounded-xl overflow-hidden border ${isBossLevel ? "border-[var(--sem-danger)] shadow-[0_0_38px_rgba(var(--sem-danger-rgb),0.16)]" : "border-accent/20"} ${bossIntroActive ? "boss-arena-shake" : ""}`}
       style={{
         background: 'var(--bg-primary)',
-        boxShadow: '0 0 40px rgba(var(--accent-rgb),0.08), inset 0 0 30px rgba(var(--accent-rgb),0.02)',
+        boxShadow: isBossLevel
+          ? '0 0 46px rgba(var(--sem-danger-rgb),0.18), inset 0 0 34px rgba(var(--sem-danger-rgb),0.05)'
+          : '0 0 40px rgba(var(--accent-rgb),0.08), inset 0 0 30px rgba(var(--accent-rgb),0.02)',
       }}
     >
+      <style>{`
+        @keyframes bossArenaShake {
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          12% { transform: translate3d(-4px, 2px, 0); }
+          24% { transform: translate3d(5px, -3px, 0); }
+          36% { transform: translate3d(-6px, 1px, 0); }
+          48% { transform: translate3d(4px, 3px, 0); }
+          60% { transform: translate3d(-3px, -2px, 0); }
+          72% { transform: translate3d(2px, 1px, 0); }
+        }
+
+        .boss-arena-shake {
+          animation: bossArenaShake 520ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+      `}</style>
       <div
         className="flex items-center justify-between px-3 py-1.5 border-b border-accent/10"
-        style={{ background: 'rgba(var(--accent-rgb),0.03)' }}
+        style={{ background: isBossLevel ? 'rgba(var(--sem-danger-rgb),0.06)' : 'rgba(var(--accent-rgb),0.03)' }}
       >
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-accent/55" />
@@ -139,10 +160,10 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
           <span className="w-2 h-2 rounded-full bg-accent/20" />
         </div>
         <div
-          className="text-[8px] font-mono font-bold tracking-[0.18em] text-accent/50 uppercase px-3 py-0.5 rounded-full border border-accent/10"
-          style={{ background: 'rgba(var(--accent-rgb),0.04)' }}
+          className={`text-[8px] font-mono font-bold tracking-[0.18em] uppercase px-3 py-0.5 rounded-full border ${isBossLevel ? "border-[var(--sem-danger)] text-[var(--sem-danger)]" : "border-accent/10 text-accent/50"}`}
+          style={{ background: isBossLevel ? 'rgba(var(--sem-danger-rgb),0.08)' : 'rgba(var(--accent-rgb),0.04)' }}
         >
-          {mode === "loading" ? "COMBAT IN PROGRESS" : "ARENA SIMULATION"}
+          {isBossLevel ? "BOSS SIGNAL LOCKED" : mode === "loading" ? "COMBAT IN PROGRESS" : "ARENA SIMULATION"}
         </div>
         <div className="hidden md:flex items-center gap-2 text-[8px] font-mono font-bold tracking-widest">
           <span className="text-accent/70">ALLY</span>
@@ -160,6 +181,7 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
             tick={hudSnapshot.tick}
             maxTicks={maxTicks}
             isMobile
+            isBossLevel={isBossLevel}
           />
         </div>
       )}
@@ -176,6 +198,7 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
           fightResult={fightResult}
           aspectRatio={compact ? 16 / 6 : 16 / 7}
           waitingForReplay={waitingForReplay}
+          isBossLevel={isBossLevel}
         />
 
         {mode === "loading" && !isMobile && (
@@ -186,6 +209,7 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
             tick={hudSnapshot.tick}
             maxTicks={maxTicks}
             isMobile={false}
+            isBossLevel={isBossLevel}
           />
         )}
       </div>
