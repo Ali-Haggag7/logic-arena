@@ -316,10 +316,10 @@ IF VISIBLE_ENEMY_COUNT > 0 THEN
   IF filled < 5 THEN
     SET filled = filled + 1
   END
-  
+
   SET sum = buf[0] + buf[1] + buf[2] + buf[3] + buf[4]
   SET avg = sum / 5
-  
+
   SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)
   IF filled == 5 THEN
     IF avg < prev_avg THEN
@@ -329,10 +329,12 @@ IF VISIBLE_ENEMY_COUNT > 0 THEN
       SET _SYS_SPEED_MULT = 1.5
       BURST_FIRE
     ELSE
+      SET _SYS_ORBIT_R = 0
       SET _SYS_SPEED_MULT = 2
       FIRE
     END
   ELSE
+    SET _SYS_ORBIT_R = 0
     FIRE
   END
   SET prev_avg = avg
@@ -350,12 +352,12 @@ END`,
     difficulty: 'EXTREME',
     pointsReward: D.EXTREME,
     description:
-      'It uses \`GET_ALL_VISIBLE_ENEMIES\` and constructs an array of threats. It then iterates the array, applies RAYCAST to check for line-of-sight on each, and caches valid targets into a secondary array. It then pops from this target array to unleash a relentless barrage while strafing dynamically. O(N) array filtering in real-time.',
+      'It uses `GET_ALL_VISIBLE_ENEMIES` and constructs an array of threats. It then iterates the array, applies RAYCAST to check for line-of-sight on each, and caches valid targets into a secondary array. It then pops from this target array to unleash a relentless barrage while strafing dynamically. O(N) array filtering in real-time.',
     hint: 'It explicitly uses RAYCAST to filter out blocked targets. Hide behind obstacles; if the raycast hits the wall first, it removes you from its target array and ignores you.',
     enemyScript: `IF NOT init THEN
-  SET targets = []
   SET init = 1
 END
+SET targets = []
 SET enemies = GET_ALL_VISIBLE_ENEMIES()
 SET len = LENGTH(enemies)
 IF len > 0 THEN
