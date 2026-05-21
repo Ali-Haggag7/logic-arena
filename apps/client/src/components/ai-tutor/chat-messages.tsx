@@ -3,7 +3,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Bot } from 'lucide-react';
+import { Bot, ChevronDown } from 'lucide-react';
 import { markdownComponents } from './markdown-components';
 import { TypingIndicator } from './typing-indicator';
 import { SUGGESTED_QUESTIONS } from './constants';
@@ -24,11 +24,38 @@ export function ChatMessages({
   onSendQuestion,
   messagesEndRef,
 }: ChatMessagesProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = React.useState(false);
+  const [userScrolled, setUserScrolled] = React.useState(false);
+
+  const handleScroll = () => {
+    if (!containerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+    setShowScrollButton(!isAtBottom);
+    setUserScrolled(!isAtBottom);
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setUserScrolled(false);
+    setShowScrollButton(false);
+  };
+
+  React.useEffect(() => {
+    if (!userScrolled) {
+      messagesEndRef.current?.scrollIntoView({ behavior: status === 'streaming' ? 'auto' : 'smooth' });
+    }
+  }, [messages, status, streamedText, userScrolled, messagesEndRef]);
+
   return (
-    <div
-      className="flex-1 overflow-y-auto p-4 space-y-4 cursor-text"
-      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-    >
+    <div className="relative flex-1 min-h-0 flex flex-col">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 space-y-4 cursor-text"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
       {messages.length === 0 && status === 'idle' && (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
           <div className="w-12 h-12 rounded-2xl bg-accent/8 flex items-center justify-center mb-5">
@@ -71,8 +98,8 @@ export function ChatMessages({
                 {msg.isError ? 'ARIA \u2022 Error' : 'ARIA'}
               </p>
             )}
-            <div className={`text-[13px] leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 ${msg.isError ? 'text-sem-danger/80' : ''
-              }`}>
+            <div dir="auto" className={`text-[13px] leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 ${msg.isError ? 'text-sem-danger/80' : ''
+              }`} style={{ fontFamily: 'var(--font-alexandria), sans-serif' }}>
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {msg.content}
               </ReactMarkdown>
@@ -98,7 +125,7 @@ export function ChatMessages({
             <p className="text-[10px] font-semibold text-accent/50 mb-1.5 tracking-wide uppercase">
               ARIA
             </p>
-            <div className="text-[13px] leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 overflow-hidden" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+            <div dir="auto" className="text-[13px] leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 overflow-hidden" style={{ fontFamily: 'var(--font-alexandria), sans-serif', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {streamedText + ' \u258b'}
               </ReactMarkdown>
@@ -108,6 +135,17 @@ export function ChatMessages({
       )}
 
       <div ref={messagesEndRef} />
+      </div>
+
+      {showScrollButton && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-accent/20 border border-accent/40 text-accent flex items-center justify-center hover:bg-accent/30 transition-all shadow-lg backdrop-blur-md"
+          aria-label="Scroll to bottom"
+        >
+          <ChevronDown size={18} />
+        </button>
+      )}
     </div>
   );
 }

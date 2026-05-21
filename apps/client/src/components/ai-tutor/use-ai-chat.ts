@@ -16,9 +16,7 @@ export function useAiChat() {
     messagesRef.current = messages;
   }, [messages]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, status, streamedText]);
+  // Scrolling is now handled directly inside ChatMessages component
 
   const sendMessage = useCallback(async (text: string) => {
     const sanitized = text.replace(/<[^>]*>/g, '').slice(0, MAX_MESSAGE_LENGTH).trim();
@@ -115,9 +113,12 @@ export function useAiChat() {
     } finally {
       setStatus('idle');
       abortRef.current = null;
-      if (!aborted && !encounteredError && streamedRef.current) {
-        setMessages((prev) => [...prev, { role: 'model', content: streamedRef.current }]);
+      
+      const finalContent = streamedRef.current;
+      if (!aborted && !encounteredError && finalContent) {
+        setMessages((prev) => [...prev, { role: 'model', content: finalContent }]);
       }
+      
       setStreamedText('');
       streamedRef.current = '';
     }

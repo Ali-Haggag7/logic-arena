@@ -46,7 +46,8 @@ export function ChatInput({
             rows={1}
             disabled={isActive}
             className="ai-placeholder w-full bg-bg-secondary border border-accent/10 rounded-xl px-3.5 py-2.5 text-[13px] text-text-primary placeholder:text-text-secondary/25 outline-none resize-none leading-relaxed disabled:opacity-50"
-            style={{ fontFamily: 'inherit', maxHeight: '200px', overflowY: 'hidden' }}
+            style={{ fontFamily: 'var(--font-alexandria), sans-serif', maxHeight: '200px', overflowY: 'hidden' }}
+            dir="auto"
             aria-label="Chat message input"
           />
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Geist_Mono, Alexandria } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../providers/ThemeProvider";
 import { SoundProvider } from "../context/SoundContext";
@@ -20,6 +20,12 @@ const spaceGrotesk = Space_Grotesk({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const alexandria = Alexandria({
+  variable: "--font-alexandria",
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -91,7 +97,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${geistMono.variable} antialiased`}
+      className={`${spaceGrotesk.variable} ${geistMono.variable} ${alexandria.variable} antialiased`}
       suppressHydrationWarning
     >
       <head>
