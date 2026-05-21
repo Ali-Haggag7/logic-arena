@@ -21,9 +21,7 @@ const BotModel = memo((props: RobotModelProps & { file: string }) => {
 });
 BotModel.displayName = 'BotModel';
 
-const PRIMITIVE_CHASSIS_IDS = new Set([
-  'chassis-phantom',
-]);
+const PRIMITIVE_CHASSIS_IDS = new Set<string>([]);
 
 const PrimitiveBotModel = memo((props: RobotModelProps & { chassisId: string }) => {
   const primitiveGroup = useMemo(

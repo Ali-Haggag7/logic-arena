@@ -35,7 +35,7 @@ model User {
   // ── Black Market ──────────────────────────────────────────────────────────
   points               Int                @default(0)
   unlockedItems        String[]           @default([])
-  equippedChassis      String             @default("chassis-phantom")
+  equippedChassis      String             @default("chassis-unit-01")
   equippedPaint        String             @default("paint-default")
   equippedTracer       String             @default("tracer-pulse")
   createdAt            DateTime           @default(now())

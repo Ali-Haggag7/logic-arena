@@ -28,8 +28,10 @@ export interface VaultMobileLayoutProps {
   isLoading: boolean;
   equippingId: string | null;
   getEquippedIdForCategory: (category: string) => string;
+  getPreviewedIdForCategory: (category: string) => string | null;
   onCategoryChange: (cat: CategoryKey) => void;
   onEquip: (item: MarketItem) => void;
+  onPreview: (item: MarketItem) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -43,8 +45,10 @@ export function VaultMobileLayout({
   isLoading,
   equippingId,
   getEquippedIdForCategory,
+  getPreviewedIdForCategory,
   onCategoryChange,
   onEquip,
+  onPreview,
 }: VaultMobileLayoutProps) {
   const [sheetState, setSheetState] = useState<SheetState>("peek");
 
@@ -179,21 +183,29 @@ export function VaultMobileLayout({
                 className="flex gap-3 px-4 pb-4 overflow-x-auto overflow-y-hidden no-scrollbar items-start"
                 style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
               >
-                {displayedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    style={{ scrollSnapAlign: "start" }}
-                    className="flex-shrink-0"
-                  >
-                    <VaultItemCard
-                      item={item}
-                      isEquipped={getEquippedIdForCategory(item.category) === item.id}
-                      isEquipping={equippingId === item.id}
-                      onEquip={onEquip}
-                      isMobile={true}
-                    />
-                  </div>
-                ))}
+                {displayedItems.map((item) => {
+                  const isEquipped = getEquippedIdForCategory(item.category) === item.id;
+                  const previewId = getPreviewedIdForCategory(item.category);
+                  const isPreviewed = previewId ? previewId === item.id : isEquipped;
+
+                  return (
+                    <div
+                      key={item.id}
+                      style={{ scrollSnapAlign: "start" }}
+                      className="flex-shrink-0"
+                    >
+                      <VaultItemCard
+                        item={item}
+                        isEquipped={isEquipped}
+                        isPreviewed={isPreviewed}
+                        isEquipping={equippingId === item.id}
+                        onEquip={onEquip}
+                        onPreview={onPreview}
+                        isMobile={true}
+                      />
+                    </div>
+                  );
+                })}
                 {/* Trailing spacer for last card */}
                 <div className="flex-shrink-0 w-4" aria-hidden="true" />
               </div>

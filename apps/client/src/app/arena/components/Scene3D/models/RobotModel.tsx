@@ -103,10 +103,22 @@ export const RobotModelInner = memo(({
 
           if (!isDefaultPaint) {
             try {
-              mat.color = new THREE.Color(color.trim());
+              const parsedColor = new THREE.Color(color.trim());
+              mat.color = parsedColor;
+              // Very subtle emissive to pop in the dark without washing out PBR details
+              mat.emissive = parsedColor.clone();
+              mat.emissiveIntensity = 0.15;
             } catch {
               mat.color = new THREE.Color('#22d3ee');
+              mat.emissive = new THREE.Color('#22d3ee');
+              mat.emissiveIntensity = 0.15;
             }
+          } else {
+             // For default paint, we keep the original materials but give a tiny baseline visibility
+             if (mat.emissive && mat.emissive.getHex() === 0x000000) {
+               mat.emissive = new THREE.Color(0xffffff);
+               mat.emissiveIntensity = 0.05;
+             }
           }
 
           // Store original emissive properties for hit flash / stasis

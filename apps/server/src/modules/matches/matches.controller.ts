@@ -101,7 +101,7 @@ export class MatchesController {
     let userModel = 'unit-01';
 
     if (user) {
-      userModel = user.equippedChassis || 'chassis-phantom';
+      userModel = user.equippedChassis || 'chassis-unit-01';
       const paint = BLACK_MARKET_ITEMS.find((i) => i.id === user.equippedPaint);
       if (paint?.color) userColor = paint.color;
       const tracer = BLACK_MARKET_ITEMS.find(

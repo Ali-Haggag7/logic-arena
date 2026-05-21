@@ -14,7 +14,6 @@ export const CAMPAIGN_STAGE_REWARD_POINTS = 100;
 export const DEFAULT_UNLOCKED_ITEMS: string[] = [
   'chassis-unit-01',
   'chassis-unit-02',
-  'chassis-phantom',
   'paint-default',
   'tracer-pulse',
 ];
@@ -24,7 +23,6 @@ export const BLACK_MARKET_ITEMS: BlackMarketItem[] = [
   // Robot chassis
   { id: 'chassis-unit-01', category: 'chassis', price: 0 },
   { id: 'chassis-unit-02', category: 'chassis', price: 0 },
-  { id: 'chassis-phantom', category: 'chassis', price: 0 },
   { id: 'chassis-wraith', category: 'chassis', price: 800 },
   { id: 'chassis-titan', category: 'chassis', price: 1800 },
   // Neon paints

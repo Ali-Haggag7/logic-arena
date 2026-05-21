@@ -20,8 +20,10 @@ export interface VaultDesktopLayoutProps {
   isLoading: boolean;
   equippingId: string | null;
   getEquippedIdForCategory: (category: string) => string;
+  getPreviewedIdForCategory: (category: string) => string | null;
   onCategoryChange: (cat: CategoryKey) => void;
   onEquip: (item: MarketItem) => void;
+  onPreview: (item: MarketItem) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -35,8 +37,10 @@ export function VaultDesktopLayout({
   isLoading,
   equippingId,
   getEquippedIdForCategory,
+  getPreviewedIdForCategory,
   onCategoryChange,
   onEquip,
+  onPreview,
 }: VaultDesktopLayoutProps) {
   return (
     <div className="min-h-[100dvh] bg-bg-primary font-mono text-accent/90 relative">
@@ -69,7 +73,7 @@ export function VaultDesktopLayout({
         {/* Side-by-side panels */}
         <div className="flex-1 flex flex-row gap-6 min-h-0">
           {/* Left: 3D Showroom */}
-          <div className="w-[45%] rounded-2xl bg-[rgba(var(--accent-rgb),0.02)] backdrop-blur-md border border-accent/20 shadow-[0_0_40px_rgba(var(--accent-rgb),0.05)] overflow-hidden flex flex-col relative">
+          <div className="w-[35%] rounded-2xl bg-[rgba(var(--accent-rgb),0.02)] backdrop-blur-md border border-accent/20 shadow-[0_0_40px_rgba(var(--accent-rgb),0.05)] overflow-hidden flex flex-col relative">
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="flex-1 w-full cursor-grab active:cursor-grabbing">
               <RobotShowroom
@@ -88,7 +92,7 @@ export function VaultDesktopLayout({
           </div>
 
           {/* Right: Inventory */}
-          <div className="w-[55%] flex flex-col gap-4 min-h-0">
+          <div className="w-[65%] flex flex-col gap-4 min-h-0">
             <VaultCategoryTabs
               activeCategory={activeCategory}
               onChange={onCategoryChange}
@@ -103,16 +107,24 @@ export function VaultDesktopLayout({
                 <VaultEmptyState categoryLabel={CATEGORY_LABELS[activeCategory]} />
               ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-12">
-                  {displayedItems.map((item) => (
-                    <VaultItemCard
-                      key={item.id}
-                      item={item}
-                      isEquipped={getEquippedIdForCategory(item.category) === item.id}
-                      isEquipping={equippingId === item.id}
-                      onEquip={onEquip}
-                      isMobile={false}
-                    />
-                  ))}
+                  {displayedItems.map((item) => {
+                    const isEquipped = getEquippedIdForCategory(item.category) === item.id;
+                    const previewId = getPreviewedIdForCategory(item.category);
+                    const isPreviewed = previewId ? previewId === item.id : isEquipped;
+
+                    return (
+                      <VaultItemCard
+                        key={item.id}
+                        item={item}
+                        isEquipped={isEquipped}
+                        isPreviewed={isPreviewed}
+                        isEquipping={equippingId === item.id}
+                        onEquip={onEquip}
+                        onPreview={onPreview}
+                        isMobile={false}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -51,7 +51,7 @@ export async function loadPlayerScriptAndLoadout(
         },
       }));
     if (user) {
-      selectedRobotId = user.equippedChassis || 'chassis-phantom';
+      selectedRobotId = user.equippedChassis || 'chassis-unit-01';
       const paint = BLACK_MARKET_ITEMS.find((i) => i.id === user.equippedPaint);
       if (paint?.color) selectedColor = paint.color;
       const tracer = BLACK_MARKET_ITEMS.find((i) => i.id === user.equippedTracer);

@@ -238,13 +238,16 @@ export function RobotShowroom({ chassisId, paintColor, tracerColor, quality = "m
       {quality !== "low" && <Environment preset="city" />}
       <RobotMesh chassisId={chassisId} paintColor={paintColor} tracerColor={tracerColor} animate={animate} />
       <OrbitControls
-        enablePan={false}
+        enablePan={true}
         enableZoom={true}
         enableRotate={true}
-        minDistance={2.0}
-        maxDistance={6.5}
-        minPolarAngle={Math.PI / 4}
-        maxPolarAngle={Math.PI / 1.8}
+        minDistance={0.5}
+        maxDistance={10.0}
+        minPolarAngle={0}
+        maxPolarAngle={Math.PI / 1.5}
+        panSpeed={1.2}
+        enableDamping={true}
+        dampingFactor={0.05}
         autoRotate={false}
       />
     </Canvas>

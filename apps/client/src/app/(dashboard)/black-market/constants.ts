@@ -2,17 +2,17 @@ import type { ItemCategory, MarketItem } from "./types";
 
 export const INITIAL_POINTS = 1500;
 export const CATEGORIES: ItemCategory[] = ["chassis", "paint", "tracer"];
-export const STARTER_ITEM_IDS = ["chassis-phantom", "paint-crimson", "tracer-pulse"] as const;
+export const STARTER_ITEM_IDS = ["chassis-unit-01", "paint-crimson", "tracer-pulse"] as const;
 
 export const DEFAULT_LOADOUT: Record<ItemCategory, string> = {
-  chassis: "chassis-phantom",
+  chassis: "chassis-unit-01",
   paint: "paint-crimson",
   tracer: "tracer-pulse",
 };
 
 /** Guest default: factory spec paint (no colour override) so the raw GLB colour shows through. */
 export const GUEST_LOADOUT: Record<ItemCategory, string> = {
-  chassis: "chassis-phantom",
+  chassis: "chassis-unit-01",
   paint: "paint-default",
   tracer: "tracer-pulse",
 };
@@ -39,16 +39,7 @@ export const MARKET_ITEMS: MarketItem[] = [
     rarity: "COMMON",
     description: "Classic backup chassis. Reliable performance.",
   },
-  {
-    id: "chassis-phantom",
-    name: "PHANTOM UNIT",
-    category: "chassis",
-    price: 0,
-    color: "#22d3ee",
-    glowColor: "#22d3ee",
-    rarity: "COMMON",
-    description: "Standard-issue battle chassis. Reliable and lethal.",
-  },
+
   {
     id: "chassis-wraith",
     name: "BUNNY BUNDLE",

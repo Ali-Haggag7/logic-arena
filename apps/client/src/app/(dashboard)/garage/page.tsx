@@ -30,6 +30,14 @@ export default function GaragePage() {
   const [equippedPaint, setEquippedPaint] = useState("paint-default");
   const [equippedTracer, setEquippedTracer] = useState("tracer-pulse");
 
+  const [previewedChassis, setPreviewedChassis] = useState<string | null>(null);
+  const [previewedPaint, setPreviewedPaint] = useState<string | null>(null);
+  const [previewedTracer, setPreviewedTracer] = useState<string | null>(null);
+
+  const activeChassis = previewedChassis ?? equippedChassis;
+  const activePaint = previewedPaint ?? equippedPaint;
+  const activeTracer = previewedTracer ?? equippedTracer;
+
   const [isLoading, setIsLoading] = useState(true);
   const [equippingId, setEquippingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -71,13 +79,13 @@ export default function GaragePage() {
   );
 
   const activePaintColor = useMemo(
-    () => MARKET_ITEMS.find((i) => i.id === equippedPaint)?.color ?? "#ef4444",
-    [equippedPaint]
+    () => MARKET_ITEMS.find((i) => i.id === activePaint)?.color ?? "#ef4444",
+    [activePaint]
   );
 
   const activeTracerColor = useMemo(
-    () => MARKET_ITEMS.find((i) => i.id === equippedTracer)?.color ?? "#22d3ee",
-    [equippedTracer]
+    () => MARKET_ITEMS.find((i) => i.id === activeTracer)?.color ?? "#22d3ee",
+    [activeTracer]
   );
 
   // ── Callbacks ────────────────────────────────────────────────────────────────
@@ -124,10 +132,16 @@ export default function GaragePage() {
     [isGuest, showToast]
   );
 
+  const handlePreview = useCallback((item: MarketItem) => {
+    if (item.category === "chassis") setPreviewedChassis(item.id);
+    if (item.category === "paint")   setPreviewedPaint(item.id);
+    if (item.category === "tracer")  setPreviewedTracer(item.id);
+  }, []);
+
   // ── Shared layout props ──────────────────────────────────────────────────────
 
   const layoutProps = {
-    equippedChassis,
+    equippedChassis: activeChassis,
     activePaintColor,
     activeTracerColor,
     activeCategory,
@@ -135,8 +149,15 @@ export default function GaragePage() {
     isLoading,
     equippingId,
     getEquippedIdForCategory,
+    getPreviewedIdForCategory: (category: string) => {
+      if (category === "chassis") return previewedChassis;
+      if (category === "paint")   return previewedPaint;
+      if (category === "tracer")  return previewedTracer;
+      return null;
+    },
     onCategoryChange: setActiveCategory,
     onEquip: handleEquip,
+    onPreview: handlePreview,
   };
 
   // ── Render ───────────────────────────────────────────────────────────────────
