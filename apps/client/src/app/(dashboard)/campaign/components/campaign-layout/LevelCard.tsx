@@ -2,7 +2,7 @@
 
 import React, { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Info, Lock, Zap } from "lucide-react";
+import { Check, Info, Lock, Zap, Star } from "lucide-react";
 
 import { DIFFICULTY_CONFIG } from "../../constants/difficulty.constants";
 import type { ApiLevelInfo } from "../../types/campaign.types";
@@ -10,26 +10,25 @@ import { useCampaignPrefetch } from "../../hooks/useCampaignPrefetch";
 import { useSoundEffects } from "../../../../../hooks/useSoundEffects";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const STAR_FILLED = "★";
-const STAR_EMPTY  = "☆";
 const MAX_STARS   = 3;
 const ORDER_PAD   = 2;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function StarDisplay({ count }: { count: number }) {
   return (
-    <span className="inline-flex gap-[2px] text-[13px] leading-none" aria-label={`${count} of ${MAX_STARS} stars`}>
+    <span className="inline-flex gap-[2px]" aria-label={`${count} of ${MAX_STARS} stars`}>
       {Array.from({ length: MAX_STARS }).map((_, i) => (
-        <span
+        <Star
           key={i}
+          size={14}
+          fill={i < count ? "rgba(var(--accent-rgb), 1)" : "transparent"}
+          strokeWidth={i < count ? 0 : 1.5}
           style={
             i < count
               ? { color: "rgba(var(--accent-rgb),1)", filter: "drop-shadow(0 0 4px rgba(var(--accent-rgb),0.7))" }
               : { color: "rgba(var(--accent-rgb),0.2)" }
           }
-        >
-          {i < count ? STAR_FILLED : STAR_EMPTY}
-        </span>
+        />
       ))}
     </span>
   );
@@ -118,19 +117,23 @@ export const LevelCard = memo(function LevelCard({
 
   // ── Unlocked state ──────────────────────────────────────────────────────────
   return (
-    <button
-      type="button"
-      onClick={handleCardClick}
+    <div
       onMouseEnter={handlePrefetch}
       onTouchStart={handlePrefetch}
-      aria-label={`${level.title} — ${level.difficulty} — ${level.completed ? "Completed" : "Not completed"}`}
       className={`level-card level-card--unlocked ${level.completed ? "level-card--completed" : "level-card--active"} ${isMobile ? "level-card--mobile" : "level-card--desktop"} group`}
       style={{ "--diff-color": dc.color } as React.CSSProperties}
     >
+      <button
+        type="button"
+        onClick={handleCardClick}
+        aria-label={`${level.title} — ${level.difficulty} — ${level.completed ? "Completed" : "Not completed"}`}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, opacity: 0, cursor: "pointer" }}
+      />
+
       {/* Difficulty accent bar */}
       <div className="level-card__diff-bar level-card__diff-bar--glow" />
 
-      <div className="level-card__body">
+      <div className="level-card__body" style={{ pointerEvents: "none" }}>
         <div className="level-card__top-row">
           <span className="level-card__order">
             #{String(level.order).padStart(ORDER_PAD, "0")}
@@ -149,6 +152,7 @@ export const LevelCard = memo(function LevelCard({
               aria-label={`View details for ${level.title}`}
               onClick={handleInfoClick}
               className="level-card__info-btn"
+              style={{ pointerEvents: "auto" }}
             >
               <Info className="w-3 h-3" aria-hidden="true" />
             </button>
@@ -182,6 +186,6 @@ export const LevelCard = memo(function LevelCard({
 
       {/* Hover glow overlay */}
       <div className="level-card__hover-glow" aria-hidden="true" />
-    </button>
+    </div>
   );
 });

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Tournament } from "../../types";
+import { Lock } from "lucide-react";
 
 interface Props {
   tournament: Tournament;
@@ -65,7 +66,7 @@ export function TournamentHeader({ tournament, userId, onStart, isMobile, isGues
             <span className="relative z-10 flex items-center justify-center gap-2">
               {isGuest ? (
                 <>
-                  <span className="text-[12px]">🔒</span>
+                  <span className="flex items-center"><Lock size={12} /></span>
                   <span>LOGIN TO START</span>
                 </>
               ) : (

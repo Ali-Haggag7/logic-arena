@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo } from "react";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Star, Swords } from "lucide-react";
 
 import { TAB_ICONS, TAB_SHORT } from "./tabMeta";
 import type { CampaignViewProps } from "./types";
@@ -48,12 +48,15 @@ export const MobileLayout = memo(function MobileLayout({
       <div className="mobile-layout__sticky-header">
         {/* Compact summary row */}
         <div className="mobile-layout__summary-row">
-          <h1 className="mobile-layout__title">⚔ CAMPAIGN</h1>
+          <h1 className="mobile-layout__title flex items-center gap-2">
+            <Swords size={20} />
+            CAMPAIGN
+          </h1>
           <span
-            className="mobile-layout__summary-stats"
+            className="mobile-layout__summary-stats flex items-center gap-1"
             aria-label={`${completedCount} of ${TOTAL_LEVELS} missions, ${totalStars} of ${TOTAL_STARS} stars`}
           >
-            {completedCount}/{TOTAL_LEVELS} · ★ {totalStars}
+            {completedCount}/{TOTAL_LEVELS} · <Star size={12} className="ml-1 text-accent" fill="currentColor" /> {totalStars}
           </span>
         </div>
 

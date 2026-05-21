@@ -83,8 +83,9 @@ export function VictoryScreen({ reward, stars, levelTitle, isMobile, onNextLevel
               fill="currentColor"
               aria-hidden="true"
               style={{
-                animation: `${isEarned ? "victoryStarReveal 0.35s ease both, victoryStarPulse 0.42s ease 0.35s both" : "none"}${stars === FULL_GLOW_STARS && isEarned ? ", victoryStarShimmer 1.4s ease-in-out 0.8s infinite" : ""}`,
-                animationDelay: `${index * 140}ms`,
+                animation: isEarned
+                  ? `victoryStarReveal 0.35s ease ${index * 0.14}s both, victoryStarPulse 0.42s ease ${0.35 + index * 0.14}s both${stars === FULL_GLOW_STARS ? `, victoryStarShimmer 1.4s ease-in-out ${0.8 + index * 0.14}s infinite` : ""}`
+                  : "none",
               }}
             />
           );

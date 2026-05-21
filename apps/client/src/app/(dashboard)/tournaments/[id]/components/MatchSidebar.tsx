@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Tournament, TMatch, Player } from "../../types";
-import { Trophy } from "lucide-react";
+import { Trophy, Lock } from "lucide-react";
 import { UserLink } from "../../../../../components/ui/UserLink";
 
 const ROUND_LABELS: Record<number, Record<number, string>> = {
@@ -81,7 +81,7 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
                 <span className="relative z-10 flex items-center justify-center gap-2">
                     {isGuest ? (
                         <>
-                            <span className="text-[12px]">🔒</span>
+                            <span className="flex items-center"><Lock size={12} /></span>
                             <span>LOGIN TO SIMULATE</span>
                         </>
                     ) : (

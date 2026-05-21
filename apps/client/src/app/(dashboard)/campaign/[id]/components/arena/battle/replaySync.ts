@@ -31,8 +31,7 @@ export function syncReplayFrame(
   battleEndedRef: { current: boolean },
   fightResult: { winner: string; completionToken: string | null; tick?: number; fightDurationTicks?: number } | null,
   fovTimerRef: Map<string, number>,
-  onBattleEnd: ((winner: 'player' | 'enemy' | 'draw') => void) | null,
-): void {
+): boolean {
   for (const robot of state.robots) {
     const src = frame.robots?.find((r: CampaignFrameRobot) => r.id === robot.id);
     if (!src) continue;
@@ -62,7 +61,7 @@ export function syncReplayFrame(
 
   if (!battleEndedRef.current && fightResult) {
     battleEndedRef.current = true;
-    const winner = fightResult.winner as 'player' | 'enemy' | 'draw';
-    setTimeout(() => onBattleEnd?.(winner), BATTLE_END_DELAY_MS);
+    return true;
   }
+  return false;
 }

@@ -5,7 +5,7 @@ import type { ArenaRobot, SceneDef, SceneState } from "./scenes";
 import { createEvalState } from "./miniEvaluator";
 import type { EvalState } from "./miniEvaluator";
 import { getEnemyScript } from "../levelScripts";
-import { ROBOT_SIZE, FOV_SWEEP_FRAMES, FLASH_DURATION } from "./constants";
+import { ROBOT_SIZE, FOV_SWEEP_FRAMES, FLASH_DURATION, BATTLE_END_DELAY_MS } from "./constants";
 import { drawGrid, drawScanLine, drawLabel, drawGraphNet } from "./rendering/drawBackground";
 import { drawFovCone, drawRobot } from "./rendering/drawRobot";
 import { drawProjectile } from "./rendering/drawProjectile";
@@ -175,6 +175,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
   const dangerColorRef = useRef(DEFAULT_DANGER_COLOR);
   const warningRgbRef = useRef(DEFAULT_WARNING_RGB);
   const dangerRgbRef = useRef(DEFAULT_DANGER_RGB);
+  const bgPrimaryRef = useRef("rgba(3,7,18,0.92)");
   const pausedRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -202,6 +203,8 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       dangerColorRef.current = css.getPropertyValue('--sem-danger').trim() || DEFAULT_DANGER_COLOR;
       warningRgbRef.current = css.getPropertyValue('--sem-warning-rgb').trim() || DEFAULT_WARNING_RGB;
       dangerRgbRef.current = css.getPropertyValue('--sem-danger-rgb').trim() || DEFAULT_DANGER_RGB;
+      const bg = css.getPropertyValue('--bg-primary').trim();
+      bgPrimaryRef.current = bg || "rgba(3,7,18,0.92)";
     };
 
     updateAccentRgb();
@@ -301,7 +304,11 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       state.tick++;
 
       if (streamingMode) {
-        syncReplayFrame(state, streamingFrame, battleEndedRef, fightResultRef.current ?? null, fovTimerRef.current, onBattleEndRef.current ?? null);
+        const justEnded = syncReplayFrame(state, streamingFrame, battleEndedRef, fightResultRef.current ?? null, fovTimerRef.current);
+        if (justEnded) {
+          const winner = fightResultRef.current?.winner as 'player' | 'enemy' | 'draw';
+          setTimeout(() => onBattleEndRef.current?.(winner), BATTLE_END_DELAY_MS);
+        }
       }
 
       if (!streamingMode) {
@@ -337,7 +344,7 @@ export const ArenaCanvas = memo(function ArenaCanvas({
       }
 
       ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = 'rgba(3,7,18,0.92)';
+      ctx.fillStyle = bgPrimaryRef.current;
       ctx.fillRect(0, 0, W, H);
       drawGrid(ctx, W, H, rgb);
       drawScanLine(ctx, W, H, state.tick, rgb);
@@ -428,10 +435,6 @@ export const ArenaCanvas = memo(function ArenaCanvas({
           </span>
         </button>
       )}
-      <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-accent/30 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-accent/30 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-accent/30 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-accent/30 pointer-events-none" />
       <div className="absolute top-2 left-2 flex items-center gap-1.5 pointer-events-none">
         <span
           className="w-1.5 h-1.5 rounded-full bg-accent"

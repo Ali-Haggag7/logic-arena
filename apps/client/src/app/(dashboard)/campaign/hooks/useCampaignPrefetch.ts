@@ -55,7 +55,7 @@ function getNextLevelId(level: ApiLevelInfo): string | null {
   if (!match) return null;
 
   const [, prefix, rawIndex] = match;
-  const nextIndex = Number.parseInt(rawIndex, 10) + 1;
+  const nextIndex = String(Number.parseInt(rawIndex, 10) + 1).padStart(rawIndex.length, "0");
   return `${prefix}${nextIndex}`;
 }
 

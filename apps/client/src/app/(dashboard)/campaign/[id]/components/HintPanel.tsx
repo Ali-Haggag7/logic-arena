@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSoundEffects } from "../../../../../hooks/useSoundEffects";
+import { Lightbulb, Lock } from "lucide-react";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ interface HintPanelProps {
   isRevealing: boolean;
 }
 
-type ConfirmState = "idle" | "confirming" | "loading";
+type ConfirmState = "idle" | "confirming" | "loading" | "error";
 
 // ── Typewriter hook ────────────────────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ function RevealedHintCard({ index, text, animate }: RevealedHintCardProps) {
       }}
     >
       <div className="hint-card__badge">
-        💡 HINT {index + 1}
+        <Lightbulb size={14} className="mr-1 inline-block" /> HINT {index + 1}
         {index > 0 && (
           <span className="hint-card__cost-badge">
             -{HINT_COSTS[index as 1 | 2]} PTS
@@ -88,6 +89,7 @@ interface LockedHintSlotProps {
 
 function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlotProps) {
   const [confirm, setConfirm] = useState<ConfirmState>("idle");
+  const [errMsg, setErrMsg] = useState<string | null>(null);
   const { playClick } = useSoundEffects();
 
   const cost = HINT_COSTS[index];
@@ -96,10 +98,20 @@ function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlot
     playClick();
     navigator.vibrate?.(PRIMARY_HAPTIC_MS);
     setConfirm("loading");
+    setErrMsg(null);
     try {
       await onReveal(index);
-    } finally {
-      setConfirm("idle");
+    } catch (e: any) {
+      if (e.response?.status === 402) {
+        setErrMsg("INSUFFICIENT POINTS");
+      } else {
+        setErrMsg("ERROR PURCHASING HINT");
+      }
+      setConfirm("error");
+      setTimeout(() => {
+        setConfirm("idle");
+        setErrMsg(null);
+      }, 2500);
     }
   }
 
@@ -115,7 +127,7 @@ function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlot
         disabled={isGloballyRevealing}
         aria-label={`Reveal hint ${index + 1} for ${cost} points`}
       >
-        <span className="hint-slot__icon">🔒</span>
+        <span className="hint-slot__icon"><Lock size={14} /></span>
         <span className="hint-slot__label">HINT {index + 1}</span>
         <span className="hint-slot__action">DECRYPT [{cost} PTS]</span>
       </button>
@@ -149,6 +161,15 @@ function LockedHintSlot({ index, onReveal, isGloballyRevealing }: LockedHintSlot
             CANCEL
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (confirm === "error") {
+    return (
+      <div className="hint-slot hint-slot--error" role="alert">
+        <span className="hint-slot__error-icon" aria-hidden="true">⚠</span>
+        <span className="hint-slot__error-text">{errMsg}</span>
       </div>
     );
   }
@@ -397,6 +418,34 @@ export function HintPanel({
 
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+
+        .hint-slot--error {
+          border-color: rgba(239, 68, 68, 0.4);
+          background: rgba(239, 68, 68, 0.08);
+          cursor: default;
+          justify-content: center;
+          animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .hint-slot__error-icon {
+          font-size: 11px;
+          color: #ef4444;
+        }
+
+        .hint-slot__error-text {
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          font-weight: 900;
+          color: #ef4444;
+          text-transform: uppercase;
+        }
+
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-2px, 0, 0); }
+          40%, 60% { transform: translate3d(2px, 0, 0); }
         }
       `}</style>
 

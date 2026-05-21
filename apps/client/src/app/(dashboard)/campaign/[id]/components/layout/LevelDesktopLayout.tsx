@@ -10,6 +10,7 @@ import { EditorToolbar } from "../../../../../../components/editor/EditorToolbar
 import { HintPanel } from "../HintPanel";
 import { apiClient } from "../../../../../../lib/api-client";
 import { Loader2 } from "lucide-react";
+import { cacheCampaignLevel } from "../../../hooks/useCampaignPrefetch";
 
 interface RevealHintResponse {
   hint: string;
@@ -52,9 +53,17 @@ export function LevelDesktopLayout({ level, script, setScript, modal, handleFigh
       const newHints = [...hints];
       newHints[index] = res.data.hint;
       setHints(newHints);
-      setRevealedCount((c) => Math.max(c, index));
-    } catch {
-      // Errors (e.g. insufficient points) surface via UI — no re-throw needed
+      
+      const newRevealedCount = Math.max(revealedCount, index);
+      setRevealedCount(newRevealedCount);
+
+      cacheCampaignLevel({
+        ...level,
+        hints: newHints,
+        revealedHintCount: newRevealedCount,
+      });
+    } catch (error) {
+      throw error;
     } finally {
       setIsRevealing(false);
     }

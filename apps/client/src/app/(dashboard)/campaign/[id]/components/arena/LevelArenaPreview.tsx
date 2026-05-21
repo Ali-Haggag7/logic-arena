@@ -155,9 +155,9 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
         style={{ background: isBossLevel ? 'rgba(var(--sem-danger-rgb),0.06)' : 'rgba(var(--accent-rgb),0.03)' }}
       >
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-accent/55" />
-          <span className="w-2 h-2 rounded-full bg-accent/35" />
-          <span className="w-2 h-2 rounded-full bg-accent/20" />
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#ff5f56" }} />
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#ffbd2e" }} />
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#27c93f" }} />
         </div>
         <div
           className={`text-[8px] font-mono font-bold tracking-[0.18em] uppercase px-3 py-0.5 rounded-full border ${isBossLevel ? "border-[var(--sem-danger)] text-[var(--sem-danger)]" : "border-accent/10 text-accent/50"}`}
@@ -186,7 +186,21 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
         </div>
       )}
 
-      <div className="relative">
+      {mode === "loading" && !isMobile && (
+        <div className="border-b border-accent/10">
+          <BattleHUD
+            playerHealth={hudSnapshot.playerHealth}
+            enemyHealth={hudSnapshot.enemyHealth}
+            playerEnergy={hudSnapshot.playerEnergy}
+            tick={hudSnapshot.tick}
+            maxTicks={maxTicks}
+            isMobile={false}
+            isBossLevel={isBossLevel}
+          />
+        </div>
+      )}
+
+      <div className="relative min-h-[1px] flex-1">
         <ArenaCanvas
           scene={scene}
           levelId={levelId}
@@ -200,18 +214,6 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
           waitingForReplay={waitingForReplay}
           isBossLevel={isBossLevel}
         />
-
-        {mode === "loading" && !isMobile && (
-          <BattleHUD
-            playerHealth={hudSnapshot.playerHealth}
-            enemyHealth={hudSnapshot.enemyHealth}
-            playerEnergy={hudSnapshot.playerEnergy}
-            tick={hudSnapshot.tick}
-            maxTicks={maxTicks}
-            isMobile={false}
-            isBossLevel={isBossLevel}
-          />
-        )}
       </div>
 
       <div

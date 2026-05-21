@@ -412,9 +412,8 @@ export function AliScriptEditor({
           }}
           readOnly={readOnly}
           spellCheck={false}
-          className="relative z-20 min-h-full w-full flex-1 resize-none overflow-auto bg-transparent py-3 pr-3 font-mono leading-6 tracking-normal text-transparent caret-accent outline-none selection:bg-accent/30"
+          className="absolute inset-0 z-20 h-full w-full resize-none overflow-auto bg-transparent py-3 pr-3 font-mono leading-6 tracking-normal text-transparent caret-accent outline-none selection:bg-accent/30"
           style={{
-            minHeight: "inherit",
             paddingLeft: `${EDITOR_PADDING_LEFT}px`,
             fontSize: `${fontSize}px`,
             tabSize: 2,

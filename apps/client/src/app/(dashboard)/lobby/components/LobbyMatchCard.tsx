@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMediaQuery } from "../../../../hooks/useMediaQuery";
 import { UserLink } from "../../../../components/ui/UserLink";
+import { Lock } from "lucide-react";
 
 export interface LobbyMatch {
   hostId: string;
@@ -44,7 +45,7 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
         disabled={isGuest}
         className="px-8 py-2.5 rounded-md text-[10px] font-black tracking-[0.18em] font-mono transition-all duration-200 border disabled:opacity-50 disabled:cursor-not-allowed bg-accent/5 border-accent/30 text-accent/70 hover:bg-accent/20 hover:border-accent/70 hover:text-accent hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)]"
       >
-        {isGuest ? "🔒 LOCKED" : "JOIN"}
+        {isGuest ? <span className="flex items-center gap-1.5 justify-center"><Lock size={12} /> LOCKED</span> : "JOIN"}
       </button>
     </div>
   );
@@ -75,7 +76,7 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
           disabled={isGuest}
           className="w-full h-[44px] flex items-center justify-center bg-accent/10 border border-accent/40 text-accent font-black tracking-[0.2em] text-[10px] rounded-lg transition-transform active:scale-95 shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isGuest ? "🔒 LOCKED" : "JOIN MATCH"}
+          {isGuest ? <span className="flex items-center gap-1.5 justify-center"><Lock size={12} /> LOCKED</span> : "JOIN MATCH"}
         </button>
       </div>
     </div>

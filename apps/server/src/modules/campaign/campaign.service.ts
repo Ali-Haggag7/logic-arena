@@ -89,11 +89,10 @@ export class CampaignService {
     return prevId !== null && completedIds.includes(prevId);
   }
 
-  private async getBestStars(
-    userId: string,
-    levelId: string,
-  ): Promise<number> {
-    return (await this.redis.get<number>(campaignStarsKey(userId, levelId))) ?? 0;
+  private async getBestStars(userId: string, levelId: string): Promise<number> {
+    const s = await this.redis.get<number>(campaignStarsKey(userId, levelId));
+    console.log(`[DEBUG getBestStars] user=${userId} level=${levelId} s=${s}`);
+    return s ?? 0;
   }
 
   private async setBestStars(
@@ -102,8 +101,10 @@ export class CampaignService {
     stars: number,
   ): Promise<void> {
     const current = await this.getBestStars(userId, levelId);
+    console.log(`[DEBUG setBestStars] user=${userId} level=${levelId} stars=${stars} current=${current}`);
     if (stars > current) {
       await this.redis.set(campaignStarsKey(userId, levelId), stars, STARS_CACHE_TTL);
+      console.log(`[DEBUG setBestStars] SET REDIS DONE`);
     }
   }
 

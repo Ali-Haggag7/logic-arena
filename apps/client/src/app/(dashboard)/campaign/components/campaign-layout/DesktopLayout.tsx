@@ -51,7 +51,7 @@ export const DesktopLayout = memo(function DesktopLayout({
       <header className="desktop-layout__hero">
         <div className="desktop-layout__hero-title-row">
           <Swords className="desktop-layout__hero-icon" aria-hidden="true" />
-          <h1 className="desktop-layout__hero-title">⚔ CAMPAIGN MODE</h1>
+          <h1 className="desktop-layout__hero-title">CAMPAIGN MODE</h1>
         </div>
 
         <div className="desktop-layout__hero-stats">

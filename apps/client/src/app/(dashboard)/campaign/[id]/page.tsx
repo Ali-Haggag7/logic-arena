@@ -164,10 +164,11 @@ export default function CampaignLevelPage() {
     }
   }, [fightStatus, fightResult, modal, getFightDurationTicks, latestFrameRef]);
 
-  const handleBattleEnd = useCallback(() => {
-    if (!pendingWinner) return;
-    if (pendingWinner === 'draw') { setModal("draw"); return; }
-    if (pendingWinner === 'enemy') { setModal("defeat"); return; }
+  const handleBattleEnd = useCallback((canvasWinner?: 'player' | 'enemy' | 'draw') => {
+    const winner = canvasWinner || pendingWinner;
+    if (!winner) return;
+    if (winner === 'draw') { setModal("draw"); return; }
+    if (winner === 'enemy') { setModal("defeat"); return; }
     setModal("victory");
 
     if (pendingToken) {
@@ -179,6 +180,7 @@ export default function CampaignLevelPage() {
           setReward(pts);
           setStars(awardedStars);
           window.dispatchEvent(new Event("global-refresh"));
+          router.refresh();
         })
         .catch(() => {
           setReward(level?.pointsReward ?? DEFAULT_REWARD);

@@ -20,7 +20,6 @@ export function CampaignLayoutStyles() {
       }
       @keyframes progressFill {
         from { transform: scaleX(0); }
-        to { transform: scaleX(1); }
       }
       @keyframes tabUnderlineIn {
         from { transform: scaleX(0); }

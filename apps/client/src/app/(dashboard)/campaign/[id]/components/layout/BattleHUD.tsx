@@ -153,31 +153,29 @@ export function BattleHUD({ playerHealth, enemyHealth, playerEnergy, tick, maxTi
   }
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20">
+    <div className="w-full grid grid-cols-3 gap-6 px-4 py-3 bg-bg-primary backdrop-blur-sm z-20">
       {warningStyles}
-      {isBossLevel && (
-        <div className="absolute left-1/2 top-4 w-[min(520px,62%)] -translate-x-1/2">
-          <BossWarning />
-        </div>
-      )}
-      <div className="absolute left-4 top-4 rounded-lg border border-accent/15 bg-bg-primary/75 p-3 backdrop-blur-sm shadow-[0_0_28px_rgba(var(--accent-rgb),0.08)]">
+      <div className="flex flex-col justify-center">
         <StatBlock label="ALLY" health={playerHealth} energy={playerEnergy} align="left" />
       </div>
-      <div className={`absolute right-4 ${isBossLevel ? "top-16" : "top-4"} rounded-lg border ${isBossLevel ? "border-[var(--sem-danger)] shadow-[0_0_32px_rgba(var(--sem-danger-rgb),0.18)]" : "border-accent/15 shadow-[0_0_28px_rgba(var(--accent-rgb),0.08)]"} bg-bg-primary/75 p-3 backdrop-blur-sm`}>
+
+      <div className="flex flex-col items-center justify-center">
+        {isBossLevel && <div className="mb-2 w-full max-w-[200px]"><BossWarning compact /></div>}
+        <div className="w-full max-w-[220px] flex items-center gap-3">
+          <span className="text-[8px] font-black tracking-[0.2em] text-accent/45 uppercase">TIME</span>
+          <div className="h-1.5 flex-1 rounded-full border border-accent/10 bg-bg-primary/80 overflow-hidden">
+            <div className="h-full w-full origin-left bg-accent/70 transition-transform duration-300 ease-out" style={{ transform: `scaleX(${progressPercent / PERCENT_SCALE})` }} />
+          </div>
+          <span className="min-w-[28px] text-right text-[8px] font-black tracking-[0.12em] text-accent/60">{remainingTicks}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-col justify-center items-end">
         {isBossLevel ? (
           <BossHealthBar health={enemyHealth} />
         ) : (
           <StatBlock label="ENEMY" health={enemyHealth} align="right" />
         )}
-      </div>
-      <div className="absolute bottom-4 left-1/2 w-[46%] -translate-x-1/2 rounded-lg border border-accent/15 bg-bg-primary/75 p-2 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[8px] font-black tracking-[0.22em] text-accent/45 uppercase">TIME REMAINING</span>
-          <span className="text-[8px] font-black tracking-[0.16em] text-accent/65">{remainingTicks} TICKS</span>
-        </div>
-        <div className="h-2 rounded-full border border-accent/10 bg-bg-primary/80 overflow-hidden">
-          <div className="h-full w-full origin-left bg-accent/70 transition-transform duration-300 ease-out" style={{ transform: `scaleX(${progressPercent / PERCENT_SCALE})` }} />
-        </div>
       </div>
     </div>
   );
