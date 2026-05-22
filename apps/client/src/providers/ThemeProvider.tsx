@@ -21,6 +21,7 @@ function ThemeProviderInner({ children }: { children: React.ReactNode }) {
       defaultTheme="cyberpunk"
       themes={["cyberpunk", "light", "desert"]}
       enableSystem={false}
+      disableTransitionOnChange
     >
       <ThemeMetaSync />
       {children}
