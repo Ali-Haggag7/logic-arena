@@ -15,9 +15,16 @@ const ROBOT_SCALES: Record<string, number> = {
 };
 
 const BotModel = memo((props: RobotModelProps & { file: string }) => {
-  const { scene } = useGLTF(props.file);
+  const { scene, animations } = useGLTF(props.file);
   const scale = ROBOT_SCALES[props.file] ?? 2;
-  return <RobotModelInner {...props} scene={scene as unknown as THREE.Group} scale={scale} />;
+  return (
+    <RobotModelInner
+      {...props}
+      scene={scene as unknown as THREE.Group}
+      animations={animations}
+      scale={scale}
+    />
+  );
 });
 BotModel.displayName = 'BotModel';
 
