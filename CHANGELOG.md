@@ -2247,3 +2247,93 @@ The guiding rule throughout: a subfolder is only created when it will contain 3 
 
 * Logic Arena is now architecturally clean from packages to pages. Every module has a single responsibility. Every file is under 250 lines. Every dead file is deleted. The campaign delivers a live battle experience that no comparable platform offers. The enemy AI operates with surgical precision through a hidden control layer invisible to players. The semantic warning system teaches algorithmic thinking in real time.
 * **Ready for:** Fog of War, University Competition launch, and full multiplayer stress testing.
+
+## [3.1.0] - The Living Arena & Mobile Revolution — 2026-05-22
+
+Shipped the most visually ambitious update in Logic Arena's history — a complete resurrection of the 3D arena from a static battlefield into a living, breathing cinematic experience. Delivered five new game modes, nine AliScript super powers, a groundbreaking mobile block editor that eliminates the keyboard entirely, a legendary winner screen overhaul, dynamic environment themes with gameplay consequences, robot skeletal animations, a global sound architecture, and a sweeping platform-wide polish pass covering auth, garage, campaign, and the admin command center.
+
+---
+
+### New Features
+
+* **Phase 0 — Critical Arena Bug Fixes & Memory Leak Elimination:**
+  The 3D arena was silently hemorrhaging memory and wasting CPU on every session. A useless RAF loop in `page.tsx` was burning CPU cycles doing nothing. The camera position was being set in two conflicting locations simultaneously. The shadow system had working code but zero shadows — `castShadow` was configured but never wired to a light source. `BoundaryLine` was being rendered twice, doubling draw calls for zero visual gain. Most critically, `setRenderTick` was triggering a full React re-render of the entire 3D subtree 20 times per second — the single largest performance drain in the entire codebase. Every `FovCone` unmount leaked geometry. Every `RobotModel` cloned GLTF materials without disposing them. `LaserBeam` created a new geometry object every frame. Every projectile allocated its own sphere geometry independently instead of sharing a module-level instance.
+
+  All of it was eliminated in a single surgical pass: RAF loop removed, camera consolidated to `SceneCanvas` as single source of truth, `DirectionalLight` wired with a 1024×1024 shadow map, duplicate `BoundaryLine` deleted, `setRenderTick` replaced with a ref eliminating 20 re-renders per second, all geometry and material leaks plugged with proper dispose calls on unmount, `LaserBeam` geometry memoized, and all projectiles sharing a single module-level geometry instance.
+
+* **Phase 1 — Accessibility & CSS Variable Architecture:**
+  Added `type="button"` to every arena button across `DesktopHUD`, `WinnerScreen`, `BottomSheet`, `OrientationLock`, and `NeuralHandbook`. Added `aria-label` to all interactive elements. Replaced `BottomSheet` backdrop `div onClick` with a proper button element. Added `Escape` key handler to `BottomSheet`. Added `role=alert` and `aria-live` to `StasisWarning`. Introduced 15+ arena-scoped CSS variables in `globals.css` and replaced all hardcoded hex colors across 19 arena HUD and UI files.
+
+* **Phase 3 — Dynamic Robot Animations:**
+  Robots are no longer static meshes sliding across the arena floor. GLTF skeletal animations are now extracted and cross-faded automatically — idle clips play at rest, movement clips activate on velocity. Models without skeletal data receive a procedural fallback: forward lean on movement, backward stagger on impact. All animation logic runs inside `useFrame` via refs with zero React re-renders.
+
+* **Phase 4 — Dynamic Environment Themes with Gameplay Consequences:**
+  Added ICE (Glacial Tundra) and LAVA (Magma Core) themes alongside the existing Cyber default. Theme selection propagates from the `ArenaSelector` through the server lobby and engine to every connected client simultaneously. The arena grid, floor colors, obstacle materials, and weather particle systems all respond to the active theme — ice obstacles render as translucent glass, lava obstacles as molten rock, snow particles blanket ICE arenas, sparks shower LAVA arenas. `mapTheme` is wired through `GameState` and synced across all clients on match start.
+
+* **Phase 5 — Cinematic Winner Screen Overhaul:**
+  The post-match screen was a dead end. It is now a cinematic moment. Hard reload replaced with seamless React state reset via `clearMatchResult`. A 3-star rating system with sequential pop-in animations reveals performance tier. A detailed stats grid surfaces Accuracy, Execution Time, Energy efficiency, and Combo rating. ELO rank animates up or down with a count-up effect based on match result. Layout is compact, 100vh clamped, iPhone-style glassmorphism. Action buttons sit side-by-side to preserve vertical space on mobile.
+
+* **Phase 7 — Mobile Block Editor — Visual Programming Without a Keyboard:**
+  The most disruptive UX problem on mobile was unsolvable through conventional means: when a player rotates to landscape to use the arena, the mobile keyboard covers 80% of the screen height the moment they tap the code editor. They can see neither their code nor the arena simultaneously. No amount of layout optimization fixes a keyboard that consumes the viewport.
+
+  The solution was architectural: eliminate the keyboard entirely on mobile. The Block Editor replaces text input with a drag-and-drop visual programming system built on `@dnd-kit`. Full AliScript block definitions cover every category — Actions, Logic, Variables, Arrays, Dictionaries. A recursive block-to-script compiler converts the visual arrangement into valid AliScript at submission time. Players compose programs by dragging blocks like LEGO pieces — selecting a control flow category, picking a command, arranging the sequence — without ever touching the keyboard. The editor renders conditionally in mobile landscape, is invisible on desktop, and applies iOS-style frosted glass UI with 44px touch targets throughout.
+
+* **Phase 8 — Three New Game Modes: SURVIVAL, KOTH, and CTF:**
+  Three complete game modes ship alongside the existing Combat mode. Survival pits the player against escalating enemy waves with dynamic scaling and per-wave healing. King of the Hill introduces a central control zone — the robot holding it longest wins; `KothZone` renders as a 3D pulsing territory marker. Capture the Flag adds `CtfFlag` and `CtfBase` 3D models with strict win conditions requiring flag capture and return. All three modes have dedicated HUD overlays displaying mode-specific stats and progress. Floor and grid theming responds to the active game mode. Pure mode-processor functions (`processKothTick`, `processCtfTick`, `processSurvivalTick`) keep the engine clean and composable.
+
+* **Phase 9 — AliScript Super Powers:**
+  Six new commands extend AliScript into tactical territory that demands resource management thinking: `TELEPORT` for instant positional repositioning, `SHIELD` for damage negation, `CLOAK` for visibility suppression, `DASH` for burst movement, `MINE` for area denial, and `TAUNT` for behavioral manipulation. Every command carries an energy cost and cooldown enforced by the engine — `SHIELD` negates incoming damage in combat math, `CLOAK` excludes the robot from radar and `GET_ALL_VISIBLE_ENEMIES()` returns, `MINE` spawns persistent arena objects. 3D visual effects render the shield sphere, cloak opacity fade, and mine placement in real time. The Mobile Block Editor palette was expanded to include all six tactical actions.
+
+* **Global Sound Architecture:**
+  Eliminated the `use-sound` library and all three external `mixkit.co` audio URLs entirely. Replaced with a pure Web Audio API synthesis layer matching the architecture of `useSoundEffects`. Three distinct arena sounds are synthesized in code: a sawtooth swoop for projectile fire, a mid-range impact crunch for robot hits, and a metallic clang for robot-to-robot collisions. A `SoundContext` provider wraps the entire application and installs a single `document`-level capture listener that intercepts every `<button>` click site-wide — no per-component wiring required. Hover sounds removed from campaign tabs and level cards entirely. Arena Audio and Interface Audio toggles added to the Settings preferences page with `localStorage` persistence.
+
+* **Garage Overhaul — Preview System, Blender Controls & Thumbnails:**
+  The vault's core UX flaw was that clicking any item immediately equipped it — there was no way to browse inventory without changing the active loadout. The preview system decouples inspection from commitment: clicking a card sets a preview state and updates the 3D viewer without touching the loadout. An explicit `EQUIP` button saves the selection. A preview badge and eye icon mark the currently viewed item. OrbitControls expanded to full Blender-like behavior — right-click pan, `minDistance=0.5` for close inspection, `minPolarAngle=0` for overhead view, camera damping for premium feel. Item thumbnail images load from `/thumbnails/[item-id].png` with a themed color swatch fallback. The Black Market received the same thumbnail system. Phantom Unit chassis removed from constants, model loaders, market listings, and schema — `chassis-unit-01` is now the canonical default.
+
+* **Auth System — Premium Redesign & Reliability Hardening:**
+  All five auth pages (Login, Register, Forgot Password, Reset Password, Verify Email) rebuilt with a glassmorphism Apple-inspired design system. All technical jargon eliminated — `INITIALIZING UPLINK` becomes `Creating your account`, `VERIFYING CREDENTIALS` becomes `Signing in`. Social buttons received proper Light Mode contrast via `color-mix`. Auth inputs fixed for Light Mode compatibility. The register flow now blocks submission until the `PasswordStrengthIndicator` confirms all five criteria — the error list spray is gone. Auth icon in the header unified to `rounded-lg` matching the ThemeSwitcher. Login and Register text labels replaced with icon-only glassmorphism buttons. AI Tutor chatbot suppressed on all auth pages.
+
+* **Campaign Polish:**
+  Nested `<button>` hydration error in `LevelCard` resolved by converting the root to a div with an overlay button pattern. Progress bar animation corrected to stop at actual progress value instead of animating to 100% first. Hint unlock state now persists across sessions via `sessionStorage` cache update on unlock. Insufficient points on hint unlock shows a red shake animation with a single clear error message. Star count updates correctly on map return via `router.refresh()`. Level prefetch corrected from `cond-2` to `cond-02` eliminating 404 console errors. All campaign emojis replaced with Lucide React icons.
+
+* **Admin Command Center:**
+  Full analytics dashboard across Users, Matches, Campaign, Scripts, Market, Tournaments, and AI Insights pages. KPI cards, area charts, bar charts, donut charts, data tables, and gauge widgets built as reusable components via Recharts. Mobile admin layout with full-screen drawer, 56px nav items, and card-list DataTable view. Framer Motion fade-in on data load. Collapsible sidebar groups with unread feedback badges. Server Health and Auth Security pages with DB/Redis status indicators, heap gauge, and memory KPIs. Community Feedback Hub for bug reports, feature requests, and contact messages with filter tabs, status workflows, and detail modals. Rate limit raised to 300 requests/minute on the admin tier with 429 retry logic across all 11 admin hooks.
+
+* **Chatbot UX Improvements:**
+  `dir=auto` added to chat input and message bubbles for automatic RTL/LTR alignment based on content language. Alexandria font integrated for premium Arabic typography. Scroll-to-bottom floating button appears when the user scrolls up and disappears at the bottom. Auto-scroll disabled during streaming so users can read previous messages without being forced down while the AI responds.
+
+---
+
+### Technical Scars and Resolutions
+
+* **Issue — "The Admin Rate Limit Wall" (Analytics Dashboard Throttled Into Uselessness):**
+  The admin analytics dashboard was built to give visibility into platform health — but navigating between its tabs triggered cascading 429 Too Many Requests errors that froze the entire interface. The global rate limiter was treating admin traffic identically to public API traffic, making the dashboard functionally unusable for any session lasting more than a few minutes. The irony was complete: the tool built to monitor the platform was being blocked by the platform's own defenses.
+
+  **Resolution:** Introduced a dedicated `admin` throttle tier at 300 requests per minute in `app.module.ts`, applied via `@Throttle` to `AdminController` and `AdminFeedbackController` independently from the public tier. Added `adminRequest.ts` as a shared 429 retry helper with a 2-second delay and single retry, applied across all 11 admin hooks. Simultaneous fetches on overview, security, health, and sidebar pages are staggered by 500ms to prevent burst collisions. The dashboard now navigates freely without interruption.
+
+* **Issue — "The Auth Spinner of Doom" (SMTP Timeout Freezing Registration and Password Reset):**
+  Players registering new accounts or requesting password reset codes encountered a loading spinner that never resolved. The button would spin for minutes before the server finally returned a generic timeout error — indistinguishable from a network failure, a server crash, or a bug. First-time users assumed the platform was broken and left. The root cause was invisible: Gmail's SMTP handshake can silently hang for 2–5 minutes before failing, and the nodemailer transporter had no timeout configured whatsoever. The server waited indefinitely.
+
+  **Resolution:** Added `connectionTimeout: 8000` and `socketTimeout: 8000` to the nodemailer transporter configuration — 8 seconds maximum before the email attempt is abandoned. On timeout, the server adopts a fail-fast posture: the account is created and the user is immediately redirected to `/verify-email` with an informational banner explaining the email may be delayed rather than blocking the entire registration flow. The spinner now resolves in under 10 seconds in every scenario, success or failure.
+
+* **Issue — "The Keyboard Blindfold" (Mobile Arena Code Editor Unusable in Landscape):**
+  The arena requires landscape orientation on mobile for a usable combat viewport. But the moment a player tapped the code editor in landscape, the mobile system keyboard expanded to cover 80% of the screen height — simultaneously hiding the code they were writing and the arena they were playing in. There was no layout solution: the keyboard is a system-level overlay that no CSS can constrain. Players on mobile had a binary choice between seeing their code and seeing the arena, never both.
+
+  **Resolution:** The keyboard was eliminated as a concept for mobile arena coding. The Block Editor replaces text input entirely with a drag-and-drop visual programming interface built on `@dnd-kit`. AliScript commands are organized into categorical palettes — Actions, Logic, Variables, Arrays, Dictionaries — and players compose programs by selecting and arranging blocks without touching the keyboard. A recursive compiler converts the block arrangement into valid AliScript at submission time. The system keyboard is never invoked. Players retain full visibility of both their program and the arena simultaneously throughout the entire composition flow.
+
+* **Issue — "The Phantom Equip" (Garage Preview Destroying Active Loadouts):**
+  The vault had no concept of browsing. Every card tap was an immediate equip operation — selecting any item to inspect it overwrote the player's active arena loadout without confirmation. A player curious about the Wraith chassis would find it equipped in their next match simply by tapping its card. There was no undo, no preview mode, and no indication that inspection and commitment were the same action.
+
+  **Resolution:** Introduced `previewedChassis`, `previewedPaint`, and `previewedTracer` state in `page.tsx` fully decoupled from the equipped loadout. Card taps set the preview state and update the 3D viewer — the loadout is untouched. An explicit `EQUIP` button within the card commits the selection. A preview badge and eye icon mark the currently previewed item so the player always knows the difference between what they are looking at and what they are fighting with.
+
+* **Issue — "The Hint Amnesia" (Purchased Hints Vanishing on Session End):**
+  Players spent points to unlock campaign hints, saw them appear correctly, then found them locked again after refreshing the page or returning from a different session. The points had been deducted permanently from their balance but the hint appeared to reset — creating the perception that the platform had taken their points and given nothing in return. The root cause was in `redis.service.ts`: a `set` command with a TTL of `0` was being interpreted as immediate expiry rather than permanent storage, silently discarding the record the moment it was written.
+
+  **Resolution:** Fixed `redis.service.ts` to correctly interpret TTL `0` as a permanent store — routing to the `set` command without an expiry argument instead of `setex` with zero seconds. Hint unlock state now also propagates to `sessionStorage` on the client at the moment of purchase, so the UI reflects the correct state immediately on refresh without waiting for a server round-trip. A purchased hint is now permanent across all sessions and devices.
+
+---
+
+### Current Status
+
+* Logic Arena is now a living, cinematic platform. The arena breathes with skeletal robot animations, environmental weather, and dynamic obstacle themes. Players on mobile compose AliScript programs without a keyboard. Six tactical super powers demand resource management thinking at the language level. Three new game modes reframe what winning means. The winner screen is a moment worth playing toward. Every memory leak is plugged. Every re-render eliminated. Every auth flow resolves in under 10 seconds.
+* **Ready for:** Fog of War, University Competition launch, and full multiplayer stress testing.
