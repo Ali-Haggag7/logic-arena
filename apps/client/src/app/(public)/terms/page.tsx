@@ -21,10 +21,9 @@ import PublicPageLayout, {
 } from "@/components/PublicPageLayout";
 import { LegalBasics, ContentConduct, ServiceTerms, LegalFooter } from "./sections";
 
-export const metadata: Metadata = {
-  title: "Terms of Service — Logic Arena",
-  description:
-    "The Terms of Service that govern your access to and use of the Logic Arena platform. By competing, you agree to uphold these standards.",
+export const metadata = {
+  title: "Terms of Service | Logic Arena",
+  description: "Logic Arena terms of service — rules and guidelines for using the platform.",
 };
 
 const SECTIONS: PublicSection[] = [

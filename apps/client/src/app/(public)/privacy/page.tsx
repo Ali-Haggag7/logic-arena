@@ -18,10 +18,9 @@ import PublicPageLayout, {
 } from "@/components/PublicPageLayout";
 import { DataUsage, NetworkRetention, CookiesSecurity, RightsUpdates } from "./sections";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — Logic Arena",
-  description:
-    "Understand exactly how Logic Arena collects, processes, and safeguards your personal data. We believe transparency is not optional — it is a competitive advantage.",
+export const metadata = {
+  title: "Privacy Policy | Logic Arena",
+  description: "Logic Arena privacy policy — how we collect, use, and protect your data.",
 };
 
 const SECTIONS: PublicSection[] = [

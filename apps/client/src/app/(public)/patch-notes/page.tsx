@@ -6,9 +6,9 @@ import PublicPageLayout, {
   PublicBody, PublicFooterCTA, PublicSectionCard, type PublicSection,
 } from "@/components/PublicPageLayout";
 
-export const metadata: Metadata = {
-  title: "Updates — Logic Arena",
-  description: "Full changelog for every Logic Arena release. Follow the evolution of the combat engine, AliScript, the Garage, and everything in between.",
+export const metadata = {
+  title: "Patch Notes | Logic Arena",
+  description: "Latest updates, bug fixes, and new features in Logic Arena. See what changed in each version.",
 };
 
 /* ─── Types ─────────────────────────────────────────────── */

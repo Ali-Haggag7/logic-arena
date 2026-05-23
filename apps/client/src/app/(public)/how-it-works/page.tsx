@@ -8,9 +8,9 @@ import PublicPageLayout, {
   PublicBody, PublicFooterCTA, PublicSectionCard, type PublicSection,
 } from "@/components/PublicPageLayout";
 
-export const metadata: Metadata = {
-  title: "How It Works — Logic Arena",
-  description: "Logic Arena transforms your code into a living, fighting robot. Four steps stand between you and combat glory.",
+export const metadata = {
+  title: "How It Works | Logic Arena",
+  description: "Learn how Logic Arena works — write AliScript, deploy your robot, and battle in real-time. No account required to explore.",
 };
 
 const SECTIONS: PublicSection[] = [

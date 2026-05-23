@@ -7,6 +7,8 @@ import { CyberSelect, type CyberSelectOption } from "../../../components/ui/Cybe
 import { FieldLabel, StyledInput, StyledTextarea } from "../../../components/ui/FormHelpers";
 import { apiClient } from "@/lib/api-client";
 
+
+
 type Severity = "" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 const BUG_OPTIONS: CyberSelectOption[] = [
