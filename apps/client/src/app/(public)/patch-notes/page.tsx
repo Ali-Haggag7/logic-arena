@@ -42,6 +42,22 @@ const TAG_ICONS: Record<Tag, React.ReactNode> = {
 
 const RELEASES: Release[] = [
   {
+    version: "v3.1.0",
+    date: "2026-05-22",
+    headline: "The Living Arena & Mobile Revolution",
+    summary: "Shipped the most visually ambitious update in Logic Arena's history — a complete resurrection of the 3D arena into a living cinematic experience, five new game modes, and a mobile block editor.",
+    changes: [
+      { tag: "ENGINE", text: "Phase 0 — Critical Arena Bug Fixes: Plugged massive memory leaks, eliminated 20/sec React re-renders, and memoized geometry to stabilize the 3D arena." },
+      { tag: "COMBAT", text: "Phase 3 — Dynamic Robot Animations: Robots now use GLTF skeletal animations that cross-fade automatically based on velocity and idle states." },
+      { tag: "COMBAT", text: "Phase 4 — Dynamic Environment Themes: ICE and LAVA themes introduced with gameplay consequences. Materials, lighting, and particle effects adapt globally." },
+      { tag: "QOL", text: "Phase 7 — Mobile Block Editor: Eliminated the mobile keyboard entirely. Players now compose AliScript using a drag-and-drop visual programming system via @dnd-kit." },
+      { tag: "COMBAT", text: "Phase 8 — Three New Game Modes: Launched SURVIVAL (waves), KOTH (control points), and CTF (capture the flag), expanding combat beyond basic deathmatch." },
+      { tag: "ENGINE", text: "Phase 9 — AliScript Super Powers: Added 6 new tactical commands (TELEPORT, SHIELD, CLOAK, DASH, MINE, TAUNT) with strict energy and cooldown mechanics." },
+      { tag: "QOL", text: "Phase 5 & Garage Polish: Cinematic Winner Screen with 3-star ratings, plus a Garage preview system allowing inspection without changing active loadouts." },
+      { tag: "BUG FIX", text: "Admin & Auth Hardening: Resolved cascading 429 errors on the Admin dashboard and fixed the SMTP timeout bug freezing the registration flow." },
+    ],
+  },
+  {
     version: "v3.0.0",
     date: "2026-05-19",
     headline: "The Architecture Mastery Update & Full Campaign Mode",

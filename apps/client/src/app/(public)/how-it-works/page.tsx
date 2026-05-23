@@ -23,8 +23,8 @@ const SECTIONS: PublicSection[] = [
 ];
 
 const ALISCRIPT_FEATURES = [
-  { icon: <Code2 size={15} />, label: "Imperative Syntax", desc: "Familiar C-style control flow: if / else / while / for — zero learning curve if you know any language." },
-  { icon: <Zap size={15} />, label: "Robot API Built-In", desc: "robot.move(), robot.attack(), robot.scan() — native language primitives, not a library." },
+  { icon: <Code2 size={15} />, label: "Imperative Syntax", desc: "Familiar control flow: IF / ELSE / WHILE — zero learning curve if you know any basic programming logic." },
+  { icon: <Zap size={15} />, label: "Robot API Built-In", desc: "MOVE, FIRE, SCAN — native uppercase language primitives, not a library." },
   { icon: <RefreshCw size={15} />, label: "Deterministic Execution", desc: "Runs inside the engine at 20 ticks/second (50ms) with a fixed instruction quota ensuring hardware-independent outcomes." },
   { icon: <Shield size={15} />, label: "Sandboxed & Safe", desc: "No filesystem or network access. Pure battle logic — no side-channel attacks, no infinite loops escaping the quota." },
   { icon: <Layers size={15} />, label: "Version History", desc: "Every script submission is versioned. Roll back to any prior version from your Garage at any time." },
@@ -70,7 +70,7 @@ export default function HowItWorksPage() {
       title: "Climb the Ranks",
       icon: <Crown size={16} />,
       body: "Wins earn ELO rating points; losses reduce them. The ELO delta per match is determined by the skill gap between you and your opponent — defeating a higher-ranked player earns significantly more. Study your match replays to identify strategic weaknesses, iterate your script, and ascend the global leaderboard.",
-      detail: "The leaderboard is global, real-time, and backed by Redis for instant updates. Earn points through victories to unlock premium AAA chassis models, custom tracer colors, and exclusive paints in the Black Market.",
+      detail: "The leaderboard is global, real-time, and backed by Redis for instant updates. Rise to the top of the ranks and establish yourself as an elite Logic Arena operator.",
     },
   ];
 
