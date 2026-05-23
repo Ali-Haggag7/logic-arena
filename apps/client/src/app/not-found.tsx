@@ -12,7 +12,7 @@ export default function NotFound() {
         <div className="bg-accent/10 border border-accent/40 p-4 rounded text-accent text-xs tracking-widest mb-10 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]">
           [ERR] INVALID DIRECTORY ACCESSED
         </div>
-        <Link href="/" className="px-6 py-3 border border-accent/40 text-accent hover:bg-accent/10 tracking-[0.2em] transition-all uppercase rounded text-sm hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]">
+        <Link href="/dashboard" className="px-6 py-3 border border-accent/40 text-accent hover:bg-accent/10 tracking-[0.2em] transition-all uppercase rounded text-sm hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]">
           Return to Dashboard
         </Link>
       </div>

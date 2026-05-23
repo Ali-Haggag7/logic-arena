@@ -28,16 +28,19 @@ const alexandria = Alexandria({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const baseUrl = process.env.CLIENT_URL || "https://logicarena.dev";
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.CLIENT_URL || "https://logicarena.dev"),
+  metadataBase: new URL(baseUrl),
   title: {
     default: "Logic Arena | Competitive Robot Coding Simulator",
     template: "%s | Logic Arena",
   },
   description:
-    "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
+    "Write code, battle robots, and climb the leaderboard in Logic Arena — the competitive real-time programming battle simulator where your logic controls your robot. Learn coding through combat, master AliScript, and dominate the arena.",
   keywords: [
     "Logic Arena",
+    "logic",
     "coding game",
     "programming simulator",
     "robot battle",
@@ -45,23 +48,37 @@ export const metadata: Metadata = {
     "learn to code",
     "TypeScript game",
     "coding competition",
+    "coding robot game",
+    "programming battle",
+    "AliScript",
+    "competitive programming",
+    "AI bot game",
+    "real-time strategy coding",
+    "code combat",
+    "robot programming game",
+    "logic puzzle game",
+    "coding for developers",
+    "battle bot simulator",
   ],
   authors: [{ name: "Ali Haggag" }],
   creator: "Ali Haggag",
+  alternates: {
+    canonical: baseUrl,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "/",
+    url: baseUrl,
     title: "Logic Arena | Competitive Robot Coding Simulator",
     description:
-      "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
+      "Write code, battle robots, and climb the leaderboard in Logic Arena — the real-time programming battle simulator where your logic controls your robot.",
     siteName: "Logic Arena",
     images: [
       {
-        url: "/icons/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "Logic Arena Gameplay",
+        url: "/logic-arena-logo.jpeg",
+        width: 1200,
+        height: 630,
+        alt: "Logic Arena — Competitive Robot Coding Simulator",
       },
     ],
   },
@@ -69,8 +86,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Logic Arena | Competitive Robot Coding Simulator",
     description:
-      "Write code, battle robots, and climb the leaderboard in Logic Arena. A competitive real-time programming battle simulator for developers and coders.",
-    images: ["/icons/icon-512.png"],
+      "Write code, battle robots, and climb the leaderboard in Logic Arena — the real-time programming battle simulator where your logic controls your robot.",
+    images: ["/logic-arena-logo.jpeg"],
   },
   robots: {
     index: true,
@@ -86,6 +103,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icons/icon-512.png",
     apple: "/icons/icon-192.png",
+  },
+  verification: {
+    google: "5N0GMr8mxTY9zb0A9rUhrHZo39jdVfRAbAM_h_FYcTg",
   },
 };
 
@@ -130,6 +150,45 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh w-full flex flex-col bg-bg-primary">
+        {/* JSON-LD Structured Data for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Logic Arena",
+                "url": baseUrl,
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": `${baseUrl}/search?q={search_term_string}`,
+                  },
+                  "query-input": "required name=search_term_string",
+                },
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": "Logic Arena",
+                "url": baseUrl,
+                "description":
+                  "Write code, battle robots, and climb the leaderboard in Logic Arena — the competitive real-time programming battle simulator where your logic controls your robot.",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": "Web Browser",
+                "author": { "@type": "Person", "name": "Ali Haggag" },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD",
+                },
+              },
+            ]),
+          }}
+        />
+
         <ThemeProvider>
           <SoundProvider>
           <AuthProvider>
