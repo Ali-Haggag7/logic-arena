@@ -59,7 +59,7 @@ export function StatRing({
       aria-label={`${label}: ${value}%`}
     >
       <div style={{ position: "relative", width: size, height: size }}>
-        <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <svg width={size} height={size} style={{ transform: "rotate(-90deg)", overflow: "visible" }}>
           {/* Track */}
           <circle
             cx={size / 2} cy={size / 2} r={r}
