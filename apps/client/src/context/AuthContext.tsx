@@ -69,9 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username: res.data.username ?? null,
         avatarUrl: res.data.avatarUrl ?? null,
       });
-    }).catch(() => {
+    }).catch((error: unknown) => {
       if (!cancelled) {
-        clearAuthSession();
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 401) {
+          clearAuthSession();
+        }
         setProfile(null);
       }
     }).finally(() => {

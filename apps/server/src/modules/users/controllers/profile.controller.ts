@@ -17,6 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from '../../../common/prisma.service';
 import { RedisService } from '../../../common/redis.service';
 import { AuthGuard } from '../../../common/auth.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ProfileQueryService } from '../queries/profile-query.service';
 import { ProfileCommandService } from '../commands/profile-command.service';
 import { PreferencesCommandService } from '../commands/preferences-command.service';
@@ -37,6 +38,7 @@ const replayKey = (matchId: string) => `replay:${matchId}`;
 const REPLAY_TTL = 3_600;
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
+@SkipThrottle({ auth: true })
 @Controller('users')
 export class ProfileController {
   constructor(

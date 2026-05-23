@@ -57,9 +57,12 @@ export function useAuthState(): {
         avatarUrl: res.data.avatarUrl ?? null,
       });
       refresh();
-    }).catch(() => {
+    }).catch((error: unknown) => {
       if (!cancelled) {
-        clearAuthSession();
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 401) {
+          clearAuthSession();
+        }
         refresh();
       }
     });

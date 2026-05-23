@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../../../common/auth.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 import { MarketQueryService } from '../queries/market-query.service';
 import { MarketCommandService } from '../commands/market-command.service';
 import { PurchaseItemDto, EquipItemDto } from '../users.dto';
@@ -18,6 +19,7 @@ interface AuthenticatedRequest {
   user: { sub: string };
 }
 
+@SkipThrottle({ auth: true })
 @Controller('users')
 export class MarketController {
   constructor(
