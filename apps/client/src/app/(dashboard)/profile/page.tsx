@@ -43,6 +43,11 @@ export default function ProfilePage() {
   const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
+    ctxRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (ctxLoading) return;
 
     if (ctxProfile) {

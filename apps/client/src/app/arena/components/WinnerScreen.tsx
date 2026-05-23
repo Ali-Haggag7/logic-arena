@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Socket } from 'socket.io-client';
 import { getAuthUsername } from '../../../lib/client-security';
 import { apiClient } from '../../../lib/api-client';
@@ -105,6 +105,8 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
   matchResult, currentUserId, socket, matchId, onRematchClient,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const scriptId = searchParams.get('scriptId');
   const { winner, draw, efficiencyScores } = matchResult;
   const username = getAuthUsername() ?? 'PLAYER';
 
@@ -126,9 +128,29 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
   const animatedElo = useEloAnimation(eloDelta);
 
   const handleRematch = useCallback(() => {
-    socket.emit('resetGame', { matchId });
-    onRematchClient();
-  }, [socket, matchId, onRematchClient]);
+    if (scriptId) {
+      socket.emit('createMatch', { scriptId });
+    } else {
+      router.push('/lobby');
+    }
+  }, [socket, scriptId, router]);
+
+  useEffect(() => {
+    const onMatchCreated = (data: { matchId: string }) => {
+      const mode = searchParams.get('mode') || 'COMBAT';
+      const theme = searchParams.get('theme') || 'CYBER';
+      window.location.href = `/arena?matchId=${data.matchId}&scriptId=${scriptId}&mode=${mode}&theme=${theme}`;
+    };
+    const onMatchError = (data: { message: string }) => {
+      alert(data.message);
+    };
+    socket.on('matchCreated', onMatchCreated);
+    socket.on('createMatchError', onMatchError);
+    return () => {
+      socket.off('matchCreated', onMatchCreated);
+      socket.off('createMatchError', onMatchError);
+    };
+  }, [socket, scriptId, searchParams]);
 
   const handleReturnToLobby = useCallback(() => router.push('/lobby'), [router]);
 
