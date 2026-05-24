@@ -27,7 +27,7 @@ export async function persistMatchResults(
   prisma: PrismaService,
   matchRef: MatchEngine,
   redis?: RedisService,
-): Promise<void> {
+): Promise<any> {
   const candidatePlayerIds = state.robots
     .map((r) => r.id)
     .filter((id) => id !== 'bot-2');
@@ -43,7 +43,7 @@ export async function persistMatchResults(
     // Keep only real persisted users. This avoids trying to connect guest/dummy IDs.
     const users = await tx.user.findMany({
       where: { id: { in: candidatePlayerIds } },
-      select: { id: true, combatStats: true },
+      select: { id: true, combatStats: true, rank: true },
     });
     const userMap = new Map(users.map((u) => [u.id, u]));
     const playerIds = users.map((u) => u.id);
@@ -110,6 +110,8 @@ export async function persistMatchResults(
       },
     });
 
+    const playerStats: Record<string, any> = {};
+
     await Promise.all(
       aliveAtEnd.map(async (robot, index) => {
         const scriptId = playerScriptMap.get(robot.id);
@@ -117,12 +119,21 @@ export async function persistMatchResults(
 
         const existingStats = userMap.get(robot.id)
           ?.combatStats as CombatStats | null;
+        const currentRank = userMap.get(robot.id)?.rank || 0;
         const newStats = computeCombatStats(
           robot,
           efficiencyScores[robot.id] ?? 0,
           durationSecs,
         );
         const mergedStats = mergeStats(existingStats, newStats);
+
+        const eloDelta = persistedWinnerId === robot.id ? 10 : (persistedWinnerId ? -10 : 0);
+        playerStats[robot.id] = {
+          eloDelta,
+          newStats,
+          durationSecs,
+          rank: currentRank + eloDelta
+        };
 
         await tx.matchParticipant.upsert({
           where: {
@@ -159,10 +170,11 @@ export async function persistMatchResults(
         })
       : null;
 
-    return { createdMatch, playerIds, updatedWinner, replayDataPayload };
+    return { createdMatch, playerIds, updatedWinner, replayDataPayload, playerStats };
   });
 
   if (!persistenceResult) return;
+
 
   if (persistenceResult.updatedWinner && redis?.healthy) {
     await redis
@@ -191,4 +203,5 @@ export async function persistMatchResults(
       REPLAY_TTL,
     );
   }
+  return persistenceResult;
 }

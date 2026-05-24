@@ -37,6 +37,7 @@ interface WinnerScreenProps {
     winner: { id: string; color: string } | null;
     draw: boolean;
     efficiencyScores: Record<string, number>;
+    playerStats?: Record<string, { eloDelta: number; newStats: any; durationSecs: number; rank: number }>;
   };
   currentUserId: string | null;
   socket: Socket;
@@ -107,7 +108,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const scriptId = searchParams.get('scriptId');
-  const { winner, draw, efficiencyScores } = matchResult;
+  const { winner, draw, efficiencyScores, playerStats } = matchResult;
   const username = getAuthUsername() ?? 'PLAYER';
 
   useEffect(() => {
@@ -119,12 +120,13 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
   const subtitle = draw ? 'MATCH_DELETED' : isWinner ? 'VICTORY!' : `${username} DEFEATED!`;
 
   const myScore = currentUserId ? (efficiencyScores?.[currentUserId] ?? null) : null;
+  const myPlayerStats = currentUserId ? (playerStats?.[currentUserId] ?? null) : null;
 
   const earnedStars = myScore === null ? 0
     : myScore >= THREE_STAR_THRESHOLD ? 3
       : myScore >= TWO_STAR_THRESHOLD ? 2 : 1;
 
-  const eloDelta = draw ? 0 : isWinner ? MOCK_ELO_DELTA : -MOCK_ELO_DELTA;
+  const eloDelta = myPlayerStats ? myPlayerStats.eloDelta : (draw ? 0 : isWinner ? MOCK_ELO_DELTA : -MOCK_ELO_DELTA);
   const animatedElo = useEloAnimation(eloDelta);
 
   const handleRematch = useCallback(() => {
@@ -231,7 +233,12 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
 
           {/* Stats grid */}
           <div className="ws-stats">
-            {MOCK_STATS.map((stat) => (
+            {(myPlayerStats?.newStats ? [
+              { label: 'EXEC TIME', value: `${myPlayerStats.durationSecs}s` },
+              { label: 'PRECISION', value: `${myPlayerStats.newStats.precision}%` },
+              { label: 'DEFENSE', value: `${myPlayerStats.newStats.defense}%` },
+              { label: 'AGGRESSION', value: `${myPlayerStats.newStats.aggression}%` },
+            ] : MOCK_STATS).map((stat) => (
               <div key={stat.label} className="ws-stat">
                 <div className="ws-stat__label">{stat.label}</div>
                 <div className="ws-stat__value">{stat.value}</div>
@@ -242,7 +249,9 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           {/* ELO section */}
           {!draw && (
             <div className="ws-elo">
-              <div className={`ws-elo__badge ws-elo__badge--${resultTheme}`}>{MOCK_RANK}</div>
+              <div className={`ws-elo__badge ws-elo__badge--${resultTheme}`}>
+                {myPlayerStats?.rank ? `RANK: ${myPlayerStats.rank}` : MOCK_RANK}
+              </div>
               <div className={`ws-elo__delta ws-elo__delta--${resultTheme}`}>
                 ELO {animatedElo >= 0 ? '+' : ''}{animatedElo}
               </div>

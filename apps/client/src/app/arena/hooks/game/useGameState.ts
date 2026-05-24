@@ -39,6 +39,7 @@ export const useGameState = (
     winner: { id: string; color: string } | null;
     draw: boolean;
     efficiencyScores: Record<string, number>;
+    playerStats?: Record<string, { eloDelta: number; newStats: any; durationSecs: number; rank: number }>;
   } | null>(null);
   const [serverConfirmedMode, setServerConfirmedMode] = useState<string>(mode || 'COMBAT');
 
@@ -200,11 +201,13 @@ export const useGameState = (
       winner: { id: string; color: string } | null;
       draw: boolean;
       efficiencyScores: Record<string, number>;
+      playerStats?: Record<string, any>;
     }) => {
       setMatchResult({
         winner: data.winner,
         draw: data.draw,
         efficiencyScores: data.efficiencyScores ?? {},
+        playerStats: data.playerStats,
       });
     };
 

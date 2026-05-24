@@ -39,13 +39,7 @@ export class MatchLoopManager {
 
           const efficiencyScores = match.getEfficiencyScores();
 
-          this.server.to(matchId).emit('matchOver', {
-            winner: winner ? { id: winner.id, color: winner.color } : null,
-            draw: !winner && mode !== 'RACING',
-            efficiencyScores,
-          });
-
-          await persistMatchResults(
+          const persistenceResult = await persistMatchResults(
             matchId,
             state,
             winner,
@@ -55,6 +49,13 @@ export class MatchLoopManager {
             match,
             this.redis,
           );
+
+          this.server.to(matchId).emit('matchOver', {
+            winner: winner ? { id: winner.id, color: winner.color } : null,
+            draw: !winner && mode !== 'RACING',
+            efficiencyScores,
+            playerStats: persistenceResult?.playerStats || {},
+          });
 
           match.stop();
           this.state.cleanupMatch(matchId);
