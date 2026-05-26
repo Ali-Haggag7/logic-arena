@@ -36,6 +36,10 @@ const MOST_ACTIVE_USERS_LIMIT = 10;
 const TOP_TOURNAMENT_WINNERS_LIMIT = 5;
 const TOP_FAILED_LEVELS_LIMIT = 10;
 const DEFAULT_PAGE_SIZE = 20;
+const OVERVIEW_CACHE_KEY = 'admin:stats:overview';
+const OVERVIEW_CACHE_TTL = 60;
+const HEALTH_CACHE_KEY = 'admin:health';
+const HEALTH_CACHE_TTL = 30;
 
 function startOfToday(): Date {
   const d = new Date();
@@ -109,6 +113,9 @@ export class AdminService {
   // ── Overview ────────────────────────────────────────────────────────────────
 
   async getOverviewStats(): Promise<OverviewStats> {
+    const cached = await this.redis.get<OverviewStats>(OVERVIEW_CACHE_KEY);
+    if (cached) return cached;
+
     const today = startOfToday();
     const weekAgo = startOfThisWeek();
     const monthAgo = startOfThisMonth();
@@ -135,7 +142,7 @@ export class AdminService {
       this.prisma.user.aggregate({ _sum: { points: true } }),
     ]);
 
-    return {
+    const result: OverviewStats = {
       totalUsers,
       newUsersToday,
       newUsersThisWeek,
@@ -147,6 +154,9 @@ export class AdminService {
       totalPoints: pointsAgg._sum.points ?? 0,
       onlineUsers: 0,
     };
+
+    await this.redis.set(OVERVIEW_CACHE_KEY, result, OVERVIEW_CACHE_TTL);
+    return result;
   }
 
   // ── Users ────────────────────────────────────────────────────────────────────
@@ -520,6 +530,9 @@ export class AdminService {
   // ── Health ────────────────────────────────────────────────────────────────────
 
   async getHealthStats(): Promise<HealthStats> {
+    const cached = await this.redis.get<HealthStats>(HEALTH_CACHE_KEY);
+    if (cached) return cached;
+
     const mem = process.memoryUsage();
 
     let redisHealthy = false;
@@ -540,7 +553,7 @@ export class AdminService {
       dbHealthy = false;
     }
 
-    return {
+    const result: HealthStats = {
       uptimeSeconds: Math.floor(process.uptime()),
       memoryUsage: {
         rss: mem.rss,
@@ -551,6 +564,9 @@ export class AdminService {
       redisHealthy,
       dbHealthy,
     };
+
+    await this.redis.set(HEALTH_CACHE_KEY, result, HEALTH_CACHE_TTL);
+    return result;
   }
 
   // ── Paginated user list ───────────────────────────────────────────────────────
