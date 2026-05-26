@@ -12,6 +12,7 @@ const DOC_SECTIONS: DocSection[] = [
   { id: 'docs-intro',       label: 'Introduction',     short: 'INTRO'   },
   { id: 'docs-quick-ref',   label: 'Quick Reference',  short: 'QUICK'   },
   { id: 'docs-commands',    label: 'Commands',         short: 'CMDS'    },
+  { id: 'docs-super-powers',label: 'Super Powers',     short: 'POWERS'  },
   { id: 'docs-queries',     label: 'Query Functions',  short: 'QUERY'   },
   { id: 'docs-identifiers', label: 'Identifiers',      short: 'IDS'     },
   { id: 'docs-advanced',    label: 'Advanced',         short: 'ADVANCED'},

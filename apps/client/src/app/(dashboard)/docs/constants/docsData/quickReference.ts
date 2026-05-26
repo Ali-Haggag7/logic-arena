@@ -12,6 +12,7 @@ import {
   RotateCw,
   ServerCrash,
   Zap,
+  Flame,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -36,4 +37,5 @@ export const QUICK_REF: QuickRefDoc[] = [
   { title: 'ADVANCED SENSORS', icon: Radar, color: 'var(--docs-pink)', commands: ['GET_ALL_VISIBLE_ENEMIES()', 'Returns [dist, x, y, hp][]', 'RAYCAST(angle)', 'Returns dist to first hit'] },
   { title: 'SWARM INTELLIGENCE', icon: RadioReceiver, color: 'var(--docs-emerald)', commands: ['BROADCAST(data)', 'Returns recipient count', 'RECEIVE()', 'Returns Array of messages'] },
   { title: 'SYSTEM LIMITS', icon: ServerCrash, color: 'var(--docs-red)', commands: ['2000 Operations / Tick', 'Exceeding Quota = TLE Crash', 'WHILE loops cap at 10 iters'] },
+  { title: 'SUPER POWERS', icon: Flame, color: 'var(--docs-orange)', commands: ['TELEPORT / DASH', 'SHIELD / CLOAK', 'MINE (Proximity Trap)', 'Requires massive energy'] },
 ];

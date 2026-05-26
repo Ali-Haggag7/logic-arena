@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { User, Settings, Wrench, Hexagon, X, Trophy, Lightbulb, Shield, ShoppingCart } from "lucide-react";
+import { User, Settings, Wrench, Hexagon, X, Trophy, FileCode, Shield, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const mainNavItems = [
@@ -18,6 +18,14 @@ const mainNavItems = [
     )
   },
   {
+    href: "/leaderboard", label: "RANKINGS", icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-[22px] h-[22px]">
+        <path d="M22 11v1a10 10 0 1 1-9-10" />
+        <path d="M22 4L12 14.01l-3-3" />
+      </svg>
+    )
+  },
+  {
     href: "/campaign", label: "CAMPAIGN", icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-[22px] h-[22px]">
         <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -26,20 +34,12 @@ const mainNavItems = [
       </svg>
     )
   },
-  {
-    href: "/leaderboard", label: "RANKINGS", icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-[22px] h-[22px]">
-        <path d="M22 11v1a10 10 0 1 1-9-10" />
-        <path d="M22 4L12 14.01l-3-3" />
-      </svg>
-    )
-  },
 ];
 
 const subNavItems = [
   { href: "/profile", label: "PROFILE", icon: <User size={18} /> },
   { href: "/garage", label: "GARAGE", icon: <Wrench size={18} /> },
-  { href: "/insights", label: "INSIGHTS", icon: <Lightbulb size={18} /> },
+  { href: "/docs", label: "ALISCRIPT", icon: <FileCode size={18} /> },
   { href: "/tournaments", label: "TOURNAMENTS", icon: <Trophy size={18} /> },
   { href: "/settings", label: "SETTINGS", icon: <Settings size={18} /> },
 ];

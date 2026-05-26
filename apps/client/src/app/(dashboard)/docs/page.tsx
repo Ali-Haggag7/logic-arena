@@ -7,6 +7,7 @@ import { QuickReferenceSection } from './components/QuickReferenceSection';
 import { InteractivePlayground } from './components/InteractivePlayground';
 import { BattleTacticsSection } from './components/BattleTacticsSection';
 import { CommandReferenceSection } from './components/CommandReferenceSection';
+import { SuperPowersSection } from './components/SuperPowersSection';
 import { RotationSystemSection } from './components/rotation-system/RotationSystemSection';
 import { AlgorithmChallenges } from './components/AlgorithmChallenges';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
@@ -70,6 +71,10 @@ export default function DocsPage() {
 
         <div id="docs-commands" style={{ scrollMarginTop: '80px' }}>
           <CommandReferenceSection isMobile={isMobile} />
+        </div>
+
+        <div id="docs-super-powers" style={{ scrollMarginTop: '80px' }}>
+          <SuperPowersSection isMobile={isMobile} />
         </div>
 
         <div id="docs-queries" style={{ scrollMarginTop: '80px' }}>

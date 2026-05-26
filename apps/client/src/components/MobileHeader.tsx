@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ThemeSwitcher } from "./ui/ThemeSwitcher";
 import { useAuthState } from "../hooks/useAuthState";
 import { clearAuthSession, clearSensitiveBrowserStorage } from "../lib/client-security";
-import { LogIn, LogOut, LayoutDashboard, UserPlus } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, UserPlus, Lightbulb } from "lucide-react";
 
 export function MobileHeader() {
   const pathname = usePathname() || "";
@@ -77,6 +77,8 @@ export function MobileHeader() {
     }
   }
 
+  const insightsButton = getIconButton(<Lightbulb size={16} />, () => router.push("/insights"), "Insights");
+
   return (
     <header className={`mobile-header-safe w-full ${visibilityClass} items-center justify-between px-4 border-b border-accent/8 bg-bg-primary z-[60] fixed top-0 left-0 right-0 min-h-14`}>
       <button
@@ -97,6 +99,7 @@ export function MobileHeader() {
         />
       </button>
       <div className="flex items-center gap-2">
+        {insightsButton}
         {authButtonContent}
         <ThemeSwitcher variant="minimal" />
       </div>
