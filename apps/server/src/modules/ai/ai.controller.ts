@@ -12,12 +12,17 @@ import { AiService } from './ai.service';
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_HISTORY = 10;
+const MAX_DESCRIPTION_LENGTH = 500;
 
 interface ChatDto {
   message: string;
   history: { role: 'user' | 'model'; content: string }[];
   language?: 'ar' | 'en' | 'auto';
   image?: string;
+}
+
+interface GenerateScriptDto {
+  description: string;
 }
 
 @SkipThrottle({ auth: true })
@@ -65,6 +70,43 @@ export class AiController {
 
     try {
       const stream = this.aiService.streamChat(sanitized, trimmedHistory, image);
+
+      for await (const chunk of stream) {
+        const escaped = JSON.stringify(chunk);
+        res.write(`data: ${escaped}\n\n`);
+      }
+
+      res.write('data: [DONE]\n\n');
+    } catch (error) {
+      const message_ = error instanceof Error ? error.message : 'Unknown error';
+      const escaped = JSON.stringify({ error: message_ });
+      res.write(`data: ${escaped}\n\n`);
+    } finally {
+      res.end();
+    }
+  }
+
+  @Post('generate-script')
+  @HttpCode(200)
+  async generateScript(
+    @Body() body: GenerateScriptDto,
+    @Res() res: Response,
+  ) {
+    const { description } = body;
+
+    if (!description || typeof description !== 'string' || description.trim().length === 0) {
+      throw new BadRequestException('description must be a non-empty string');
+    }
+
+    const sanitized = description.replace(/<[^>]*>/g, '').slice(0, MAX_DESCRIPTION_LENGTH);
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    try {
+      const stream = this.aiService.streamGenerateScript(sanitized);
 
       for await (const chunk of stream) {
         const escaped = JSON.stringify(chunk);

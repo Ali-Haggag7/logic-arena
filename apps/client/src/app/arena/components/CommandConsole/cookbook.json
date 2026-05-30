@@ -1,0 +1,178 @@
+[
+  {
+    "id": "atan2-precision-aim",
+    "name": "ATAN2 Precision Aim",
+    "description": "Calculate the exact angle toward the nearest visible enemy and snap your cannon to it every tick.",
+    "category": "aiming",
+    "difficulty": "beginner",
+    "code": "-- Keep scanner locked to body rotation for simplicity\nSET lockVision = TRUE\n-- Compute precise angle from our position to the enemy\nSET aim = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n-- Rotate body to face enemy\nSET rotation = aim\n-- Fire if enemy is in our FOV cone\nIF CAN_SEE_ENEMY THEN\n  FIRE\nELSE\n  -- Sweep scanner slowly when no enemy visible\n  SCAN\nEND"
+  },
+  {
+    "id": "strafe-while-aiming",
+    "name": "Strafe While Aiming",
+    "description": "Decouple your scanner from your body — keep the cannon on the enemy while strafing unpredictably.",
+    "category": "aiming",
+    "difficulty": "intermediate",
+    "code": "-- Decouple scanner from body (independent rotation)\nSET lockVision = FALSE\n-- Compute angle to nearest enemy\nSET aim = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n-- Point scanner at enemy while body circles\nSET fovDirection = aim\n-- Rotate body to strafe (circle around enemy)\nSET rotation = rotation + 0.06\nMOVE\n-- Fire whenever scanner sees the enemy\nIF CAN_SEE_ENEMY THEN\n  FIRE\nEND"
+  },
+  {
+    "id": "predictive-lead",
+    "name": "Predictive Lead Shot",
+    "description": "Aim slightly ahead of where the enemy is moving to account for bullet travel time.",
+    "category": "aiming",
+    "difficulty": "advanced",
+    "code": "-- Lead factor increases with distance (farther = more lead needed)\nSET lead = distance / 400\n-- Project enemy position forward in their current direction\nSET lead_x = NEAREST_VISIBLE_X + (NEAREST_VISIBLE_X - POSITION_X) * lead * 0.12\nSET lead_y = NEAREST_VISIBLE_Y + (NEAREST_VISIBLE_Y - POSITION_Y) * lead * 0.12\n-- Aim at predicted intercept point\nSET rotation = ATAN2(lead_y - POSITION_Y, lead_x - POSITION_X)\nIF CAN_SEE_ENEMY THEN\n  FIRE\nELSE\n  SCAN\n  MOVE\nEND"
+  },
+  {
+    "id": "turret-mode",
+    "name": "Turret Mode",
+    "description": "Stop moving entirely and become a precision stationary turret — full energy into combat.",
+    "category": "aiming",
+    "difficulty": "beginner",
+    "code": "-- Stop all movement to become a stationary turret\nSTOP\n-- Aim at enemy if visible\nIF CAN_SEE_ENEMY THEN\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  -- Fire rapidly while energy allows\n  IF ENERGY_PCT > 20 THEN\n    FIRE\n  END\nELSE\n  -- Sweep FOV to find targets\n  SET fovDirection = fovDirection + 0.18\n  SCAN\nEND"
+  },
+  {
+    "id": "raycast-wall-detection",
+    "name": "RAYCAST Wall Detection",
+    "description": "Fire invisible lasers in 3 directions to detect walls before you crash into them.",
+    "category": "vision",
+    "difficulty": "intermediate",
+    "code": "-- Fire rays ahead and to both sides\nSET ahead = RAYCAST(0)\nSET right = RAYCAST(0.5)\nSET left = RAYCAST(-0.5)\n-- If wall is close ahead, steer away\nIF ahead < 90 THEN\n  SET rotation = rotation + 0.35\n  BACKUP\nELSE\n  -- Gently correct toward clearer side\n  IF right < 60 THEN\n    SET rotation = rotation - 0.15\n  END\n  IF left < 60 THEN\n    SET rotation = rotation + 0.15\n  END\n  MOVE\nEND\n-- Still attack enemies even while navigating\nIF CAN_SEE_ENEMY THEN\n  FIRE\nEND"
+  },
+  {
+    "id": "360-fov-sweep",
+    "name": "360° FOV Sweep",
+    "description": "Spin your scanner independently of your body to cover all angles and never miss an enemy.",
+    "category": "vision",
+    "difficulty": "beginner",
+    "code": "-- Decouple scanner so it spins independently\nSET lockVision = FALSE\n-- Rotate scanner 10° each tick for full coverage\nSET fovDirection = fovDirection + 0.17\n-- Snap scanner to enemy when found\nIF CAN_SEE_ENEMY THEN\n  SET fovDirection = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  -- Rotate body to aim and fire\n  SET rotation = fovDirection\n  FIRE\nELSE\n  -- Keep moving while sweeping\n  SCAN\n  MOVE\nEND"
+  },
+  {
+    "id": "multi-enemy-tracking",
+    "name": "Multi-Enemy Tracking",
+    "description": "Use GET_ALL_VISIBLE_ENEMIES() to track every visible enemy and target the closest one.",
+    "category": "vision",
+    "difficulty": "advanced",
+    "code": "-- Returns array of [dist, x, y, health] for each visible enemy\nSET enemies = GET_ALL_VISIBLE_ENEMIES()\nSET count = LENGTH(enemies)\nIF count > 0 THEN\n  -- Target index 0 (first/closest in the array)\n  SET tx = enemies[0][1]\n  SET ty = enemies[0][2]\n  SET t_hp = enemies[0][3]\n  -- Aim at target\n  SET rotation = ATAN2(ty - POSITION_Y, tx - POSITION_X)\n  -- Burst fire if target is low HP for a quick kill\n  IF t_hp < 30 THEN\n    BURST_FIRE\n  ELSE\n    FIRE\n  END\nELSE\n  -- No targets visible — sweep scanner\n  SET fovDirection = fovDirection + 0.13\n  SCAN\n  MOVE\nEND"
+  },
+  {
+    "id": "obstacle-aware-nav",
+    "name": "Obstacle-Aware Navigation",
+    "description": "Use RAYCAST to pick the clearest path forward and navigate around walls automatically.",
+    "category": "vision",
+    "difficulty": "intermediate",
+    "code": "-- Cast rays in three directions to assess clearance\nSET f = RAYCAST(0)\nSET fl = RAYCAST(-0.4)\nSET fr = RAYCAST(0.4)\n-- Full clearance ahead — move forward\nIF f > 160 THEN\n  MOVE\nELSE\n  -- Choose the side with more room\n  IF fl > fr THEN\n    SET rotation = rotation - 0.25\n  ELSE\n    SET rotation = rotation + 0.25\n  END\n  MOVE\nEND\n-- Fire at any enemy spotted during navigation\nIF CAN_SEE_ENEMY THEN\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  FIRE\nEND"
+  },
+  {
+    "id": "remember-last-enemy",
+    "name": "Remember Last Enemy Position",
+    "description": "Store the last place you saw the enemy and navigate there when they disappear from view.",
+    "category": "memory",
+    "difficulty": "intermediate",
+    "code": "-- Initialize last known position to map center\nSET last_x = 400\nSET last_y = 300\nSET has_target = FALSE\n-- Update memory whenever enemy is visible\nIF CAN_SEE_ENEMY THEN\n  SET last_x = NEAREST_VISIBLE_X\n  SET last_y = NEAREST_VISIBLE_Y\n  SET has_target = TRUE\n  -- Aim and fire while in sight\n  SET rotation = ATAN2(last_y - POSITION_Y, last_x - POSITION_X)\n  FIRE\nELSE\n  -- Navigate to last known position\n  IF has_target THEN\n    SET rotation = ATAN2(last_y - POSITION_Y, last_x - POSITION_X)\n    MOVE\n    SCAN\n  ELSE\n    -- Never seen enemy — do a full sweep\n    SET fovDirection = fovDirection + 0.15\n    SCAN\n    MOVE\n  END\nEND"
+  },
+  {
+    "id": "queue-patrol",
+    "name": "Queue-Based Patrol Route",
+    "description": "Define a list of waypoints and patrol them in order, attacking any enemy spotted along the way.",
+    "category": "memory",
+    "difficulty": "advanced",
+    "code": "-- Patrol waypoints as flat [x0,y0, x1,y1, ...] array\nSET waypoints = [150, 150, 650, 150, 650, 450, 150, 450]\nSET wp_idx = 0\nSET total = LENGTH(waypoints)\n-- Get current target waypoint\nSET tx = waypoints[wp_idx]\nSET ty = waypoints[wp_idx + 1]\n-- Compute distance to waypoint\nSET dx = tx - POSITION_X\nSET dy = ty - POSITION_Y\nSET dist_wp = SQRT(POW(dx, 2) + POW(dy, 2))\n-- Advance to next waypoint when close enough\nIF dist_wp < 55 THEN\n  SET wp_idx = wp_idx + 2\n  IF wp_idx >= total THEN\n    SET wp_idx = 0\n  END\nEND\n-- Navigate toward current waypoint\nSET rotation = ATAN2(ty - POSITION_Y, tx - POSITION_X)\n-- Attack enemies spotted on patrol\nIF CAN_SEE_ENEMY THEN\n  FIRE\nELSE\n  MOVE\nEND"
+  },
+  {
+    "id": "enemy-history-ring",
+    "name": "Enemy Position Ring Buffer",
+    "description": "Track the last 5 enemy positions using a ring buffer to predict patrol patterns.",
+    "category": "memory",
+    "difficulty": "advanced",
+    "code": "-- Ring buffer: 5 positions × 2 coordinates = 10 slots\nSET hist = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nSET idx = 0\nIF CAN_SEE_ENEMY THEN\n  -- Record current enemy position in ring buffer\n  SET hist[idx] = NEAREST_VISIBLE_X\n  SET hist[idx + 1] = NEAREST_VISIBLE_Y\n  -- Advance ring index, wrap at 10\n  SET idx = idx + 2\n  IF idx >= 10 THEN\n    SET idx = 0\n  END\n  -- Engage enemy\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  FIRE\nELSE\n  -- Move toward the most recently recorded position\n  SET prev_idx = idx - 2\n  IF prev_idx < 0 THEN\n    SET prev_idx = 8\n  END\n  SET rotation = ATAN2(hist[prev_idx + 1] - POSITION_Y, hist[prev_idx] - POSITION_X)\n  MOVE\n  SCAN\nEND"
+  },
+  {
+    "id": "hunt-retreat-machine",
+    "name": "Hunt / Retreat State Machine",
+    "description": "Switch between aggressive hunt mode and defensive retreat mode based on your energy level.",
+    "category": "state",
+    "difficulty": "intermediate",
+    "code": "-- State: 0 = HUNT, 1 = RETREAT\nSET mode = 0\n-- Switch to RETREAT when energy drops critically low\nIF ENERGY_PCT < 22 THEN\n  SET mode = 1\nEND\n-- Return to HUNT once energy recovers\nIF mode = 1 AND ENERGY_PCT > 58 THEN\n  SET mode = 0\nEND\n-- Execute HUNT behavior\nIF mode = 0 THEN\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n    FIRE\n  ELSE\n    SET fovDirection = fovDirection + 0.14\n    SCAN\n    MOVE\n  END\nELSE\n  -- Execute RETREAT behavior — back away and recover\n  BACKUP\n  SET rotation = rotation + 0.12\nEND"
+  },
+  {
+    "id": "energy-aware-switching",
+    "name": "Energy-Aware Mode Switching",
+    "description": "Three-tier energy management — aggressive when full, cautious at mid, passive when low.",
+    "category": "state",
+    "difficulty": "intermediate",
+    "code": "-- High energy tier: aggressive burst offense\nIF ENERGY_PCT > 72 THEN\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n    BURST_FIRE\n  ELSE\n    MOVE_FAST\n    SCAN\n  END\nELSE\n  -- Mid energy tier: measured single shots\n  IF ENERGY_PCT > 38 THEN\n    IF CAN_SEE_ENEMY THEN\n      SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n      FIRE\n    ELSE\n      SCAN\n      MOVE\n    END\n  ELSE\n    -- Low energy tier: conserve and evade\n    BACKUP\n    WAIT 3\n  END\nEND"
+  },
+  {
+    "id": "full-behavior-tree",
+    "name": "Full Behavior Tree (3 States)",
+    "description": "A complete state machine with HUNT, FLANK, and RECOVER states using a dictionary for state data.",
+    "category": "state",
+    "difficulty": "advanced",
+    "code": "-- Initialize state object (runs once at start)\nSET state = { mode: \"HUNT\", timer: 0 }\n-- Increment state timer each tick\nSET state.timer = state.timer + 1\n-- Transition: critically low energy → RECOVER\nIF ENERGY_PCT < 18 THEN\n  SET state.mode = \"RECOVER\"\nEND\n-- Transition: recovered enough → back to HUNT\nIF state.mode = \"RECOVER\" AND ENERGY_PCT > 55 THEN\n  SET state.mode = \"HUNT\"\n  SET state.timer = 0\nEND\n-- Transition: hunted long enough → FLANK for surprise angle\nIF state.mode = \"HUNT\" AND state.timer > 100 THEN\n  SET state.mode = \"FLANK\"\n  SET state.timer = 0\nEND\n-- Transition: flanked long enough → back to HUNT\nIF state.mode = \"FLANK\" AND state.timer > 60 THEN\n  SET state.mode = \"HUNT\"\n  SET state.timer = 0\nEND\n-- HUNT: direct aggressive engagement\nIF state.mode = \"HUNT\" THEN\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n    FIRE\n  ELSE\n    SCAN\n    MOVE\n  END\nELSE\n  IF state.mode = \"FLANK\" THEN\n    -- Circle wide around arena to get new angle\n    SET rotation = rotation + 0.07\n    MOVE_FAST\n    IF CAN_SEE_ENEMY THEN\n      FIRE\n    END\n  ELSE\n    -- RECOVER: stop and wait for energy\n    BACKUP\n    WAIT 2\n  END\nEND"
+  },
+  {
+    "id": "broadcast-position",
+    "name": "Broadcast My Position",
+    "description": "Share your coordinates and HP with all alive teammates every tick for swarm coordination.",
+    "category": "swarm",
+    "difficulty": "beginner",
+    "code": "-- Package current state as a message object\nSET ping = { x: POSITION_X, y: POSITION_Y, hp: health, energy: ENERGY_PCT }\n-- Send to all alive teammates (returns recipient count)\nBROADCAST(ping)\n-- Standard combat after broadcasting\nIF CAN_SEE_ENEMY THEN\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  FIRE\nELSE\n  SCAN\n  MOVE\nEND"
+  },
+  {
+    "id": "react-to-ally-messages",
+    "name": "React to Ally Messages",
+    "description": "Read teammate broadcasts and move toward ally-spotted enemy positions.",
+    "category": "swarm",
+    "difficulty": "intermediate",
+    "code": "-- RECEIVE() returns array of all messages this tick, then clears inbox\nSET inbox = RECEIVE()\nSET msg_count = LENGTH(inbox)\n-- Process first received message\nIF msg_count > 0 THEN\n  SET msg = inbox[0]\n  -- Navigate toward ally-spotted enemy coordinates\n  SET rotation = ATAN2(msg.y - POSITION_Y, msg.x - POSITION_X)\n  MOVE_FAST\n  -- Point scanner toward reported enemy\n  SET fovDirection = rotation\nEND\n-- Our own scouting and combat\nIF CAN_SEE_ENEMY THEN\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  FIRE\nELSE\n  SCAN\nEND"
+  },
+  {
+    "id": "coordinated-pincer",
+    "name": "Coordinated Pincer Attack",
+    "description": "Share enemy intel with all teammates and converge on the same target simultaneously.",
+    "category": "swarm",
+    "difficulty": "advanced",
+    "code": "-- If we see enemy, share intel and engage\nIF CAN_SEE_ENEMY THEN\n  -- Broadcast enemy position to teammates\n  SET intel = { x: NEAREST_VISIBLE_X, y: NEAREST_VISIBLE_Y, spotted: TRUE }\n  BROADCAST(intel)\n  -- Aim and fire\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  FIRE\nELSE\n  -- Check if a teammate spotted something\n  SET inbox = RECEIVE()\n  IF LENGTH(inbox) > 0 THEN\n    SET relay = inbox[0]\n    -- Move to ally-confirmed enemy position\n    SET rotation = ATAN2(relay.y - POSITION_Y, relay.x - POSITION_X)\n    MOVE_FAST\n    -- Lock scanner toward target area\n    SET fovDirection = rotation\n  ELSE\n    -- No intel — sweep and advance\n    SCAN\n    MOVE\n  END\nEND"
+  },
+  {
+    "id": "relay-network",
+    "name": "Relay Network",
+    "description": "Re-broadcast teammate messages to ensure intel reaches every robot even across large maps.",
+    "category": "swarm",
+    "difficulty": "advanced",
+    "code": "-- Read incoming teammate messages\nSET inbox = RECEIVE()\nIF LENGTH(inbox) > 0 THEN\n  SET msg = inbox[0]\n  -- Re-broadcast to extend range across the team\n  BROADCAST(msg)\n  -- Move toward reported enemy position\n  SET rotation = ATAN2(msg.y - POSITION_Y, msg.x - POSITION_X)\n  MOVE_FAST\nEND\n-- Share our own sightings\nIF CAN_SEE_ENEMY THEN\n  -- Send enemy coordinates to all teammates\n  BROADCAST({ x: NEAREST_VISIBLE_X, y: NEAREST_VISIBLE_Y })\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  FIRE\nELSE\n  SCAN\n  MOVE\nEND"
+  },
+  {
+    "id": "energy-conservation",
+    "name": "Energy Conservation Mode",
+    "description": "Only fire when you have healthy energy reserves — never waste shots and enter stasis.",
+    "category": "energy",
+    "difficulty": "beginner",
+    "code": "-- Fire only when energy is above safe threshold\nIF ENERGY_PCT > 42 THEN\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n    FIRE\n  END\nEND\n-- Movement is low-cost — always safe\nIF CAN_SEE_ENEMY THEN\n  -- Track while we wait for energy\n  SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  MOVE\nELSE\n  -- Nothing visible — rest and regenerate\n  WAIT 2\n  SCAN\nEND"
+  },
+  {
+    "id": "burst-when-charged",
+    "name": "Burst When Fully Charged",
+    "description": "Patiently build to maximum energy, then unleash a devastating burst of fire.",
+    "category": "energy",
+    "difficulty": "intermediate",
+    "code": "-- Wait until fully charged before attacking\nIF ENERGY_PCT < 90 THEN\n  -- Track enemy silently while charging\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n  ELSE\n    SET fovDirection = fovDirection + 0.1\n    SCAN\n  END\n  WAIT 1\nELSE\n  -- Fully charged — maximum aggression\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n    BURST_FIRE\n    BURST_FIRE\n  ELSE\n    -- Use extra energy to sprint toward enemy\n    MOVE_FAST\n    SCAN\n  END\nEND"
+  },
+  {
+    "id": "stasis-recovery",
+    "name": "Stasis Recovery Routine",
+    "description": "Handle the IN_STASIS state gracefully and recover efficiently after energy depletion.",
+    "category": "energy",
+    "difficulty": "beginner",
+    "code": "-- IN_STASIS = TRUE when energy hits zero (all actions blocked)\nIF IN_STASIS THEN\n  -- Cannot act — wait for energy to regenerate automatically\n  WAIT 5\nELSE\n  IF ENERGY_PCT < 15 THEN\n    -- Almost stasis — back off and wait\n    BACKUP\n    WAIT 3\n  ELSE\n    -- Normal operation with healthy energy\n    IF CAN_SEE_ENEMY THEN\n      SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n      FIRE\n    ELSE\n      SCAN\n      MOVE\n    END\n  END\nEND"
+  },
+  {
+    "id": "dynamic-fire-rate",
+    "name": "Dynamic Fire Rate",
+    "description": "Adjust how often you fire based on your current energy — full auto when rich, sniper pace when low.",
+    "category": "energy",
+    "difficulty": "advanced",
+    "code": "-- Set fire interval based on energy level (ticks between shots)\nSET interval = 1\nIF ENERGY_PCT > 75 THEN\n  SET interval = 1\nELSE\n  IF ENERGY_PCT > 45 THEN\n    SET interval = 4\n  ELSE\n    SET interval = 10\n  END\nEND\n-- Tick counter to control fire rate\nSET tick = tick + 1\n-- Fire when the interval has elapsed\nIF tick >= interval THEN\n  IF CAN_SEE_ENEMY THEN\n    SET rotation = ATAN2(NEAREST_VISIBLE_Y - POSITION_Y, NEAREST_VISIBLE_X - POSITION_X)\n    FIRE\n    SET tick = 0\n  END\nEND\n-- Always scan and move between shots\nIF NOT CAN_SEE_ENEMY THEN\n  SCAN\n  MOVE\nEND"
+  }
+]

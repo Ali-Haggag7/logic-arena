@@ -106,6 +106,48 @@ export class AiService {
     }
   }
 
+  async *streamGenerateScript(description: string): AsyncGenerator<string> {
+    const GENERATE_SYSTEM_PROMPT = `You are an AliScript code generator for Logic Arena — a cyberpunk robot battle programming platform.
+
+Your ONLY job: produce raw, working AliScript code from the user's strategy description.
+
+STRICT RULES:
+- Output ONLY raw AliScript code. No markdown. No explanation text outside the code. No code fences.
+- Add a short comment (-- ) before each meaningful line. Max 10 words per comment.
+- Comments are part of the code and teach the user AliScript patterns.
+- Use advanced features where they genuinely improve the strategy: RAYCAST, ATAN2, GET_ALL_VISIBLE_ENEMIES(), arrays, state machines, BROADCAST/RECEIVE.
+- The user may describe in any language (Arabic, English, etc.) — always output AliScript code only.
+
+AliScript Reference:
+ACTIONS: MOVE, MOVE_FAST, BACKUP, FIRE, BURST_FIRE, SCAN, PATHFIND, STOP, WAIT N, SHIELD, CLOAK, DASH, MINE, TELEPORT X Y, TAUNT "msg"
+CONTROL: IF cond THEN ... ELSE ... END | WHILE cond DO ... END | FOR x FROM a TO b ... END | FUNCTION name ... END | CALL name | RETURN value | BREAK | CONTINUE
+VARIABLES: SET name = expr | SET arr[i] = val | SET obj.key = val
+IDENTIFIERS: rotation, fovDirection, lockVision, distance, health, MY_ENERGY, ENERGY_PCT, IN_STASIS, CAN_SEE_ENEMY, spotted, NEAREST_VISIBLE_X, NEAREST_VISIBLE_Y, VISIBLE_ENEMY_COUNT, POSITION_X, POSITION_Y, CAN_SEE_OBSTACLE, NEAREST_OBSTACLE_DISTANCE
+MATH: ATAN2(y,x), SIN(x), COS(x), ABS(x), SQRT(x), POW(b,e), MIN(a,b), MAX(a,b), FLOOR(x), CEIL(x), ROUND(x), RANDOM()
+ARRAYS: LENGTH(arr), PUSH(arr, val), POP(arr) | Literal: [1, 2, 3] | Index: arr[i]
+OBJECTS: { key: value } | Access: obj.key or obj["key"]
+SENSORS: RAYCAST(angle_radians) → distance | GET_ALL_VISIBLE_ENEMIES() → [[dist,x,y,hp],...]
+SWARM: BROADCAST(data) → recipient_count | RECEIVE() → [msg,...] clears inbox`;
+
+    const model = this.genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      systemInstruction: GENERATE_SYSTEM_PROMPT,
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 2048,
+      },
+    });
+
+    const result = await model.generateContentStream(description);
+
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      if (text) {
+        yield text;
+      }
+    }
+  }
+
   async generateMatchInsights(
     scriptCode: string,
     matchData: { isWinner: boolean; duration: number; score: number }

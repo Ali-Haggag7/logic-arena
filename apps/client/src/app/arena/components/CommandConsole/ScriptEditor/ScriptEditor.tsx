@@ -9,12 +9,15 @@ import { DiagnosticTooltip } from "../../../../../components/shared-script-edito
 import { useDiagnosticTooltip } from "../../../../../components/shared-script-editor";
 import { DETAIL_COLORS_HEX, LINE_HEIGHT_ARENA } from "../../../../../components/shared-script-editor";
 import { sanitizeHtml } from "../../../../../lib/client-security";
+import { AiGeneratePanel } from "../AiGeneratePanel";
+import { Sparkles } from "lucide-react";
 
 export const ScriptEditor: React.FC<ScriptEditorProps> = ({ scriptInput, setScriptInput, handleDeployBrain, toggleLibrary, clearPrebuilt }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const highlightRef = useRef<HTMLDivElement>(null);
     const { syntaxValid, validateSyntax, warnings, diagnostics } = useParserWorker();
     const [showWarnings, setShowWarnings] = useState(false);
+    const [showGenerate, setShowGenerate] = useState(false);
     const { suggestions, activeIdx, caretXY, handleChange, handleKeyDown, acceptSuggestion, clearSuggestions, handleApplyDiagnosticFix } = useAutocompleteFast(
         setScriptInput, clearPrebuilt, textareaRef, validateSyntax, diagnostics
     );
@@ -37,6 +40,41 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ scriptInput, setScri
                     <div ref={highlightRef} className="absolute inset-0 p-3 pt-4 font-mono text-[13px] leading-5 text-cyan-300 overflow-hidden" style={{ pointerEvents: 'auto' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(highlightCode(scriptInput, { keywordClass: 'text-purple-400 drop-shadow-[0_0_5px_rgba(var(--arena-purple-rgb),0.8)]', lineNumberColor: 'rgba(var(--arena-cyan-rgb),0.5)', lineNumberWidth: '32px', lineHeight: LINE_HEIGHT_ARENA, lineNumberPaddingRight: '8px', lineNumberMarginRight: '12px', borderColor: 'rgba(var(--arena-cyan-rgb),0.4)', diagnostics })) }} />
                     <textarea title="script editor" ref={textareaRef} onScroll={handleScroll} onMouseMove={onHighlightMouseMove} onMouseLeave={onHighlightMouseLeave} className="relative w-full h-full p-3 pt-4 font-mono text-[13px] leading-5 text-transparent caret-purple-500 bg-transparent resize-none outline-none group-focus-within:border-cyan-500/50 transition-colors custom-scrollbar" style={{ paddingLeft: "56px" }} spellCheck={false} value={scriptInput} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={() => setTimeout(clearSuggestions, 150)} />
                 </div>
+                {showGenerate && (
+                    <div
+                        className="absolute inset-0 z-40 flex flex-col overflow-hidden"
+                        style={{
+                            background: "rgba(var(--arena-black-rgb),0.92)",
+                            backdropFilter: "blur(16px)",
+                            borderRadius: "8px",
+                            padding: "12px",
+                            border: "1px solid rgba(var(--arena-purple-rgb),0.4)",
+                        }}
+                    >
+                        <div className="flex justify-between items-center mb-3 border-b border-purple-900/30 pb-2 shrink-0">
+                            <h4 className="text-[10px] font-black tracking-widest text-purple-400 uppercase flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-purple-400" /> AI Script Generator
+                            </h4>
+                            <button
+                                type="button"
+                                onClick={() => setShowGenerate(false)}
+                                className="text-purple-400 hover:text-white text-[10px] font-bold px-2 py-0.5 rounded border border-purple-500/20 hover:border-purple-400 transition-colors"
+                            >
+                                CLOSE
+                            </button>
+                        </div>
+                        <div className="flex-1 min-h-0">
+                            <AiGeneratePanel
+                                onInsert={(code) => {
+                                    setScriptInput(code);
+                                    clearPrebuilt();
+                                    setShowGenerate(false);
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 <div className="absolute top-2 right-4 flex items-center gap-2 text-[10px] tracking-[0.3em] font-black pointer-events-none select-none">
                     <span className="text-cyan-600/50">[ALISCRIPT_V2]</span>
                     {syntaxValid === false && <span className="text-red-500 drop-shadow-[0_0_5px_rgba(var(--sem-danger-rgb),0.8)] animate-pulse">SYNTAX_ERR</span>}
@@ -88,12 +126,27 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ scriptInput, setScri
                     }}
                 />
             </div>
-            <div className="flex gap-3 shrink-0">
+            <div className="flex gap-2 shrink-0">
                 <button type="button" onClick={handleDeployBrain} className="flex-1 py-3 bg-purple-900/20 border border-purple-500/50 text-purple-300 font-black text-[10px] hover:bg-purple-600/40 hover:border-purple-400 hover:text-white transition-all rounded uppercase tracking-widest shadow-[0_0_15px_rgba(var(--arena-purple-rgb),0.15)] group relative overflow-hidden">
                     <span className="relative z-10">Upload Script</span><div className="absolute inset-0 bg-purple-500/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </button>
                 <button type="button" onClick={toggleLibrary} className="flex-1 py-3 bg-cyan-900/20 border border-cyan-700/50 text-cyan-400 font-black text-[10px] hover:bg-cyan-800/40 hover:border-cyan-400 transition-all rounded uppercase tracking-widest shadow-[0_0_10px_rgba(var(--arena-cyan-rgb),0.1)] group relative overflow-hidden">
-                    <span className="relative z-10">Script Guide</span><div className="absolute inset-0 bg-cyan-500/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span className="relative z-10">Cookbook</span><div className="absolute inset-0 bg-cyan-500/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setShowGenerate(!showGenerate)}
+                    aria-label="Generate AliScript with ARIA AI"
+                    aria-pressed={showGenerate}
+                    className={`px-3 py-3 font-black text-[10px] transition-all rounded uppercase tracking-widest group relative overflow-hidden flex items-center gap-1.5 shadow-[0_0_15px_rgba(var(--arena-purple-rgb),0.15)] ${
+                        showGenerate
+                            ? "bg-purple-500/25 border border-purple-500 text-purple-200"
+                            : "bg-purple-950/20 border border-purple-500/30 text-purple-400/80 hover:bg-purple-600/30 hover:border-purple-400 hover:text-white"
+                    }`}
+                >
+                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="relative z-10">AI</span>
+                    <div className="absolute inset-0 bg-purple-500/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </button>
             </div>
         </div>

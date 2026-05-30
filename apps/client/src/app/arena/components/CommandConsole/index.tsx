@@ -12,7 +12,7 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({
     const consoleState = useConsole(socket, robotId);
     const [isZenMode, setIsZenMode] = useState(false);
     const [isLogsOpen, setIsLogsOpen] = useState(false);
-    const [hubTab, setHubTab] = useState<'controls' | 'bots' | 'handbook'>('controls');
+    const [hubTab, setHubTab] = useState<'controls' | 'bots' | 'handbook' | 'generate'>('controls');
 
     const lastSnippetVersion = useRef(snippetVersion ?? 0);
     useEffect(() => {

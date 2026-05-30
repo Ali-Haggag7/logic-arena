@@ -1,13 +1,14 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { Settings, Bot, BookOpen } from 'lucide-react';
+import { Settings, Bot, BookOpen, Sparkles } from 'lucide-react';
 import { ArenaControls } from '../ArenaControls';
 import { BotSelector } from './BotSelector';
 import { NeuralHandbook } from './NeuralHandbook';
+import { AiGeneratePanel } from './AiGeneratePanel';
 
 interface MobileHubSheetProps {
     isMobile: boolean;
-    hubTab: 'controls' | 'bots' | 'handbook';
-    setHubTab: Dispatch<SetStateAction<'controls' | 'bots' | 'handbook'>>;
+    hubTab: 'controls' | 'bots' | 'handbook' | 'generate';
+    setHubTab: Dispatch<SetStateAction<'controls' | 'bots' | 'handbook' | 'generate'>>;
     commandInput: string;
     setCommandInput: (val: string) => void;
     handleCommandSubmit: (e: React.FormEvent) => void;
@@ -25,9 +26,10 @@ export const MobileHubSheet: React.FC<MobileHubSheetProps> = ({
     output, isLogsOpen, setIsLogsOpen, availableRobots, robotId, onRobotChange, onInsertAndSwitch
 }) => {
     const tabs = [
-        { id: 'controls' as const, label: 'CONTROLS', icon: <Settings className="w-3.5 h-3.5" /> },
-        { id: 'bots' as const, label: 'BOTS', icon: <Bot className="w-3.5 h-3.5" /> },
-        { id: 'handbook' as const, label: 'HANDBOOK', icon: <BookOpen className="w-3.5 h-3.5" /> },
+        { id: 'controls' as const, label: 'CTRL',     icon: <Settings className="w-3.5 h-3.5" /> },
+        { id: 'bots'     as const, label: 'BOTS',     icon: <Bot      className="w-3.5 h-3.5" /> },
+        { id: 'handbook' as const, label: 'COOKBOOK', icon: <BookOpen className="w-3.5 h-3.5" /> },
+        { id: 'generate' as const, label: 'AI GEN',   icon: <Sparkles className="w-3.5 h-3.5" /> },
     ];
 
     return (
@@ -52,33 +54,46 @@ export const MobileHubSheet: React.FC<MobileHubSheetProps> = ({
             </div>
 
             {/* Tab Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 min-h-0 flex flex-col">
                 {hubTab === 'controls' && (
-                    <ArenaControls
-                        isMobile={isMobile}
-                        commandInput={commandInput}
-                        setCommandInput={setCommandInput}
-                        handleCommandSubmit={handleCommandSubmit}
-                        output={output}
-                        isLogsOpen={isLogsOpen}
-                        setIsLogsOpen={setIsLogsOpen}
-                    />
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <ArenaControls
+                            isMobile={isMobile}
+                            commandInput={commandInput}
+                            setCommandInput={setCommandInput}
+                            handleCommandSubmit={handleCommandSubmit}
+                            output={output}
+                            isLogsOpen={isLogsOpen}
+                            setIsLogsOpen={setIsLogsOpen}
+                        />
+                    </div>
                 )}
                 {hubTab === 'bots' && (
-                    <BotSelector
-                        availableRobots={availableRobots}
-                        robotId={robotId}
-                        onRobotChange={onRobotChange}
-                    />
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <BotSelector
+                            availableRobots={availableRobots}
+                            robotId={robotId}
+                            onRobotChange={onRobotChange}
+                        />
+                    </div>
                 )}
                 {hubTab === 'handbook' && (
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                         <NeuralHandbook
                             isOpen={true}
                             fullWidth={true}
                             onSelect={(cmd) => {
                                 onInsertAndSwitch?.(cmd);
                             }}
+                        />
+                    </div>
+                )}
+                {hubTab === 'generate' && (
+                    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                        <AiGeneratePanel
+                            isMobile={true}
+                            onInsert={(code) => onInsertAndSwitch?.(code)}
+                            onInsertAndSwitch={(code) => onInsertAndSwitch?.(code)}
                         />
                     </div>
                 )}

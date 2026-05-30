@@ -625,13 +625,25 @@ textarea::selection,
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(var(--accent-rgb), 0.35) rgba(var(--accent-rgb), 0.08);
+  scrollbar-color: rgba(34, 211, 238, 0.3) #030712;
   color-scheme: dark;
 }
 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: rgba(var(--accent-rgb), 0.08); border-radius: 6px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb), 0.35); border-radius: 6px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(var(--accent-rgb), 0.55); }
+.custom-scrollbar::-webkit-scrollbar-track { 
+  background: #030712; 
+  border-radius: 6px; 
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+  background: rgba(34, 211, 238, 0.3); 
+  border-radius: 6px; 
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+  background: #22d3ee; 
+  border: 1px solid #22d3ee;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+}
 
 /* ─────────────────────────────────────────────────────────
  *  SHARED KEYFRAMES — referenced via animate-[name_duration_easing]

@@ -1,8 +1,8 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { ArenaControls } from '../ArenaControls';
 import { BotSelector } from './BotSelector';
 import { ScriptEditor } from './ScriptEditor';
-import { NeuralHandbook } from './NeuralHandbook';
+import { NeuralHandbook, Recipe, DIFFICULTY_STYLES, CodeLine } from './NeuralHandbook';
 
 interface DesktopConsoleProps {
     isMobile: boolean;
@@ -32,9 +32,11 @@ export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
     scriptInput, setScriptInput, handleDeployBrain, isLibraryOpen, setIsLibraryOpen,
     setActivePrebuilt, appendScriptLine
 }) => {
+    const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
+
     return (
         <div
-            className={`transition-all duration-500 ease-out flex flex-col bg-black/70 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 z-50 ${isZenMode
+            className={`relative transition-all duration-500 ease-out flex flex-col bg-black/70 backdrop-blur-xl border border-cyan-900/60 rounded-xl p-5 z-50 ${isZenMode
                 ? "fixed top-24 bottom-8 left-8 w-200 border-cyan-500/50 shadow-[0_0_80px_rgba(34,211,238,0.2)]"
                 : "h-full min-w-105 w-auto"
                 }`}
@@ -91,8 +93,80 @@ export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
                         appendScriptLine(cmd);
                         setIsLibraryOpen(false);
                     }}
+                    onExpandRecipe={setActiveRecipe}
                 />
+
             </div>
+
+            {activeRecipe && (
+                <div 
+                    className="absolute left-5 right-5 bottom-5 z-50 flex flex-col overflow-hidden animate-[modalIn_0.2s_ease-out]"
+                    style={{
+                        top: "60px",
+                        background: "rgba(var(--arena-black-rgb),0.94)",
+                        backdropFilter: "blur(20px)",
+                        border: "1px solid rgba(var(--arena-cyan-rgb),0.4)",
+                        borderRadius: "10px",
+                        padding: "12px 16px",
+                    }}
+                >
+                    {/* Header */}
+                    <div className="flex justify-between items-start border-b border-cyan-900/30 pb-2 mb-2 shrink-0">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h4 className="text-[11px] font-black tracking-widest text-cyan-400 uppercase">
+                                    {activeRecipe.name}
+                                </h4>
+                                <span style={{
+                                    fontSize: "7.5px",
+                                    fontWeight: 700,
+                                    letterSpacing: "0.08em",
+                                    padding: "1px 5px",
+                                    borderRadius: "4px",
+                                    color: DIFFICULTY_STYLES[activeRecipe.difficulty].color,
+                                    background: DIFFICULTY_STYLES[activeRecipe.difficulty].bg,
+                                }}>
+                                    {DIFFICULTY_STYLES[activeRecipe.difficulty].label}
+                                </span>
+                            </div>
+                            <p className="text-[9.5px] text-slate-400 leading-normal max-w-[500px]">
+                                {activeRecipe.description}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setActiveRecipe(null)}
+                            className="text-cyan-400 hover:text-white text-[9px] font-bold px-2.5 py-0.5 rounded border border-cyan-500/20 hover:border-cyan-400 transition-colors"
+                        >
+                            CLOSE
+                        </button>
+                    </div>
+                    
+                    {/* Scrollable Code Area */}
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-black/40 border border-cyan-900/20 rounded-lg p-3">
+                        <pre className="font-mono text-[11px] leading-relaxed text-cyan-100">
+                            {activeRecipe.code.split("\n").map((line, i) => (
+                                <CodeLine key={i} line={line} />
+                            ))}
+                        </pre>
+                    </div>
+                    
+                    {/* Footer Action Button */}
+                    <div className="flex justify-end mt-2 shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                appendScriptLine(activeRecipe.code);
+                                setIsLibraryOpen(false);
+                                setActiveRecipe(null);
+                            }}
+                            className="py-2 px-5 bg-cyan-900/20 border border-cyan-500/50 text-cyan-400 font-black text-[9px] hover:bg-cyan-600/25 hover:border-cyan-400 transition-all rounded uppercase tracking-widest"
+                        >
+                            Insert into Editor
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
