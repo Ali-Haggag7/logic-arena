@@ -15,6 +15,7 @@ export interface HighlightOptions {
     fontSize?: string;
     wordBreak?: string;
     diagnostics?: DiagnosticMarker[];
+    commentColor?: string;
 }
 
 const CONTROL_KEYWORDS = ["IF", "THEN", "ELSE", "END", "WHILE", "DO", "FOR", "SET"];
@@ -109,14 +110,13 @@ export const highlightCode = (code: string, options?: HighlightOptions): string 
         fontSize = '11px',
         wordBreak = 'break-all',
         diagnostics = [],
+        commentColor = '#4ade80',
     } = options ?? {};
 
     const lines = code.split('\n');
     let diagIdx = 0;
 
     return lines.map((line, i) => {
-        const COMMENT_COLOR = '#4ade80';
-
         // Detect comment position in the raw line (before any HTML escaping)
         const slashIdx = line.indexOf('//');
         const dashIdx = line.indexOf('--');
@@ -127,7 +127,7 @@ export const highlightCode = (code: string, options?: HighlightOptions): string 
         // Full-line comment: entire line is a comment
         if (commentStart >= 0 && line.slice(0, commentStart).trim() === '') {
             const escaped = escapeHtml(line);
-            return `<div style="display: flex; min-height: ${lineHeight}px; align-items: center;"><span style="box-sizing: border-box; user-select: none; color: ${lineNumberColor}; text-align: right; min-width: ${lineNumberWidth}; border-right: 1px solid ${borderColor}; padding-right: ${lineNumberPaddingRight}; margin-right: ${lineNumberMarginRight}; flex-shrink: 0; font-size: ${fontSize}; letter-spacing: 0.05em;">${i + 1}</span><span style="white-space: pre-wrap; word-break: ${wordBreak}; tab-size: 2; color: ${COMMENT_COLOR}; font-style: italic; opacity: 0.7;">${escaped || ' '}</span></div>`;
+            return `<div style="display: flex; min-height: ${lineHeight}px; align-items: center;"><span style="box-sizing: border-box; user-select: none; color: ${lineNumberColor}; text-align: right; min-width: ${lineNumberWidth}; border-right: 1px solid ${borderColor}; padding-right: ${lineNumberPaddingRight}; margin-right: ${lineNumberMarginRight}; flex-shrink: 0; font-size: ${fontSize}; letter-spacing: 0.05em;">${i + 1}</span><span style="white-space: pre-wrap; word-break: ${wordBreak}; tab-size: 2; color: ${commentColor}; font-style: italic; opacity: 0.7;">${escaped || ' '}</span></div>`;
         }
 
         // Inline comment: split into code part + comment part
@@ -151,7 +151,7 @@ export const highlightCode = (code: string, options?: HighlightOptions): string 
 
         // Append the comment part in green (if any)
         if (commentPart) {
-            highlighted += `<span style="color: ${COMMENT_COLOR}; font-style: italic; opacity: 0.7;">${escapeHtml(commentPart)}</span>`;
+            highlighted += `<span style="color: ${commentColor}; font-style: italic; opacity: 0.7;">${escapeHtml(commentPart)}</span>`;
         }
 
         return `<div style="display: flex; min-height: ${lineHeight}px; align-items: center;"><span style="box-sizing: border-box; user-select: none; color: ${lineNumberColor}; text-align: right; min-width: ${lineNumberWidth}; border-right: 1px solid ${borderColor}; padding-right: ${lineNumberPaddingRight}; margin-right: ${lineNumberMarginRight}; flex-shrink: 0; font-size: ${fontSize}; letter-spacing: 0.05em;">${i + 1}</span><span style="white-space: pre-wrap; word-break: ${wordBreak}; tab-size: 2;">${highlighted || ' '}</span></div>`;

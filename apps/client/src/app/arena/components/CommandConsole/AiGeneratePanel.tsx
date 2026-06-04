@@ -17,9 +17,10 @@ interface AiGeneratePanelProps {
     onInsert: (code: string) => void;
     onInsertAndSwitch?: (code: string) => void;
     isMobile?: boolean;
+    isArena?: boolean;
 }
 
-export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false }: AiGeneratePanelProps) {
+export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false, isArena = false }: AiGeneratePanelProps) {
     const [description, setDescription] = useState("");
     const [generatedCode, setGeneratedCode] = useState("");
     const [status, setStatus] = useState<"idle" | "generating" | "done" | "error">("idle");
@@ -71,9 +72,14 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                             if (typeof parsed === "string") {
                                 accumulated += parsed;
                                 setGeneratedCode(accumulated);
+                            } else if (parsed && typeof parsed === "object" && parsed.error) {
+                                throw new Error(parsed.error);
                             }
-                        } catch {
-                            // skip malformed
+                        } catch (err) {
+                            if (err instanceof Error && !err.message.includes("Unexpected token")) {
+                                throw err; // Re-throw to be caught by the outer try-catch
+                            }
+                            // Otherwise skip malformed JSON chunks
                         }
                     }
                 }
@@ -120,18 +126,27 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
     const showCodeOverlay = hasCode && (status === "done" || status === "generating");
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
+        <div style={{ 
+            display: "flex", flexDirection: "column", gap: "8px", flex: 1, height: "100%", minHeight: 0,
+            "--local-accent-rgb": isArena ? "var(--arena-purple-rgb, 168, 85, 247)" : "var(--accent-rgb)",
+            "--scrollbar-accent-rgb": isArena ? "var(--arena-purple-rgb, 168, 85, 247)" : "var(--accent-rgb)",
+            "--scrollbar-bg": isArena ? "var(--arena-bg-dark, #020813)" : "var(--bg-primary)",
+            "--scrollbar-accent": isArena ? "var(--arena-purple, #a855f7)" : "var(--accent)",
+            "--selection-bg": isArena ? "rgba(var(--arena-purple-rgb, 168, 85, 247), 0.82)" : "rgba(var(--accent-rgb), 0.82)",
+            "--selection-color": isArena ? "#ffffff" : "var(--bg-primary)"
+        } as React.CSSProperties}>
             {/* Description Input — hidden when code is generated */}
             {!showCodeOverlay && (
                 <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                     <label
                         htmlFor="aria-strategy-description"
-                        style={{ display: "block", fontSize: "8px", color: "rgba(var(--arena-white-rgb),0.4)", marginBottom: "3px", letterSpacing: "0.06em" }}
+                        style={{ display: "block", fontSize: "8px", color: "rgba(var(--local-accent-rgb),0.6)", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 700 }}
                     >
                         Describe your robot&apos;s strategy:
                     </label>
                     <textarea
                         id="aria-strategy-description"
+                        className="custom-scrollbar"
                         value={description}
                         onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESC_LENGTH))}
                         placeholder={placeholder}
@@ -143,23 +158,24 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                             width: "100%",
                             flex: 1,
                             resize: "none",
-                            background: "rgba(var(--arena-black-rgb),0.6)",
-                            border: "1px solid rgba(var(--arena-white-rgb),0.1)",
-                            borderRadius: "8px",
-                            padding: "7px 9px",
-                            fontSize: "11px",
-                            lineHeight: "1.4",
-                            color: "rgba(var(--arena-white-rgb),0.85)",
+                            background: "rgba(var(--local-accent-rgb),0.03)",
+                            border: "1px solid rgba(var(--local-accent-rgb),0.15)",
+                            borderRadius: "10px",
+                            padding: "12px 14px",
+                            fontSize: "12.5px",
+                            lineHeight: "1.6",
+                            color: isArena ? "#ffffff" : "rgba(var(--local-accent-rgb),0.9)",
                             outline: "none",
                             fontFamily: "'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif",
                             boxSizing: "border-box",
-                            transition: "border-color 0.2s",
+                            transition: "all 0.2s ease-in-out",
+                            boxShadow: "inset 0 2px 10px rgba(0,0,0,0.02)",
                         }}
-                        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(var(--arena-purple-rgb),0.5)"; }}
-                        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(var(--arena-white-rgb),0.1)"; }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(var(--local-accent-rgb),0.4)"; e.currentTarget.style.background = "rgba(var(--local-accent-rgb),0.05)"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(var(--local-accent-rgb),0.1)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(var(--local-accent-rgb),0.15)"; e.currentTarget.style.background = "rgba(var(--local-accent-rgb),0.03)"; e.currentTarget.style.boxShadow = "inset 0 2px 10px rgba(0,0,0,0.02)"; }}
                     />
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "2px" }}>
-                        <span style={{ fontSize: "8px", color: "rgba(var(--arena-white-rgb),0.25)" }}>
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "4px" }}>
+                        <span style={{ fontSize: "9px", color: "rgba(var(--local-accent-rgb),0.4)", fontWeight: 600 }}>
                             {description.length}/{MAX_DESC_LENGTH}
                         </span>
                     </div>
@@ -189,12 +205,22 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                         transition: "all 0.2s",
                         border: isGenerating
                             ? "1px solid rgba(var(--sem-danger-rgb),0.5)"
-                            : "1px solid rgba(var(--arena-purple-rgb),0.6)",
-                        color: isGenerating ? "var(--sem-danger)" : "rgb(var(--arena-purple-rgb))",
+                            : "1px solid rgba(var(--local-accent-rgb),0.6)",
+                        color: isGenerating ? "var(--sem-danger)" : "rgb(var(--local-accent-rgb))",
                         background: isGenerating
                             ? "rgba(var(--sem-danger-rgb),0.1)"
-                            : "rgba(var(--arena-purple-rgb),0.12)",
+                            : "rgba(var(--local-accent-rgb),0.12)",
                         marginTop: "0px",
+                    }}
+                    onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background = isGenerating
+                            ? "rgba(var(--sem-danger-rgb),0.22)"
+                            : "rgba(var(--local-accent-rgb),0.22)";
+                    }}
+                    onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background = isGenerating
+                            ? "rgba(var(--sem-danger-rgb),0.1)"
+                            : "rgba(var(--local-accent-rgb),0.12)";
                     }}
                 >
                     {isGenerating ? (
@@ -233,7 +259,7 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                         justifyContent: "space-between",
                         flexShrink: 0,
                     }}>
-                        <span style={{ fontSize: "8.5px", color: "rgba(var(--arena-white-rgb),0.35)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                        <span style={{ fontSize: "8.5px", color: "rgba(var(--local-accent-rgb),0.6)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
                             Generated Code
                         </span>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -251,19 +277,19 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                                     fontWeight: 600,
                                     cursor: "pointer",
                                     transition: "all 0.15s",
-                                    border: "1px solid rgba(var(--arena-purple-rgb),0.3)",
-                                    color: "rgba(var(--arena-purple-rgb),0.7)",
-                                    background: "rgba(var(--arena-purple-rgb),0.08)",
+                                    border: "1px solid rgba(var(--local-accent-rgb),0.3)",
+                                    color: "rgba(var(--local-accent-rgb),0.7)",
+                                    background: "rgba(var(--local-accent-rgb),0.08)",
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = "rgba(var(--arena-purple-rgb),0.18)";
-                                    e.currentTarget.style.border = "1px solid rgba(var(--arena-purple-rgb),0.5)";
-                                    e.currentTarget.style.color = "var(--arena-purple)";
+                                    e.currentTarget.style.background = "rgba(var(--local-accent-rgb),0.18)";
+                                    e.currentTarget.style.border = "1px solid rgba(var(--local-accent-rgb),0.5)";
+                                    e.currentTarget.style.color = "rgb(var(--local-accent-rgb))";
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = "rgba(var(--arena-purple-rgb),0.08)";
-                                    e.currentTarget.style.border = "1px solid rgba(var(--arena-purple-rgb),0.3)";
-                                    e.currentTarget.style.color = "rgba(var(--arena-purple-rgb),0.7)";
+                                    e.currentTarget.style.background = "rgba(var(--local-accent-rgb),0.08)";
+                                    e.currentTarget.style.border = "1px solid rgba(var(--local-accent-rgb),0.3)";
+                                    e.currentTarget.style.color = "rgba(var(--local-accent-rgb),0.7)";
                                 }}
                             >
                                 <RotateCcw style={{ width: "9px", height: "9px" }} aria-hidden="true" />
@@ -283,19 +309,19 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                                     fontWeight: 600,
                                     cursor: "pointer",
                                     transition: "all 0.15s",
-                                    border: "1px solid rgba(var(--arena-white-rgb),0.1)",
-                                    color: copied ? "var(--arena-green)" : "rgba(var(--arena-white-rgb),0.4)",
-                                    background: "rgba(var(--arena-white-rgb),0.04)",
+                                    border: "1px solid rgba(var(--local-accent-rgb),0.2)",
+                                    color: copied ? "#10b981" : "rgba(var(--local-accent-rgb),0.6)",
+                                    background: "rgba(var(--local-accent-rgb),0.04)",
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = "rgba(var(--arena-white-rgb),0.12)";
-                                    e.currentTarget.style.border = "1px solid rgba(var(--arena-white-rgb),0.25)";
-                                    if (!copied) e.currentTarget.style.color = "rgba(var(--arena-white-rgb),0.8)";
+                                    e.currentTarget.style.background = "rgba(var(--local-accent-rgb),0.12)";
+                                    e.currentTarget.style.border = "1px solid rgba(var(--local-accent-rgb),0.3)";
+                                    if (!copied) e.currentTarget.style.color = "rgba(var(--local-accent-rgb),0.9)";
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = "rgba(var(--arena-white-rgb),0.04)";
-                                    e.currentTarget.style.border = "1px solid rgba(var(--arena-white-rgb),0.1)";
-                                    if (!copied) e.currentTarget.style.color = "rgba(var(--arena-white-rgb),0.4)";
+                                    e.currentTarget.style.background = "rgba(var(--local-accent-rgb),0.04)";
+                                    e.currentTarget.style.border = "1px solid rgba(var(--local-accent-rgb),0.2)";
+                                    if (!copied) e.currentTarget.style.color = "rgba(var(--local-accent-rgb),0.6)";
                                 }}
                             >
                                 {copied
@@ -313,10 +339,11 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                             minHeight: 0,
                             overflowY: "auto",
                             overflowX: "auto",
-                            background: "rgba(var(--arena-black-rgb),0.5)",
-                            border: "1px solid rgba(var(--arena-white-rgb),0.07)",
-                            borderRadius: "8px",
-                            padding: "10px 12px",
+                            background: "rgba(var(--local-accent-rgb),0.03)",
+                            border: "1px solid rgba(var(--local-accent-rgb),0.15)",
+                            borderRadius: "10px",
+                            padding: "12px 14px",
+                            boxShadow: "inset 0 2px 10px rgba(0,0,0,0.02)",
                         }}
                     >
                         <pre style={{
@@ -324,16 +351,16 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                             fontFamily: "monospace",
                             fontSize: "10.5px",
                             lineHeight: "1.65",
-                            color: "rgba(var(--arena-white-rgb),0.8)",
+                            color: "rgba(var(--local-accent-rgb),0.9)",
                             whiteSpace: "pre",
                         }}>
                             {generatedCode.split("\n").map((line, i) => {
                                 const trimmed = line.trimStart();
                                 const indent = line.length - trimmed.length;
-                                if (trimmed.startsWith("--")) {
+                                if (trimmed.startsWith("--") || trimmed.startsWith("//")) {
                                     return (
                                         <span key={i} style={{ display: "block", paddingLeft: `${indent * 7}px` }}>
-                                            <span style={{ color: "rgba(var(--arena-green-rgb),0.5)", fontStyle: "italic" }}>{trimmed}</span>
+                                            <span style={{ color: "rgba(var(--local-accent-rgb),0.5)", fontStyle: "italic" }}>{trimmed}</span>
                                         </span>
                                     );
                                 }
@@ -341,8 +368,8 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                                 const cmdRe = /\b(MOVE|MOVE_FAST|BACKUP|FIRE|BURST_FIRE|SCAN|PATHFIND|STOP|WAIT|SHIELD|CLOAK|DASH|MINE|TELEPORT|TAUNT|BROADCAST|RECEIVE)\b/g;
                                 const html = trimmed
                                     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                                    .replace(kwRe, '<span style="color:rgb(var(--arena-purple-rgb));font-weight:700">$1</span>')
-                                    .replace(cmdRe, '<span style="color:var(--arena-cyan)">$1</span>');
+                                    .replace(kwRe, '<span style="color:rgb(var(--local-accent-rgb));font-weight:700">$1</span>')
+                                    .replace(cmdRe, '<span style="color:rgb(var(--local-accent-rgb));font-weight:600">$1</span>');
                                 return (
                                     <span key={i} style={{ display: "block", paddingLeft: `${indent * 7}px` }}
                                         dangerouslySetInnerHTML={{ __html: html }} />
@@ -379,12 +406,12 @@ export function AiGeneratePanel({ onInsert, onInsertAndSwitch, isMobile = false 
                             textTransform: "uppercase",
                             cursor: "pointer",
                             transition: "all 0.2s",
-                            border: "1px solid rgba(var(--arena-cyan-rgb),0.6)",
-                            color: "var(--arena-cyan)",
-                            background: "rgba(var(--arena-cyan-rgb),0.1)",
+                            border: "1px solid rgba(var(--local-accent-rgb),0.6)",
+                            color: "rgb(var(--local-accent-rgb))",
+                            background: "rgba(var(--local-accent-rgb),0.1)",
                         }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(var(--arena-cyan-rgb),0.22)"; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(var(--arena-cyan-rgb),0.1)"; }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(var(--local-accent-rgb),0.22)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(var(--local-accent-rgb),0.1)"; }}
                     >
                         {isMobile ? "Insert & Open Editor" : "Insert into Editor"}
                     </button>

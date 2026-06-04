@@ -7,6 +7,7 @@ import { EditScriptHeader } from "./edit-script-modal/EditScriptHeader";
 import { EditScriptEditor } from "./edit-script-modal/EditScriptEditor";
 import { EditScriptFooter, FooterStatus } from "./edit-script-modal/EditScriptFooter";
 import { useSafeTimeout } from "../../../../hooks/useSafeTimeout";
+import { AiGeneratePanel } from "../../../../app/arena/components/CommandConsole/AiGeneratePanel";
 
 interface EditScriptModalProps {
     script: RobotScript;
@@ -22,6 +23,7 @@ export const EditScriptModal = ({
     onRevert,
 }: EditScriptModalProps) => {
     const [content, setContent] = useState(script.content ?? "");
+    const [showAi, setShowAi] = useState(false);
     const [footerStatus, setFooterStatus] = useState<FooterStatus>("idle");
     const [errorMessage, setErrorMessage] = useState("");
     const isSaving = useRef(false);
@@ -89,13 +91,26 @@ export const EditScriptModal = ({
                     <EditScriptHeader
                         title={script.title}
                         version={script.version}
+                        isAiActive={showAi}
+                        onToggleAi={() => setShowAi(prev => !prev)}
                         onClose={onClose}
                     />
 
-                    <EditScriptEditor
-                        content={content}
-                        setContent={setContent}
-                    />
+                    {showAi ? (
+                        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-bg-primary p-4 sm:p-5">
+                            <AiGeneratePanel 
+                                onInsert={(generatedCode) => {
+                                    setContent(generatedCode);
+                                    setShowAi(false);
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <EditScriptEditor
+                            content={content}
+                            setContent={setContent}
+                        />
+                    )}
 
                     <EditScriptFooter
                         status={footerStatus}

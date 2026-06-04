@@ -91,7 +91,8 @@ export function CampaignScriptEditor({
                     lineHeight: LINE_HEIGHT_CAMPAIGN,
                     lineNumberPaddingRight: '12px',
                     lineNumberMarginRight: '0px',
-                    borderColor: 'rgba(var(--accent-rgb),0.05)'
+                    borderColor: 'rgba(var(--accent-rgb),0.05)',
+                    commentColor: 'inherit'
                   }) 
                 : highlightCode(value, { 
                     keywordClass: 'text-[color:var(--sem-warning)] drop-shadow-[0_0_5px_rgba(var(--sem-warning-rgb),0.5)]', 
@@ -131,7 +132,7 @@ export function CampaignScriptEditor({
         
         {/* Top Right Status Area */}
         <div className="absolute top-2 right-4 z-30 flex items-center gap-2 text-[10px] tracking-[0.3em] font-black pointer-events-none select-none">
-          <span className="text-accent/30">[ALISCRIPT_V2]</span>
+          <span className="text-accent/30 hidden md:inline">[ALISCRIPT_V2]</span>
           {syntaxValid === false && <span className="text-red-500 drop-shadow-[0_0_5px_rgba(var(--sem-danger-rgb),0.8)] animate-pulse">SYNTAX_ERR</span>}
           {diagCount > 0 && (
             <span className="text-red-400/70 text-[9px] tracking-[0.15em]">

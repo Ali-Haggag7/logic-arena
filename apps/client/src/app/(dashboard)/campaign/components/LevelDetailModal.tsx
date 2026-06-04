@@ -59,7 +59,7 @@ export function LevelDetailModal({ level, onClose }: LevelDetailModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby={`level-title-${level.id}`}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[120] flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
       onClick={handleBackdropClick}
     >

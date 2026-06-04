@@ -299,16 +299,16 @@ textarea,
 }
 
 ::selection {
-  color: var(--bg-primary);
-  background: rgba(var(--accent-rgb), 0.88);
+  color: var(--selection-color, var(--bg-primary));
+  background: var(--selection-bg, rgba(var(--accent-rgb), 0.88));
   text-shadow: none;
 }
 
 input::selection,
 textarea::selection,
 [contenteditable="true"]::selection {
-  color: var(--bg-primary);
-  background: rgba(var(--accent-rgb), 0.82);
+  color: var(--selection-color, var(--bg-primary));
+  background: var(--selection-bg, rgba(var(--accent-rgb), 0.82));
 }
 
 
@@ -624,25 +624,27 @@ textarea::selection,
  * ───────────────────────────────────────────────────────── */
 
 .custom-scrollbar {
+  --scrollbar-accent-rgb-local: var(--scrollbar-accent-rgb, var(--accent-rgb));
+  --scrollbar-bg-local: var(--scrollbar-bg, var(--bg-primary));
+  --scrollbar-accent-local: var(--scrollbar-accent, var(--accent));
   scrollbar-width: thin;
-  scrollbar-color: rgba(34, 211, 238, 0.3) #030712;
-  color-scheme: dark;
+  scrollbar-color: rgba(var(--scrollbar-accent-rgb-local), 0.3) var(--scrollbar-bg-local);
 }
 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .custom-scrollbar::-webkit-scrollbar-track { 
-  background: #030712; 
+  background: var(--scrollbar-bg-local); 
   border-radius: 6px; 
-  border: 1px solid rgba(34, 211, 238, 0.2);
+  border: 1px solid rgba(var(--scrollbar-accent-rgb-local), 0.2);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb { 
-  background: rgba(34, 211, 238, 0.3); 
+  background: rgba(var(--scrollbar-accent-rgb-local), 0.3); 
   border-radius: 6px; 
-  border: 1px solid rgba(34, 211, 238, 0.2);
+  border: 1px solid rgba(var(--scrollbar-accent-rgb-local), 0.2);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
-  background: #22d3ee; 
-  border: 1px solid #22d3ee;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+  background: var(--scrollbar-accent-local); 
+  border: 1px solid var(--scrollbar-accent-local);
+  box-shadow: 0 0 10px rgba(var(--scrollbar-accent-rgb-local), 0.8);
 }
 
 /* ─────────────────────────────────────────────────────────

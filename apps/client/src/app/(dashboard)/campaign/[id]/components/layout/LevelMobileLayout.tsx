@@ -10,6 +10,8 @@ import { EditorToolbar } from "../../../../../../components/editor/EditorToolbar
 import { HintPanel } from "../HintPanel";
 import { apiClient } from "../../../../../../lib/api-client";
 import { cacheCampaignLevel } from "../../../hooks/useCampaignPrefetch";
+import { Sparkles } from "lucide-react";
+import { AiGeneratePanel } from "../../../../../../app/arena/components/CommandConsole/AiGeneratePanel";
 
 interface RevealHintResponse {
   hint: string;
@@ -40,6 +42,7 @@ export function LevelMobileLayout({ level, script, setScript, modal, handleFight
   const [revealedCount, setRevealedCount] = useState(level.revealedHintCount ?? 0);
   const [isRevealing, setIsRevealing] = useState(false);
   const [hints, setHints] = useState<string[]>(level.hints ?? []);
+  const [showAi, setShowAi] = useState(false);
 
   const handleReveal = useCallback(async (index: number) => {
     if (index !== 1 && index !== 2) return;
@@ -153,22 +156,50 @@ export function LevelMobileLayout({ level, script, setScript, modal, handleFight
       </div>
 
       {/* Code Editor Full Width */}
-      <div className="flex flex-col flex-1 gap-3 pb-8">
+      <div className="flex flex-col flex-1 gap-3 pb-8 mt-2">
         <div className="flex justify-between items-center px-1">
-          <p className="text-[9px] tracking-[0.3em] text-accent/35 uppercase m-0">{'// '}YOUR_ALISCRIPT</p>
+          <div className="flex items-center gap-3">
+            <p className="text-[9px] tracking-[0.3em] text-accent/35 uppercase m-0">{'// '}YOUR_ALISCRIPT</p>
+            <button
+              type="button"
+              onClick={() => setShowAi(!showAi)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[9px] font-bold tracking-[0.15em] transition-all cursor-pointer ${
+                showAi
+                  ? "border-accent/40 bg-accent/20 text-accent shadow-[0_0_10px_rgba(var(--accent-rgb),0.3)]"
+                  : "border-accent/20 bg-accent/5 text-accent/70 hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+              }`}
+              title="Toggle AI Generator"
+            >
+              <Sparkles className="w-3 h-3" />
+              AI GENERATOR
+            </button>
+          </div>
           <span className="text-[9px] text-accent/20 tracking-[0.12em]">
             {script.split("\n").filter(Boolean).length} LINES
           </span>
         </div>
-        <CampaignScriptEditor
-          value={script}
-          onChange={setScript}
-          isMobile
-          onRun={handleFight}
-          readOnly={modal === "loading"}
-          placeholder={"// Write your AliScript here\n// Example:\nSET x = SCAN\nIF x > 0\n  FIRE\nELSE\n  MOVE RIGHT\nEND"}
-          className="min-h-[300px] flex-1"
-        />
+
+        {showAi ? (
+          <div className="flex-1 flex flex-col min-h-[300px] bg-bg-primary rounded-xl overflow-hidden border border-accent/20 p-3">
+            <AiGeneratePanel 
+              onInsert={(code) => {
+                setScript(code);
+                setShowAi(false);
+              }}
+              isMobile={true}
+            />
+          </div>
+        ) : (
+          <CampaignScriptEditor
+            value={script}
+            onChange={setScript}
+            isMobile
+            onRun={handleFight}
+            readOnly={modal === "loading"}
+            placeholder={"// Write your AliScript here\n// Example:\nSET x = SCAN\nIF x > 0\n  FIRE\nELSE\n  MOVE RIGHT\nEND"}
+            className="min-h-[300px] flex-1"
+          />
+        )}
         <EditorToolbar onRun={handleFight} disabled={fightDisabled} isMobile />
       </div>
     </div>

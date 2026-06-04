@@ -65,6 +65,7 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ scriptInput, setScri
                         </div>
                         <div className="flex-1 min-h-0">
                             <AiGeneratePanel
+                                isArena
                                 onInsert={(code) => {
                                     setScriptInput(code);
                                     clearPrebuilt();
@@ -76,7 +77,7 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ scriptInput, setScri
                 )}
 
                 <div className="absolute top-2 right-4 flex items-center gap-2 text-[10px] tracking-[0.3em] font-black pointer-events-none select-none">
-                    <span className="text-cyan-600/50">[ALISCRIPT_V2]</span>
+                    <span className="text-cyan-600/50 hidden md:inline">[ALISCRIPT_V2]</span>
                     {syntaxValid === false && <span className="text-red-500 drop-shadow-[0_0_5px_rgba(var(--sem-danger-rgb),0.8)] animate-pulse">SYNTAX_ERR</span>}
                     {diagCount > 0 && (
                         <span className="text-red-400/70 text-[9px] tracking-[0.15em]">
