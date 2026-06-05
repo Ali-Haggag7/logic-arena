@@ -69,7 +69,7 @@ export function FriendRequestModal({ request, onAccept, onDecline }: FriendReque
             type="button"
             onClick={() => onAccept(request.request.id)}
             aria-label={`Accept friend request from ${sender.username}`}
-            className="flex-1 py-2.5 min-h-[44px] text-[11px] tracking-[0.18em] font-bold border rounded-lg transition-all flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 min-h-[44px] text-[11px] tracking-[0.18em] font-bold border rounded-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 hover:brightness-125"
             style={{
               borderColor: 'rgba(var(--sem-success-rgb),0.4)',
               background: 'rgba(var(--sem-success-rgb),0.10)',
@@ -83,7 +83,7 @@ export function FriendRequestModal({ request, onAccept, onDecline }: FriendReque
             type="button"
             onClick={() => onDecline(request.request.id)}
             aria-label={`Decline friend request from ${sender.username}`}
-            className="flex-1 py-2.5 min-h-[44px] text-[11px] tracking-[0.18em] font-bold border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 text-red-500/70 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 min-h-[44px] text-[11px] tracking-[0.18em] font-bold border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 active:scale-95 text-red-500/70 hover:text-red-400 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400 focus-visible:outline-offset-2"
           >
             <X size={14} aria-hidden="true" />
             DECLINE

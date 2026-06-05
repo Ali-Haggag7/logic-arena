@@ -29,4 +29,6 @@ export interface ProfileData {
   matchHistory: MatchEntry[];
   combatStats: CombatStats;
   achievements?: { achievementId: string; unlockedLevel: number }[];
+  isOnline?: boolean;
+  inMatch?: boolean;
 }

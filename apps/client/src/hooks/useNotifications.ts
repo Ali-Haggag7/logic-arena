@@ -145,6 +145,55 @@ async function markAllRead(): Promise<void> {
   }
 }
 
+async function deleteOne(id: string): Promise<void> {
+  if (!store) return;
+  const target = store.items.find((n) => n.id === id);
+  if (!target) return;
+  const wasUnread = !target.read;
+  store.items = store.items.filter((n) => n.id !== id);
+  if (wasUnread) {
+    store.unreadCount = Math.max(0, store.unreadCount - 1);
+  }
+  const timerId = `toast-${id}`;
+  const timer = store.timers.get(timerId);
+  if (timer) {
+    clearTimeout(timer);
+    store.timers.delete(timerId);
+  }
+  store.toasts = store.toasts.filter((t) => t.id !== timerId);
+  notify();
+  try {
+    const res = await notificationsApi.delete(id);
+    if (store) {
+      store.unreadCount = res.unreadCount;
+      notify();
+    }
+  } catch (err) {
+    console.error('[useNotifications] deleteOne failed', err);
+    if (store) {
+      void refresh();
+    }
+  }
+}
+
+async function deleteAll(): Promise<void> {
+  if (!store) return;
+  store.items = [];
+  store.unreadCount = 0;
+  store.timers.forEach((timer) => clearTimeout(timer));
+  store.timers.clear();
+  store.toasts = [];
+  notify();
+  try {
+    await notificationsApi.deleteAll();
+  } catch (err) {
+    console.error('[useNotifications] deleteAll failed', err);
+    if (store) {
+      void refresh();
+    }
+  }
+}
+
 function toggleOpen(): void {
   if (!store) return;
   store.isOpen = !store.isOpen;
@@ -231,6 +280,8 @@ export interface UseNotificationsReturn {
   loadMore: () => Promise<void>;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  deleteAll: () => Promise<void>;
   unreadFriendsRequestCount: number;
   toasts: NotificationToast[];
   dismissToast: (id: string) => void;
@@ -305,6 +356,14 @@ export function useNotifications(): UseNotificationsReturn {
     await markAllRead();
   }, []);
 
+  const deleteNotificationFn = useCallback(async (id: string) => {
+    await deleteOne(id);
+  }, []);
+
+  const deleteAllFn = useCallback(async () => {
+    await deleteAll();
+  }, []);
+
   const dismissToastFn = useCallback((id: string) => {
     dismissToast(id);
   }, []);
@@ -330,6 +389,8 @@ export function useNotifications(): UseNotificationsReturn {
     loadMore: loadMoreFn,
     markRead: markReadFn,
     markAllRead: markAllReadFn,
+    deleteNotification: deleteNotificationFn,
+    deleteAll: deleteAllFn,
     unreadFriendsRequestCount,
     toasts,
     dismissToast: dismissToastFn,

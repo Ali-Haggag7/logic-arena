@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useReducer } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, CheckCheck, Loader2, Inbox } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, Inbox, Trash2 } from 'lucide-react';
 import type {
   NotificationEntry,
   NotificationPayload,
@@ -19,6 +19,8 @@ interface NotificationDropdownProps {
   onClose: () => void;
   onMarkRead: (id: string) => Promise<void>;
   onMarkAllRead: () => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onDeleteAll: () => Promise<void>;
   onLoadMore: () => Promise<void>;
   anchorRef: React.RefObject<HTMLElement | null>;
 }
@@ -36,6 +38,8 @@ export function NotificationDropdown({
   onClose,
   onMarkRead,
   onMarkAllRead,
+  onDelete,
+  onDeleteAll,
   onLoadMore,
   anchorRef,
 }: NotificationDropdownProps) {
@@ -43,24 +47,30 @@ export function NotificationDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const firstFocusableRef = useRef<HTMLButtonElement>(null);
-  const [focusedIndex, setFocusedIndex] = useState(0);
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  const [focusedIndex, setFocusedIndex] = useReducer(
+    (_prev: number, next: number): number => next,
+    0,
+  );
+  const [confirmingClear, setConfirmingClear] = useReducer(
+    (prev: boolean, next: boolean): boolean => (prev === next ? prev : next),
+    false,
+  );
 
   useEffect(() => {
     if (!isOpen) return;
-    if (focusedIndex !== 0) {
-      setFocusedIndex(0);
-    }
+    setFocusedIndex(0);
+    setConfirmingClear(false);
     const t = setTimeout(() => firstFocusableRef.current?.focus(), 30);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
+      const target = e.target as HTMLElement;
+      if (target.closest?.('[data-action]')) {
+        return;
+      }
       if (
         containerRef.current?.contains(target) ||
         anchorRef.current?.contains(target)
@@ -77,11 +87,11 @@ export function NotificationDropdown({
       }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setFocusedIndex((i) => Math.min(notifications.length - 1, i + 1));
+        setFocusedIndex(Math.min(notifications.length - 1, focusedIndex + 1));
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setFocusedIndex((i) => Math.max(0, i - 1));
+        setFocusedIndex(Math.max(0, focusedIndex - 1));
       }
       if (e.key === 'Home') {
         e.preventDefault();
@@ -98,7 +108,7 @@ export function NotificationDropdown({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [isOpen, onClose, anchorRef, notifications.length]);
+  }, [isOpen, onClose, anchorRef, notifications.length, focusedIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -126,6 +136,29 @@ export function NotificationDropdown({
     [onMarkRead],
   );
 
+  const handleItemDelete = useCallback(
+    async (id: string) => {
+      await onDelete(id);
+    },
+    [onDelete],
+  );
+
+  const handleMarkAll = useCallback(() => {
+    if (unreadCount === 0) return;
+    void onMarkAllRead();
+  }, [onMarkAllRead, unreadCount]);
+
+  const handleClearAll = useCallback(() => {
+    if (notifications.length === 0) return;
+    if (!confirmingClear) {
+      setConfirmingClear(true);
+      window.setTimeout(() => setConfirmingClear(false), 3000);
+      return;
+    }
+    void onDeleteAll();
+    setConfirmingClear(false);
+  }, [confirmingClear, notifications.length, onDeleteAll]);
+
   if (!isOpen) return null;
 
   return (
@@ -133,13 +166,13 @@ export function NotificationDropdown({
       ref={containerRef}
       role="dialog"
       aria-label="Notifications"
-      className="absolute right-0 top-full mt-2 w-[360px] sm:w-[400px] max-h-[540px] z-50 bg-bg-primary border border-accent/30 rounded-lg overflow-hidden font-mono"
+      className="absolute right-0 top-full mt-2 w-[380px] sm:w-[420px] max-h-[560px] z-50 bg-bg-primary border border-accent/30 rounded-lg overflow-hidden font-mono"
       style={{
-        boxShadow: '0 12px 32px rgba(var(--accent-rgb),0.18)',
+        boxShadow: '0 12px 32px rgba(var(--accent-rgb),0.18), 0 0 0 1px rgba(var(--accent-rgb),0.05)',
         animation: 'dropdownIn 0.15s ease',
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-primary/40 bg-card">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-accent/15 bg-card">
         <div className="flex items-center gap-2">
           <Bell size={14} className="text-accent" />
           <span className="text-[10px] tracking-[0.22em] text-accent/80 uppercase">
@@ -151,28 +184,45 @@ export function NotificationDropdown({
             </span>
           )}
         </div>
-        <button
-          ref={firstFocusableRef}
-          type="button"
-          onClick={onMarkAllRead}
-          disabled={unreadCount === 0}
-          className="text-[9px] tracking-[0.18em] text-text-secondary/70 hover:text-accent disabled:opacity-30 disabled:hover:text-text-secondary/70 transition-colors flex items-center gap-1"
-        >
-          <CheckCheck size={11} />
-          MARK ALL
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            ref={firstFocusableRef}
+            type="button"
+            onClick={handleMarkAll}
+            disabled={unreadCount === 0}
+            title="Mark all as read"
+            className="text-[9px] tracking-[0.18em] text-text-secondary/70 hover:text-accent hover:bg-accent/10 disabled:opacity-30 disabled:hover:text-text-secondary/70 disabled:hover:bg-transparent transition-all duration-150 flex items-center gap-1 px-2 py-1 rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+          >
+            <CheckCheck size={11} />
+            MARK ALL
+          </button>
+          <button
+            type="button"
+            onClick={handleClearAll}
+            disabled={notifications.length === 0}
+            title={confirmingClear ? 'Click again to confirm' : 'Clear all notifications'}
+            className={`text-[9px] tracking-[0.18em] flex items-center gap-1 px-2 py-1 rounded cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2 disabled:opacity-30 disabled:cursor-not-allowed ${
+              confirmingClear
+                ? 'text-[color:var(--sem-danger)] bg-[color:var(--sem-danger)]/15 border border-[color:var(--sem-danger)]/40'
+                : 'text-text-secondary/70 hover:text-[color:var(--sem-danger)] hover:bg-[color:var(--sem-danger)]/10 border border-transparent'
+            }`}
+          >
+            <Trash2 size={11} />
+            {confirmingClear ? 'CONFIRM?' : 'CLEAR ALL'}
+          </button>
+        </div>
       </div>
 
-      <div ref={listRef} className="overflow-y-auto max-h-[420px]">
+      <div ref={listRef} className="overflow-y-auto max-h-[440px] divide-y divide-accent/10">
         {isLoading && notifications.length === 0 ? (
-          <div className="py-2">
+          <div className="py-2" aria-busy="true">
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="px-4 py-3 flex gap-3 items-start border-b border-border-primary/30 animate-pulse"
+                className="px-4 py-3 flex gap-3 items-start border-b border-accent/10 last:border-b-0 animate-pulse"
                 aria-hidden="true"
               >
-                <div className="shrink-0 w-9 h-9 rounded border border-border-primary/30 bg-bg-secondary/40" />
+                <div className="shrink-0 w-9 h-9 rounded border border-accent/15 bg-bg-secondary/40" />
                 <div className="flex-1 space-y-1.5">
                   <div className="h-2.5 w-1/3 rounded bg-bg-secondary/60" />
                   <div className="h-3 w-3/4 rounded bg-bg-secondary/40" />
@@ -194,34 +244,21 @@ export function NotificationDropdown({
         ) : (
           <>
             {notifications.map((n, idx) => (
-              <div
+              <NotificationItem
                 key={n.id}
-                role="button"
-                tabIndex={0}
-                aria-label={`${n.type}: ${n.title}`}
-                onClick={() => handleItemClick(n)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    void handleItemClick(n);
-                  }
-                }}
-                className="contents"
-              >
-                <NotificationItem
-                  notification={n}
-                  isFocused={idx === focusedIndex}
-                  onClick={handleItemClick}
-                  onDismiss={handleItemDismiss}
-                />
-              </div>
+                notification={n}
+                isFocused={idx === focusedIndex}
+                onClick={handleItemClick}
+                onDismiss={handleItemDismiss}
+                onDelete={handleItemDelete}
+              />
             ))}
             {hasMore && (
               <button
                 type="button"
                 onClick={onLoadMore}
                 disabled={isLoadingMore}
-                className="w-full py-2.5 text-[10px] tracking-[0.18em] text-text-secondary/70 hover:text-accent disabled:opacity-50 transition-colors flex items-center justify-center gap-2 border-t border-border-primary/30"
+                className="w-full py-2.5 text-[10px] tracking-[0.18em] text-text-secondary/70 hover:text-accent hover:bg-accent/5 disabled:opacity-50 transition-colors duration-150 cursor-pointer flex items-center justify-center gap-2 border-t border-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]"
               >
                 {isLoadingMore ? (
                   <>
@@ -237,7 +274,7 @@ export function NotificationDropdown({
         )}
       </div>
 
-      <div className="px-4 py-2 border-t border-border-primary/40 bg-card/50 text-[9px] tracking-[0.18em] text-text-secondary/40 uppercase text-center">
+      <div className="px-4 py-2 border-t border-accent/15 bg-card/50 text-[9px] tracking-[0.18em] text-text-secondary/40 uppercase text-center">
         Press Esc to close
       </div>
 

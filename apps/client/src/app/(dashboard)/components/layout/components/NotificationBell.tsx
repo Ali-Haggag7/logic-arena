@@ -23,6 +23,8 @@ export function NotificationBell({ notifications, isMobile = false }: Notificati
     close,
     markRead,
     markAllRead,
+    deleteNotification,
+    deleteAll,
     loadMore,
   } = notifications;
 
@@ -35,14 +37,15 @@ export function NotificationBell({ notifications, isMobile = false }: Notificati
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
+        title="Notifications"
         className={`relative ${
-          isMobile ? 'w-10 h-10' : 'w-9 h-9'
-        } rounded-md border border-accent/30 bg-card/60 hover:bg-card hover:border-accent/60 flex items-center justify-center text-text-secondary hover:text-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2`}
+          isMobile ? 'w-10 h-10' : 'w-[28px] h-[28px]'
+        } rounded-md border border-accent/20 bg-accent/5 hover:border-accent/40 hover:bg-accent/10 flex items-center justify-center text-accent transition-colors duration-150 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2`}
       >
-        <Bell size={isMobile ? 16 : 15} className={unreadCount > 0 ? 'animate-pulse' : ''} />
+        <Bell size={isMobile ? 16 : 14} className={unreadCount > 0 ? 'animate-pulse' : ''} />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-accent text-[9px] font-mono font-semibold text-bg-primary flex items-center justify-center border border-bg-primary"
+            className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-accent border border-bg-primary text-[7px] font-black text-bg-primary shadow-[0_0_6px_rgba(var(--accent-rgb),0.6)]"
             aria-hidden="true"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -60,6 +63,8 @@ export function NotificationBell({ notifications, isMobile = false }: Notificati
         onClose={close}
         onMarkRead={markRead}
         onMarkAllRead={markAllRead}
+        onDelete={deleteNotification}
+        onDeleteAll={deleteAll}
         onLoadMore={loadMore}
         anchorRef={buttonRef}
       />

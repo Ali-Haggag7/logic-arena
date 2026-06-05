@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -79,6 +80,32 @@ export class NotificationsController {
     @Req() req: AuthenticatedRequest,
   ): Promise<{ success: true; count: number; unreadCount: number }> {
     const result = await this.notifications.markAllRead(req.user.sub);
+    return { success: true, count: result.count, unreadCount: 0 };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<{ success: true; unreadCount: number }> {
+    if (!isUuid(id)) {
+      throw new BadRequestException('Invalid notification id');
+    }
+    const deleted = await this.notifications.delete(req.user.sub, id);
+    if (!deleted) {
+      throw new NotFoundException('Notification not found');
+    }
+    const unreadCount = await this.notifications.countUnread(req.user.sub);
+    return { success: true, unreadCount };
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  async deleteAll(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ success: true; count: number; unreadCount: number }> {
+    const result = await this.notifications.deleteAll(req.user.sub);
     return { success: true, count: result.count, unreadCount: 0 };
   }
 }

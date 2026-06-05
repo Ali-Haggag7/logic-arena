@@ -100,7 +100,7 @@ function ToastCard({
         type="button"
         onClick={handleClick}
         aria-label={`Open ${toast.notification.title}`}
-        className="flex gap-3 items-start flex-1 min-w-0 text-left p-0 bg-transparent border-0 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded"
+        className="flex gap-3 items-start flex-1 min-w-0 text-left p-0 bg-transparent border-0 cursor-pointer transition-opacity duration-150 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded"
       >
         <div className="shrink-0 w-8 h-8 rounded border border-current/40 bg-current/10 flex items-center justify-center">
           <Icon size={14} />
@@ -121,7 +121,8 @@ function ToastCard({
         type="button"
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
-        className="shrink-0 w-7 h-7 rounded text-text-secondary/60 hover:text-text-primary hover:bg-bg-secondary flex items-center justify-center"
+        title="Dismiss"
+        className="shrink-0 w-7 h-7 rounded text-text-secondary/60 hover:text-text-primary hover:bg-bg-secondary cursor-pointer transition-colors duration-150 flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
       >
         <X size={13} />
       </button>

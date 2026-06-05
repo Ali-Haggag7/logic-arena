@@ -105,6 +105,20 @@ export class NotificationsService {
     return { count: result.count };
   }
 
+  async delete(userId: string, notificationId: string): Promise<boolean> {
+    const result = await this.prisma.notification.deleteMany({
+      where: { id: notificationId, userId },
+    });
+    return result.count > 0;
+  }
+
+  async deleteAll(userId: string): Promise<{ count: number }> {
+    const result = await this.prisma.notification.deleteMany({
+      where: { userId },
+    });
+    return { count: result.count };
+  }
+
   private toJsonInput(
     data: Record<string, unknown> | undefined,
   ): Prisma.InputJsonValue | undefined {

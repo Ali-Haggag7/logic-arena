@@ -111,6 +111,8 @@ export function HeroSection({ loading, profile, isMobile, profileColor, dominant
             <ProfileActions
               targetUserId={profile.id}
               targetUsername={profile.username}
+              isOnline={profile.isOnline ?? false}
+              inMatch={profile.inMatch ?? false}
               isMobile={isMobile}
             />
           </div>

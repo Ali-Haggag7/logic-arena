@@ -102,6 +102,8 @@ export interface PublicProfile {
   matchHistory: MatchSummary[];
   combatStats: CombatStats;
   achievements?: { achievementId: string; unlockedLevel: number }[];
+  isOnline: boolean;
+  inMatch: boolean;
 }
 
 /** Shape returned by GET /users/leaderboard */

@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value: AuthContextValue = {
-    isGuest: !profile,
+    isGuest: loading ? false : !profile,
     userId: profile?.id ?? null,
     username: profile?.username ?? null,
     avatarUrl: profile?.avatarUrl ?? null,

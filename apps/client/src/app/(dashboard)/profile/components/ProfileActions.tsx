@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Swords, UserCheck, UserX, Loader2, Check } from 'lucide-react';
+import { UserPlus, Swords, UserCheck, UserX, Loader2, Check, WifiOff } from 'lucide-react';
 import { friendsApi } from '@/lib/api/friends';
 import { useAuth } from '@/context/AuthContext';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { AxiosError } from 'axios';
 
 interface ProfileActionsProps {
   targetUserId: string;
   targetUsername: string;
+  isOnline?: boolean;
+  inMatch?: boolean;
   isMobile?: boolean;
 }
 
@@ -28,13 +31,20 @@ interface SendChallengeOptions {
   source: 'profile';
 }
 
-export function ProfileActions({ targetUserId, targetUsername, isMobile = false }: ProfileActionsProps) {
+export function ProfileActions({
+  targetUserId,
+  targetUsername,
+  isOnline = false,
+  inMatch = false,
+  isMobile = false,
+}: ProfileActionsProps) {
   const router = useRouter();
   const { profile, loading: isAuthLoading } = useAuth();
   const [relation, setRelation] = useState<RelationState>('LOADING');
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmUnfriend, setConfirmUnfriend] = useState(false);
 
   const { sendChallenge } = useGlobalSocket({});
 
@@ -112,12 +122,12 @@ export function ProfileActions({ targetUserId, targetUsername, isMobile = false 
   }, [pendingRequestId]);
 
   const handleUnfriend = useCallback(async () => {
-    if (!window.confirm(`Remove @${targetUsername} from your friends?`)) return;
     setIsSubmitting(true);
     setActionError(null);
     try {
       await friendsApi.unfriend(targetUserId);
       setRelation('NONE');
+      setConfirmUnfriend(false);
     } catch (err: unknown) {
       const axiosErr = err as AxiosError<{ message?: string }>;
       const msg = axiosErr.response?.data?.message ?? 'Failed to remove';
@@ -125,127 +135,159 @@ export function ProfileActions({ targetUserId, targetUsername, isMobile = false 
     } finally {
       setIsSubmitting(false);
     }
-  }, [targetUserId, targetUsername]);
+  }, [targetUserId]);
 
   const handleChallenge = useCallback(() => {
+    if (!isOnline) return;
     const options: SendChallengeOptions = { targetUserId, source: 'profile' };
     sendChallenge(options.targetUserId, options.source);
-  }, [sendChallenge, targetUserId]);
+  }, [sendChallenge, targetUserId, isOnline]);
 
   if (relation === 'IS_SELF' || relation === 'GUEST' || relation === 'LOADING') {
     return null;
   }
 
   const buttonBase =
-    'group inline-flex items-center justify-center gap-2 font-mono font-bold uppercase transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+    'group inline-flex items-center justify-center gap-2 font-mono font-bold uppercase transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.97]';
+
   const sizeClass = isMobile
     ? 'h-10 px-3 text-[10px] tracking-[0.18em]'
     : 'h-11 px-4 text-[11px] tracking-[0.2em]';
 
+  const challengeDisabled = !isOnline || isSubmitting;
+  const challengeTitle = !isOnline
+    ? `@${targetUsername} is offline`
+    : inMatch
+      ? `@${targetUsername} is in a match`
+      : `Send a challenge to @${targetUsername}`;
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
-        {relation === 'NONE' && (
-          <button
-            type="button"
-            onClick={handleSendRequest}
-            disabled={isSubmitting}
-            aria-label={`Send friend request to ${targetUsername}`}
-            className={`${buttonBase} ${sizeClass} border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2`}
-          >
-            {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-            Add Friend
-          </button>
+    <>
+      <div className="flex flex-col gap-2">
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
+          {relation === 'NONE' && (
+            <>
+              <button
+                type="button"
+                onClick={handleSendRequest}
+                disabled={isSubmitting}
+                aria-label={`Send friend request to ${targetUsername}`}
+                className={`${buttonBase} ${sizeClass} border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2`}
+              >
+                {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                Add Friend
+              </button>
+              <button
+                type="button"
+                onClick={handleChallenge}
+                disabled={challengeDisabled}
+                aria-label={`Challenge ${targetUsername}`}
+                title={challengeTitle}
+                className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/10 text-[color:var(--sem-warning)] hover:bg-[color:var(--sem-warning)]/20 hover:border-[color:var(--sem-warning)]/60 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-warning)] focus-visible:outline-offset-2`}
+              >
+                {isOnline ? <Swords size={14} /> : <WifiOff size={14} />}
+                Challenge
+              </button>
+            </>
+          )}
+
+          {relation === 'OUTGOING_PENDING' && (
+            <button
+              type="button"
+              disabled
+              aria-label="Friend request pending"
+              className={`${buttonBase} ${sizeClass} border border-accent/20 bg-accent/5 text-accent/60 rounded-md cursor-default`}
+            >
+              <Check size={14} />
+              Request Sent
+            </button>
+          )}
+
+          {relation === 'INCOMING_PENDING' && (
+            <button
+              type="button"
+              onClick={handleAcceptRequest}
+              disabled={isSubmitting}
+              aria-label={`Accept friend request from ${targetUsername}`}
+              className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-success)]/40 bg-[color:var(--sem-success)]/10 text-[color:var(--sem-success)] hover:bg-[color:var(--sem-success)]/20 hover:border-[color:var(--sem-success)]/60 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2`}
+            >
+              {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserCheck size={14} />}
+              Accept Request
+            </button>
+          )}
+
+          {relation === 'FRIEND' && (
+            <>
+              <button
+                type="button"
+                onClick={handleChallenge}
+                disabled={challengeDisabled}
+                aria-label={`Challenge ${targetUsername}`}
+                title={challengeTitle}
+                className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/10 text-[color:var(--sem-warning)] hover:bg-[color:var(--sem-warning)]/20 hover:border-[color:var(--sem-warning)]/60 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-warning)] focus-visible:outline-offset-2`}
+              >
+                {isOnline ? <Swords size={14} /> : <WifiOff size={14} />}
+                Challenge
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmUnfriend(true)}
+                disabled={isSubmitting}
+                aria-label={`Remove ${targetUsername} from friends`}
+                className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-danger)]/30 bg-[color:var(--sem-danger)]/5 text-[color:var(--sem-danger)]/70 hover:bg-[color:var(--sem-danger)]/10 hover:border-[color:var(--sem-danger)]/50 hover:text-[color:var(--sem-danger)] rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2`}
+              >
+                <UserX size={14} />
+                Unfriend
+              </button>
+            </>
+          )}
+        </div>
+
+        {actionError && (
+          <p className="text-[10px] text-[color:var(--sem-danger)] font-mono tracking-wide">
+            {actionError}
+          </p>
         )}
 
         {relation === 'OUTGOING_PENDING' && (
-          <button
-            type="button"
-            disabled
-            aria-label="Friend request pending"
-            className={`${buttonBase} ${sizeClass} border border-accent/20 bg-accent/5 text-accent/60 rounded-md cursor-default`}
-          >
-            <Check size={14} />
-            Request Sent
-          </button>
+          <p className="text-[10px] text-text-secondary/60 font-mono">
+            Pending — they need to accept before you can challenge.
+          </p>
         )}
 
         {relation === 'INCOMING_PENDING' && (
-          <button
-            type="button"
-            onClick={handleAcceptRequest}
-            disabled={isSubmitting}
-            aria-label={`Accept friend request from ${targetUsername}`}
-            className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-success)]/40 bg-[color:var(--sem-success)]/10 text-[color:var(--sem-success)] hover:bg-[color:var(--sem-success)]/20 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2`}
-          >
-            {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserCheck size={14} />}
-            Accept Request
-          </button>
-        )}
-
-        {relation === 'FRIEND' && (
-          <>
+          <p className="text-[10px] text-text-secondary/60 font-mono">
+            @{targetUsername} sent you a friend request.{' '}
             <button
               type="button"
-              onClick={handleChallenge}
-              disabled={isSubmitting}
-              aria-label={`Challenge ${targetUsername}`}
-              className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/10 text-[color:var(--sem-warning)] hover:bg-[color:var(--sem-warning)]/20 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-warning)] focus-visible:outline-offset-2`}
+              onClick={() => router.push('/friends?tab=requests')}
+              className="text-accent hover:underline cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded"
             >
-              <Swords size={14} />
-              Challenge
+              View all
             </button>
-            <button
-              type="button"
-              onClick={handleUnfriend}
-              disabled={isSubmitting}
-              aria-label={`Remove ${targetUsername} from friends`}
-              className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-danger)]/30 bg-[color:var(--sem-danger)]/5 text-[color:var(--sem-danger)]/70 hover:bg-[color:var(--sem-danger)]/10 hover:border-[color:var(--sem-danger)]/50 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2`}
-            >
-              <UserX size={14} />
-              Unfriend
-            </button>
-          </>
+          </p>
         )}
 
-        {relation === 'NONE' && (
-          <button
-            type="button"
-            onClick={handleChallenge}
-            disabled={isSubmitting}
-            aria-label={`Challenge ${targetUsername}`}
-            className={`${buttonBase} ${sizeClass} border border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/10 text-[color:var(--sem-warning)] hover:bg-[color:var(--sem-warning)]/20 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-warning)] focus-visible:outline-offset-2`}
-          >
-            <Swords size={14} />
-            Challenge
-          </button>
+        {!isOnline && relation === 'FRIEND' && (
+          <p className="text-[10px] text-text-secondary/50 font-mono">
+            @{targetUsername} is offline — challenge unavailable.
+          </p>
         )}
       </div>
 
-      {actionError && (
-        <p className="text-[10px] text-[color:var(--sem-danger)] font-mono tracking-wide">
-          {actionError}
-        </p>
-      )}
-
-      {relation === 'OUTGOING_PENDING' && (
-        <p className="text-[10px] text-text-secondary/60 font-mono">
-          Pending — they need to accept before you can challenge.
-        </p>
-      )}
-
-      {relation === 'INCOMING_PENDING' && (
-        <p className="text-[10px] text-text-secondary/60 font-mono">
-          @${targetUsername} sent you a friend request.{' '}
-          <button
-            type="button"
-            onClick={() => router.push('/friends?tab=requests')}
-            className="text-accent hover:underline"
-          >
-            View all
-          </button>
-        </p>
-      )}
-    </div>
+      <ConfirmDialog
+        isOpen={confirmUnfriend}
+        title="REMOVE ALLY"
+        message={`Are you sure you want to remove @${targetUsername} from your alliance? You'll need to send a new friend request to reconnect.`}
+        confirmLabel="REMOVE"
+        cancelLabel="CANCEL"
+        tone="danger"
+        isLoading={isSubmitting}
+        onConfirm={() => void handleUnfriend()}
+        onClose={() => {
+          if (!isSubmitting) setConfirmUnfriend(false);
+        }}
+      />
+    </>
   );
 }

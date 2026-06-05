@@ -110,7 +110,7 @@ export function AddFriendModal({ isOpen, onClose, onRequestSent }: AddFriendModa
             type="button"
             onClick={onClose}
             aria-label="Close add friend dialog"
-            className="min-w-[36px] min-h-[36px] flex items-center justify-center text-accent/50 hover:text-accent hover:bg-accent/10 rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="min-w-[36px] min-h-[36px] flex items-center justify-center text-accent/50 hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
           >
             <X size={16} aria-hidden="true" />
           </button>
@@ -207,7 +207,7 @@ export function AddFriendModal({ isOpen, onClose, onRequestSent }: AddFriendModa
                         disabled={disabled}
                         onClick={() => void handleSend(user)}
                         aria-label={`Send friend request to ${user.username}`}
-                        className="min-w-[44px] min-h-[36px] px-3 flex items-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-accent/40 bg-accent/10 hover:bg-accent/20 disabled:opacity-40 disabled:cursor-not-allowed text-accent rounded transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+                        className="min-w-[44px] min-h-[36px] px-3 flex items-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-accent/40 bg-accent/10 hover:bg-accent/20 hover:border-accent/60 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-accent rounded transition-all cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                       >
                         {pendingId === user.id ? (
                           <Loader2 size={12} className="animate-spin" aria-hidden="true" />

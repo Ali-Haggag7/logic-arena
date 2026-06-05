@@ -104,7 +104,14 @@ export class SocialQueryService {
       matchHistory,
       combatStats: (user.combatStats as CombatStats | null) ?? zeroCombatStats,
       achievements: user.achievements,
+      isOnline: false,
+      inMatch: false,
     };
+
+    if (this.redis.healthy) {
+      const presenceValue = await this.redis.get(`user:online:${user.id}`);
+      profile.isOnline = presenceValue !== null && presenceValue !== undefined;
+    }
 
     await this.redis.set(cacheKey, profile, PUBLIC_PROFILE_TTL);
     return profile;

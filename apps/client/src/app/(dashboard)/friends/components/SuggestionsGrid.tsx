@@ -108,7 +108,7 @@ export function SuggestionsGrid({ suggestions, isLoading, isMobile, onRequestSen
             onClick={() => void handleSend(s)}
             disabled={pendingId === s.id}
             aria-label={`Send friend request to ${s.username}`}
-            className="w-full min-h-[40px] flex items-center justify-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-accent/40 bg-accent/10 hover:bg-accent/20 disabled:opacity-50 text-accent rounded-lg transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="w-full min-h-[40px] flex items-center justify-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-accent/40 bg-accent/10 hover:bg-accent/20 hover:border-accent/60 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-accent rounded-lg transition-all cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
           >
             {pendingId === s.id ? (
               <>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   UserPlus,
   UserCheck,
@@ -8,6 +8,7 @@ import {
   Trophy,
   Info,
   Check,
+  Trash2,
 } from 'lucide-react';
 import type {
   NotificationEntry,
@@ -19,6 +20,7 @@ interface NotificationItemProps {
   isFocused: boolean;
   onClick: (notification: NotificationEntry) => void;
   onDismiss: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 interface IconConfig {
@@ -56,43 +58,64 @@ export function NotificationItem({
   isFocused,
   onClick,
   onDismiss,
+  onDelete,
 }: NotificationItemProps) {
+  const [hovered, setHovered] = useState(false);
   const config = ICON_MAP[notification.type] ?? ICON_MAP.SYSTEM;
   const { Icon, tone, label } = config;
   const summary = getPayloadSummary(notification.data);
 
   const toneClass: Record<IconConfig['tone'], string> = {
     accent: 'text-accent border-accent/40 bg-accent/5',
-    success: 'text-[color:var(--sem-success)] border-[color:var(--sem-success)]/40 bg-[color:var(--sem-success)]/5',
-    warning: 'text-[color:var(--sem-warning)] border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/5',
-    info: 'text-text-secondary border-border-primary/40 bg-bg-secondary/50',
+    success:
+      'text-[color:var(--sem-success)] border-[color:var(--sem-success)]/40 bg-[color:var(--sem-success)]/5',
+    warning:
+      'text-[color:var(--sem-warning)] border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/5',
+    info: 'text-text-secondary border-accent/20 bg-bg-secondary/50',
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => onClick(notification)}
+    <div
+      role="button"
+      tabIndex={0}
       data-focused={isFocused ? 'true' : 'false'}
-      className={`group w-full text-left px-4 py-3 flex gap-3 items-start border-b border-border-primary/30 hover:bg-bg-secondary/60 transition-colors ${
-        !notification.read ? 'bg-accent/[0.03]' : ''
-      }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={() => onClick(notification)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(notification);
+        }
+      }}
+      className={`group relative w-full text-left px-4 py-3 flex gap-3 items-start cursor-pointer transition-colors duration-150 ${
+        !notification.read ? 'bg-accent/[0.04]' : ''
+      } hover:bg-accent/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] focus-visible:bg-accent/[0.08]`}
     >
-      <div className={`shrink-0 w-9 h-9 rounded border flex items-center justify-center ${toneClass[tone]}`}>
+      <div
+        className={`shrink-0 w-9 h-9 rounded border flex items-center justify-center transition-transform duration-150 ${
+          toneClass[tone]
+        } ${hovered ? 'scale-105' : ''}`}
+      >
         <Icon size={16} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2 mb-0.5">
-          <span className="text-xs font-mono tracking-[0.15em] text-text-secondary/70 uppercase">
+          <span className="text-[10px] font-mono tracking-[0.18em] text-text-secondary/70 uppercase">
             {label}
           </span>
           {!notification.read && (
             <span
-              className="w-1.5 h-1.5 rounded-full bg-accent shrink-0"
+              className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 animate-pulse"
               aria-label="Unread"
             />
           )}
         </div>
-        <p className="text-sm text-text-primary leading-snug line-clamp-2">
+        <p
+          className={`text-sm leading-snug line-clamp-2 ${
+            notification.read ? 'text-text-secondary' : 'text-text-primary font-medium'
+          }`}
+        >
           {notification.title}
         </p>
         {summary && (
@@ -101,19 +124,43 @@ export function NotificationItem({
           </p>
         )}
       </div>
-      {!notification.read && (
+      <div
+        className={`flex items-center gap-1 shrink-0 transition-opacity duration-150 ${
+          hovered || !notification.read ? 'opacity-100' : 'opacity-0'
+        }`}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {!notification.read && (
+          <button
+            type="button"
+            data-action="mark-read"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDismiss(notification.id);
+            }}
+            aria-label="Mark as read"
+            title="Mark as read"
+            className="w-7 h-7 rounded text-text-secondary/60 hover:text-[color:var(--sem-success)] hover:bg-[color:var(--sem-success)]/10 active:scale-90 flex items-center justify-center cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2"
+          >
+            <Check size={14} />
+          </button>
+        )}
         <button
           type="button"
+          data-action="delete"
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
-            onDismiss(notification.id);
+            onDelete(notification.id);
           }}
-          aria-label="Mark as read"
-          className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0 w-7 h-7 rounded text-text-secondary/60 hover:text-accent hover:bg-accent/10 flex items-center justify-center"
+          aria-label="Delete notification"
+          title="Delete"
+          className="w-7 h-7 rounded text-text-secondary/60 hover:text-[color:var(--sem-danger)] hover:bg-[color:var(--sem-danger)]/10 active:scale-90 flex items-center justify-center cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2"
         >
-          <Check size={14} />
+          <Trash2 size={13} />
         </button>
-      )}
-    </button>
+      </div>
+    </div>
   );
 }

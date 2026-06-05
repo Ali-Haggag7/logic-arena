@@ -30,6 +30,20 @@ export const notificationsApi = {
     );
     return res.data;
   },
+
+  async delete(id: string): Promise<{ success: true; unreadCount: number }> {
+    const res = await apiClient.delete<{ success: true; unreadCount: number }>(
+      `/notifications/${id}`,
+    );
+    return res.data;
+  },
+
+  async deleteAll(): Promise<{ success: true; count: number; unreadCount: number }> {
+    const res = await apiClient.delete<{ success: true; count: number; unreadCount: number }>(
+      '/notifications',
+    );
+    return res.data;
+  },
 };
 
 export type { NotificationEntry };

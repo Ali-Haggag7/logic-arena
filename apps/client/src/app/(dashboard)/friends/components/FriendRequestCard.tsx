@@ -53,7 +53,7 @@ export function FriendRequestCard({ request, variant, onAccept, onDecline }: Fri
 
   return (
     <article
-      className="relative bg-card/60 backdrop-blur-md border border-accent/10 rounded-xl p-4 flex items-start gap-3 hover:border-accent/30 transition-colors"
+      className="relative bg-card/60 backdrop-blur-md border border-accent/10 rounded-xl p-4 flex items-start gap-3 hover:border-accent/30 transition-colors duration-150"
       style={{ boxShadow: 'var(--card-shadow)' }}
     >
       <div className="shrink-0">
@@ -107,7 +107,7 @@ export function FriendRequestCard({ request, variant, onAccept, onDecline }: Fri
             type="button"
             onClick={() => onAccept(request.id)}
             aria-label={`Accept friend request from ${user.username}`}
-            className="min-w-[44px] min-h-[36px] px-3 flex items-center justify-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-sem-success/40 bg-sem-success/10 hover:bg-sem-success/20 rounded transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2"
+            className="min-w-[44px] min-h-[36px] px-3 flex items-center justify-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-sem-success/40 bg-sem-success/10 hover:bg-sem-success/20 hover:scale-105 active:scale-95 rounded transition-all duration-150 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2"
             style={{ color: 'var(--sem-success)' }}
           >
             <Check size={14} aria-hidden="true" /> ACCEPT
@@ -116,7 +116,7 @@ export function FriendRequestCard({ request, variant, onAccept, onDecline }: Fri
             type="button"
             onClick={() => onDecline(request.id)}
             aria-label={`Decline friend request from ${user.username}`}
-            className="min-w-[44px] min-h-[36px] px-3 flex items-center justify-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 text-red-400/80 rounded transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400 focus-visible:outline-offset-2"
+            className="min-w-[44px] min-h-[36px] px-3 flex items-center justify-center gap-1.5 text-[10px] tracking-[0.15em] font-bold border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 hover:scale-105 active:scale-95 text-red-400/80 rounded transition-all duration-150 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400 focus-visible:outline-offset-2"
           >
             <X size={14} aria-hidden="true" /> DECLINE
           </button>
