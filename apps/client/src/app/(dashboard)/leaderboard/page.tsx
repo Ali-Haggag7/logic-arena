@@ -186,7 +186,7 @@ const LeaderboardPage = () => {
               users={users}
               isLoading={isLoading}
               currentUserId={currentUserId}
-              onChallenge={sendChallenge}
+              onChallenge={(userId) => sendChallenge(userId, 'leaderboard')}
               onSpectate={handleSpectate}
               isGuest={isGuest}
               isMobile={true}
@@ -214,7 +214,7 @@ const LeaderboardPage = () => {
               users={users}
               isLoading={isLoading}
               currentUserId={currentUserId}
-              onChallenge={sendChallenge}
+              onChallenge={(userId) => sendChallenge(userId, 'leaderboard')}
               onSpectate={handleSpectate}
               isGuest={isGuest}
               isMobile={false}

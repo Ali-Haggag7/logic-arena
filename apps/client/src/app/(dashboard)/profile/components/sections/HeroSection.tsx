@@ -7,6 +7,7 @@ import { fmtDate } from "../../utils";
 import { HexAvatar } from "../ui/HexAvatar";
 import { OperatorBadge } from "../ui/OperatorBadge";
 import { AchievementBadge } from "../ui/AchievementBadge";
+import { ProfileActions } from "../ProfileActions";
 
 interface Props {
   loading:      boolean;
@@ -20,7 +21,7 @@ interface Props {
 export function HeroSection({ loading, profile, isMobile, profileColor, dominantKey, username }: Props) {
   return (
     <div
-      className={`relative flex ${isMobile ? "flex-col items-center text-center gap-5" : "flex-row items-center gap-7"} pb-7 mb-7`}
+      className={`relative flex ${isMobile ? "flex-col items-center text-center gap-5" : "flex-row items-start gap-7"} pb-7 mb-7`}
       style={{ borderBottom: "1px solid rgba(var(--accent-rgb),0.15)" }}
     >
       {/* Avatar */}
@@ -46,7 +47,7 @@ export function HeroSection({ loading, profile, isMobile, profileColor, dominant
         />
       )}
 
-      <div className={`flex flex-col ${isMobile ? "items-center" : "items-start"} gap-2 flex-1 min-w-0`}>
+      <div className={`flex flex-col ${isMobile ? "items-center" : "items-start"} gap-3 flex-1 min-w-0`}>
         <h1
           className="m-0 font-black tracking-[0.18em] leading-none break-words"
           style={{
@@ -102,6 +103,16 @@ export function HeroSection({ loading, profile, isMobile, profileColor, dominant
             <span className="text-[10px] text-accent/40 tracking-[0.12em] font-mono">
               SINCE {fmtDate(profile.memberSince).toUpperCase()}
             </span>
+          </div>
+        )}
+
+        {profile && !loading && (
+          <div className={`mt-2 w-full ${isMobile ? 'flex justify-center' : ''}`}>
+            <ProfileActions
+              targetUserId={profile.id}
+              targetUsername={profile.username}
+              isMobile={isMobile}
+            />
           </div>
         )}
       </div>

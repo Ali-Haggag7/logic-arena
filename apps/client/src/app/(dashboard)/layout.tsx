@@ -46,7 +46,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   const socketValue = {
-    sendChallenge,
+    sendChallenge: (targetUserId: string, source?: 'friend' | 'leaderboard' | 'profile') =>
+      sendChallenge(targetUserId, source),
     sendFriendRequest: () => {},
     acceptFriendRequest: () => {},
     declineFriendRequest: () => {},

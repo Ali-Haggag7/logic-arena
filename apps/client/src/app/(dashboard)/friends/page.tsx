@@ -95,7 +95,7 @@ export default function FriendsPage() {
           isLoadingRequests={isLoadingRequests}
           isLoadingSuggestions={isLoadingSuggestions}
           isMobile={isMobile}
-          onChallenge={(targetUserId) => sendChallenge(targetUserId)}
+          onChallenge={(targetUserId) => sendChallenge(targetUserId, 'friend')}
           onSpectate={handleSpectate}
           onUnfriend={unfriend}
           onAcceptRequest={acceptRequest}

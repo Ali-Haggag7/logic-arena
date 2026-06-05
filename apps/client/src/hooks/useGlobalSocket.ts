@@ -163,8 +163,8 @@ export function useGlobalSocket(handlers: PartialHandlers) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sendChallenge = useCallback((targetUserId: string) => {
-    manager?.socket.emit('send-challenge', { targetUserId });
+  const sendChallenge = useCallback((targetUserId: string, source?: 'friend' | 'leaderboard' | 'profile') => {
+    manager?.socket.emit('send-challenge', { targetUserId, source });
   }, []);
 
   const acceptChallenge = useCallback((challengerId: string) => {

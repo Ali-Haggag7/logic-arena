@@ -3,6 +3,7 @@ import { PrismaService } from '../../../common/prisma.service';
 import { RedisService } from '../../../common/redis.service';
 import { AuthenticatedSocket } from './types';
 import * as crypto from 'crypto';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 const CHALLENGE_TTL_SECONDS = 60;
 const CHALLENGE_RATE_LIMIT_SECONDS = 60;
@@ -12,11 +13,14 @@ const challengeKey = (challengerId: string, targetUserId: string) =>
 const challengeRateLimitKey = (userId: string) =>
   `ratelimit:challenge:${userId}`;
 
+const VALID_SOURCES = new Set(['friend', 'leaderboard', 'profile']);
+
 export class MatchSocialManager {
   constructor(
     private server: Server,
     private prisma: PrismaService,
     private redisService: RedisService,
+    private notifications: NotificationsService,
   ) {}
 
   async handlePing(client: AuthenticatedSocket) {
@@ -28,9 +32,14 @@ export class MatchSocialManager {
 
   async handleSendChallenge(
     client: AuthenticatedSocket,
-    data: { targetUserId: string },
+    data: { targetUserId: string; source?: string },
   ) {
     if (!client.userId) return;
+
+    const source =
+      typeof data.source === 'string' && VALID_SOURCES.has(data.source)
+        ? data.source
+        : 'friend';
 
     const challengeCount = await this.redisService.incr(
       challengeRateLimitKey(client.userId),
@@ -62,6 +71,7 @@ export class MatchSocialManager {
       {
         challengerId: client.userId,
         targetUserId: data.targetUserId,
+        source,
         createdAt: Date.now(),
       },
       CHALLENGE_TTL_SECONDS,
@@ -84,10 +94,32 @@ export class MatchSocialManager {
       where: { id: client.userId },
       select: { username: true },
     });
+    const challengerName = challenger?.username ?? 'UNKNOWN';
 
     this.server.to(data.targetUserId).emit('challenge-received', {
       challengerId: client.userId,
-      challengerName: challenger?.username ?? 'UNKNOWN',
+      challengerName,
+      source,
+    });
+
+    const notification = await this.notifications.create(data.targetUserId, {
+      type: 'CHALLENGE_RECEIVED',
+      title: 'Challenge received',
+      body: `@${challengerName} wants to fight you`,
+      data: {
+        actorId: client.userId,
+        actorUsername: challengerName,
+        source,
+      },
+    });
+    this.server.to(data.targetUserId).emit('notification:new', {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      read: notification.read,
+      createdAt: notification.createdAt,
+      data: notification.data,
     });
 
     client.emit('challenge-sent', { targetUserId: data.targetUserId });

@@ -31,6 +31,7 @@ import { SpectatorManager } from './gateway/match.spectator';
 import { handleJoinLeaderboard } from './gateway/match.leaderboard';
 import { AchievementsService } from '../achievements/achievements.service';
 import { FriendsGateway } from '../friends/friends.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @WebSocketGateway({
   cors: {
@@ -63,6 +64,7 @@ export class MatchGateway
     private readonly achievementsService: AchievementsService,
     private readonly state: MatchState,
     private readonly friendsGateway: FriendsGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   onModuleInit() {
@@ -83,6 +85,7 @@ export class MatchGateway
       this.server,
       this.prisma,
       this.redisService,
+      this.notificationsService,
     );
     this.loopManager = new MatchLoopManager(
       this.state,

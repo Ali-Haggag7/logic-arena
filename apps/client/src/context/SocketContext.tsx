@@ -3,7 +3,7 @@
 import { createContext, useContext } from 'react';
 
 interface SocketContextType {
-  sendChallenge: (targetUserId: string) => void;
+  sendChallenge: (targetUserId: string, source?: 'friend' | 'leaderboard' | 'profile') => void;
   sendFriendRequest: (receiverUsername: string, message?: string) => void;
   acceptFriendRequest: (requestId: string) => void;
   declineFriendRequest: (requestId: string) => void;
