@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { Lightbulb } from "lucide-react";
 import { ThemeSwitcher } from "../../../../../components/ui/ThemeSwitcher";
 import { apiClient } from "../../../../../lib/api-client";
+import { useNotifications } from "../../../../../hooks/useNotifications";
+import { NotificationBell } from "./NotificationBell";
 
 const POLL_INTERVAL = 30_000;
 
@@ -22,6 +24,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ username, avatarUrl }: DashboardHeaderProps) {
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
+  const notifications = useNotifications();
 
   useEffect(() => {
     if (!username) return;
@@ -106,6 +109,9 @@ export function DashboardHeader({ username, avatarUrl }: DashboardHeaderProps) {
             </span>
           )}
         </Link>
+
+        {/* ── Notifications bell ── */}
+        {username && <NotificationBell notifications={notifications} />}
 
         <ThemeSwitcher variant="minimal" />
       </div>

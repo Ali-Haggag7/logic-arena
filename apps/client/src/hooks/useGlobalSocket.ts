@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { API_BASE_URL } from '../lib/api-client';
 import { hasAuthSession } from '../lib/client-security';
 import type { FriendRequestEntry } from '../lib/api/friends.types';
+import type { NotificationEntry } from '../lib/api/notifications.types';
 
 export interface FriendRequestReceivedPayload {
   request: FriendRequestEntry;
@@ -34,11 +35,95 @@ interface Handlers {
   onFriendRequestDeclined: (data: FriendRequestDeclinedPayload) => void;
   onFriendRemoved: (data: FriendRemovedPayload) => void;
   onFriendsListInvalidate: () => void;
+  onNotificationNew: (notification: NotificationEntry) => void;
+  onNotificationsInvalidate: () => void;
 }
 
-export function useGlobalSocket(handlers: Handlers) {
-  const socketRef = useRef<Socket | null>(null);
-  const handlersRef = useRef<Handlers>(handlers);
+export type PartialHandlers = Partial<Handlers>;
+
+type RouterRef = ReturnType<typeof useRouter>;
+
+interface SocketManager {
+  socket: Socket;
+  refCount: number;
+  handlers: Set<PartialHandlers>;
+  heartbeat: ReturnType<typeof setInterval>;
+  router: RouterRef | null;
+}
+
+let manager: SocketManager | null = null;
+
+function buildWsUrl(): string {
+  return API_BASE_URL
+    .replace('https://', 'wss://')
+    .replace('http://', 'ws://')
+    .replace(/\/api$/, '');
+}
+
+function getOrCreateManager(): SocketManager | null {
+  if (typeof window === 'undefined') return null;
+  if (!hasAuthSession()) return null;
+  if (manager) return manager;
+
+  const socket = io(buildWsUrl(), { withCredentials: true });
+  const heartbeat = setInterval(() => socket.emit('ping'), 60_000);
+
+  const m: SocketManager = {
+    socket,
+    refCount: 0,
+    handlers: new Set(),
+    heartbeat,
+    router: null,
+  };
+
+  socket.on('challenge-received', (data: { challengerId: string; challengerName: string }) => {
+    m.handlers.forEach((h) => h.onChallengeReceived?.(data));
+  });
+  socket.on('challenge-sent', () => {
+    m.handlers.forEach((h) => h.onChallengeSent?.());
+  });
+  socket.on('challenge-failed', ({ reason }: { reason: string }) => {
+    m.handlers.forEach((h) => h.onChallengeFailed?.(reason));
+  });
+  socket.on('challenge-accepted', ({ matchId }: { matchId: string }) => {
+    m.handlers.forEach((h) => h.onChallengeAccepted?.(matchId));
+    m.router?.push(`/arena?matchId=${matchId}`);
+  });
+  socket.on('friend:request-received', (data: FriendRequestReceivedPayload) => {
+    m.handlers.forEach((h) => h.onFriendRequestReceived?.(data));
+  });
+  socket.on('friend:request-accepted', (data: FriendRequestAcceptedPayload) => {
+    m.handlers.forEach((h) => h.onFriendRequestAccepted?.(data));
+  });
+  socket.on('friend:request-declined', (data: FriendRequestDeclinedPayload) => {
+    m.handlers.forEach((h) => h.onFriendRequestDeclined?.(data));
+  });
+  socket.on('friend:removed', (data: FriendRemovedPayload) => {
+    m.handlers.forEach((h) => h.onFriendRemoved?.(data));
+  });
+  socket.on('friends:list-invalidate', () => {
+    m.handlers.forEach((h) => h.onFriendsListInvalidate?.());
+  });
+  socket.on('notification:new', (data: NotificationEntry) => {
+    m.handlers.forEach((h) => h.onNotificationNew?.(data));
+  });
+  socket.on('notifications:invalidate', () => {
+    m.handlers.forEach((h) => h.onNotificationsInvalidate?.());
+  });
+
+  manager = m;
+  return m;
+}
+
+function disposeManager() {
+  if (!manager) return;
+  clearInterval(manager.heartbeat);
+  manager.socket.disconnect();
+  manager = null;
+}
+
+export function useGlobalSocket(handlers: PartialHandlers) {
+  const handlersRef = useRef<PartialHandlers>(handlers);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,84 +131,63 @@ export function useGlobalSocket(handlers: Handlers) {
   });
 
   useEffect(() => {
-    if (!hasAuthSession()) return;
+    const m = getOrCreateManager();
+    if (!m) return;
 
-    const wsUrl = API_BASE_URL
-      .replace('https://', 'wss://')
-      .replace('http://', 'ws://')
-      .replace(/\/api$/, '');
+    m.refCount += 1;
+    m.router = router;
 
-    const socket = io(wsUrl, {
-      withCredentials: true,
-    });
+    const wrapped: PartialHandlers = {
+      onChallengeReceived: (data) => handlersRef.current.onChallengeReceived?.(data),
+      onChallengeSent: () => handlersRef.current.onChallengeSent?.(),
+      onChallengeFailed: (reason) => handlersRef.current.onChallengeFailed?.(reason),
+      onChallengeAccepted: (matchId) => handlersRef.current.onChallengeAccepted?.(matchId),
+      onFriendRequestReceived: (data) => handlersRef.current.onFriendRequestReceived?.(data),
+      onFriendRequestAccepted: (data) => handlersRef.current.onFriendRequestAccepted?.(data),
+      onFriendRequestDeclined: (data) => handlersRef.current.onFriendRequestDeclined?.(data),
+      onFriendRemoved: (data) => handlersRef.current.onFriendRemoved?.(data),
+      onFriendsListInvalidate: () => handlersRef.current.onFriendsListInvalidate?.(),
+      onNotificationNew: (data) => handlersRef.current.onNotificationNew?.(data),
+      onNotificationsInvalidate: () => handlersRef.current.onNotificationsInvalidate?.(),
+    };
 
-    socketRef.current = socket;
-
-    const heartbeat = setInterval(() => socket.emit('ping'), 60_000);
-
-    socket.on('challenge-received', (data: { challengerId: string; challengerName: string }) => {
-      handlersRef.current.onChallengeReceived(data);
-    });
-    socket.on('challenge-sent', () => {
-      handlersRef.current.onChallengeSent();
-    });
-    socket.on('challenge-failed', ({ reason }: { reason: string }) => {
-      handlersRef.current.onChallengeFailed(reason);
-    });
-    socket.on('challenge-accepted', ({ matchId }: { matchId: string }) => {
-      handlersRef.current.onChallengeAccepted(matchId);
-      router.push(`/arena?matchId=${matchId}`);
-    });
-
-    socket.on('friend:request-received', (data: FriendRequestReceivedPayload) => {
-      handlersRef.current.onFriendRequestReceived(data);
-    });
-    socket.on('friend:request-accepted', (data: FriendRequestAcceptedPayload) => {
-      handlersRef.current.onFriendRequestAccepted(data);
-    });
-    socket.on('friend:request-declined', (data: FriendRequestDeclinedPayload) => {
-      handlersRef.current.onFriendRequestDeclined(data);
-    });
-    socket.on('friend:removed', (data: FriendRemovedPayload) => {
-      handlersRef.current.onFriendRemoved(data);
-    });
-    socket.on('friends:list-invalidate', () => {
-      handlersRef.current.onFriendsListInvalidate();
-    });
+    m.handlers.add(wrapped);
 
     return () => {
-      clearInterval(heartbeat);
-      socket.disconnect();
-      socketRef.current = null;
+      m.handlers.delete(wrapped);
+      m.refCount -= 1;
+      if (m.refCount <= 0) {
+        disposeManager();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sendChallenge = useCallback((targetUserId: string) => {
-    socketRef.current?.emit('send-challenge', { targetUserId });
+    manager?.socket.emit('send-challenge', { targetUserId });
   }, []);
 
   const acceptChallenge = useCallback((challengerId: string) => {
-    socketRef.current?.emit('accept-challenge', { challengerId });
+    manager?.socket.emit('accept-challenge', { challengerId });
   }, []);
 
   const sendFriendRequest = useCallback(
     (receiverUsername: string, message?: string) => {
-      socketRef.current?.emit('friend:send-request', { receiverUsername, message });
+      manager?.socket.emit('friend:send-request', { receiverUsername, message });
     },
     [],
   );
 
   const acceptFriendRequest = useCallback((requestId: string) => {
-    socketRef.current?.emit('friend:accept-request', { requestId });
+    manager?.socket.emit('friend:accept-request', { requestId });
   }, []);
 
   const declineFriendRequest = useCallback((requestId: string) => {
-    socketRef.current?.emit('friend:decline-request', { requestId });
+    manager?.socket.emit('friend:decline-request', { requestId });
   }, []);
 
   const unfriendSocket = useCallback((friendId: string) => {
-    socketRef.current?.emit('friend:unfriend', { friendId });
+    manager?.socket.emit('friend:unfriend', { friendId });
   }, []);
 
   return {

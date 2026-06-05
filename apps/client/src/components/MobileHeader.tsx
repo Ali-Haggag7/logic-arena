@@ -7,12 +7,15 @@ import { ThemeSwitcher } from "./ui/ThemeSwitcher";
 import { useAuthState } from "../hooks/useAuthState";
 import { clearAuthSession, clearSensitiveBrowserStorage } from "../lib/client-security";
 import { LogIn, LogOut, LayoutDashboard, UserPlus, Lightbulb } from "lucide-react";
+import { useNotifications } from "../hooks/useNotifications";
+import { NotificationBell } from "../app/(dashboard)/components/layout/components/NotificationBell";
 
 export function MobileHeader() {
   const pathname = usePathname() || "";
   const router = useRouter();
   const { isGuest: isNotLoggedIn, refresh } = useAuthState();
   const isLoggedIn = !isNotLoggedIn;
+  const notifications = useNotifications();
 
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
   const isAuthPage = authRoutes.some(route => pathname.startsWith(route));
@@ -100,6 +103,7 @@ export function MobileHeader() {
         />
       </button>
       <div className="flex items-center gap-2">
+        {isLoggedIn && <NotificationBell notifications={notifications} isMobile />}
         {insightsButton}
         {authButtonContent}
         <ThemeSwitcher variant="minimal" />

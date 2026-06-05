@@ -120,6 +120,7 @@ export class NotificationsService {
       body: row.body,
       data: (row.data as Record<string, unknown> | null) ?? null,
       readAt: row.readAt ? row.readAt.toISOString() : null,
+      read: row.readAt !== null,
       createdAt: row.createdAt.toISOString(),
     };
   }

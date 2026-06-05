@@ -323,6 +323,7 @@ export class FriendsService {
         id: userId,
         username: remover.username,
       });
+      this.gateway.emitNotificationsInvalidate(friendId);
     }
 
     return { success: true };

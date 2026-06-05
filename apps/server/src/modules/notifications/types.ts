@@ -19,5 +19,6 @@ export interface NotificationEntry {
   body: string;
   data: Record<string, unknown> | null;
   readAt: string | null;
+  read: boolean;
   createdAt: string;
 }

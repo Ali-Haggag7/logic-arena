@@ -103,6 +103,35 @@ export class FriendsGateway {
     this.server.to(userId).emit('friends:list-invalidate');
   }
 
+  async emitNotificationNew(
+    userId: string,
+    notification: {
+      id: string;
+      type: string;
+      title: string;
+      body: string;
+      read: boolean;
+      createdAt: Date;
+      data: unknown;
+    },
+  ): Promise<void> {
+    if (!this.server) return;
+    this.server.to(userId).emit('notification:new', {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      read: notification.read,
+      createdAt: notification.createdAt.toISOString(),
+      data: notification.data,
+    });
+  }
+
+  emitNotificationsInvalidate(userId: string): void {
+    if (!this.server) return;
+    this.server.to(userId).emit('notifications:invalidate');
+  }
+
   // ── Subscribe handlers (called by MatchGateway event routes) ────────────
 
   async handleSendRequest(
