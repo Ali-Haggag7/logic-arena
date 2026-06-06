@@ -144,6 +144,7 @@ export interface Scene3DComponentProps {
 
 export interface HealthBarSpriteProps {
   health: number;
+  displayMode?: string;
 }
 
 export interface EnergyBarSpriteProps {

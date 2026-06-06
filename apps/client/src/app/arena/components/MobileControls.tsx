@@ -18,6 +18,8 @@ interface MobileControlsProps {
   classicMaxTokens?: number;
   onClassicEdit?: (script: string, tokensLeft: number) => void;
   initialScript?: string;
+  displayMode?: string;
+  matchPhase?: string;
 }
 
 export function MobileControls({
@@ -31,6 +33,8 @@ export function MobileControls({
   classicMaxTokens,
   onClassicEdit,
   initialScript,
+  displayMode,
+  matchPhase,
 }: MobileControlsProps) {
   const [activeSheet, setActiveSheet] = useState<'controls' | 'script' | null>(null);
   // Snippet bridge: HUB inserts code → stored here → ZEN_CORE picks it up
@@ -125,6 +129,8 @@ export function MobileControls({
           classicMaxTokens={classicMaxTokens}
           onClassicEdit={onClassicEdit}
           initialScript={initialScript}
+          displayMode={displayMode}
+          matchPhase={matchPhase}
         />
       </BottomSheet>
 

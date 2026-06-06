@@ -19,4 +19,6 @@ export interface CommandConsoleProps {
     classicMaxTokens?: number;
     onClassicEdit?: (script: string, tokensLeft: number) => void;
     initialScript?: string;
+    displayMode?: string;
+    matchPhase?: string;
 }

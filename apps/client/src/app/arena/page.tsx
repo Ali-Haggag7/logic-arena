@@ -22,6 +22,7 @@ import { TrainingHUD } from './components/TrainingMode/TrainingHUD';
 import { RacingHUD } from './components/TrainingMode/RacingHUD';
 import { SpectatorHUD } from './components/SpectatorHUD';
 import { BreakScreen } from './components/BreakScreen';
+import { RoundTransitionOverlay } from './components/Tactical/RoundTransitionOverlay';
 
 const Scene3D = dynamic(
   () => import('./components/Scene3D').then(m => m.Scene3D),
@@ -184,6 +185,10 @@ const ArenaPageContent = () => {
         />
       )}
 
+      {displayMode === 'TACTICAL' && matchPhase && (
+        <RoundTransitionOverlay phase={matchPhase as unknown as string} />
+      )}
+
       <div className="absolute inset-0 z-0">
         <Scene3D
           gameStateRef={gameStateRef}
@@ -248,6 +253,8 @@ const ArenaPageContent = () => {
                 classicMaxTokens={CLASSIC_TOKEN_BUDGET}
                 onClassicEdit={handleClassicEdit}
                 initialScript={script?.content ?? ''}
+                displayMode={displayMode}
+                matchPhase={matchPhase as unknown as string}
               />
             </>
           ) : (
@@ -271,6 +278,8 @@ const ArenaPageContent = () => {
               classicMaxTokens={CLASSIC_TOKEN_BUDGET}
               onClassicEdit={handleClassicEdit}
               initialScript={script?.content ?? ''}
+              matchPhase={matchPhase as unknown as string}
+              phaseTimeRemaining={(modeData as any)?.phaseTimeRemaining}
             />
           )}
         </>

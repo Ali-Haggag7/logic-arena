@@ -1,6 +1,8 @@
 import React from 'react';
 import { BlockEditor } from './BlockEditor/BlockEditor';
 import { WordLevelEditor } from '../WordLevelEditor';
+import { EditorCombatOverlay } from '../Tactical/EditorCombatOverlay';
+import { BreakControls } from '../Tactical/BreakControls';
 
 interface MobileScriptSheetProps {
     scriptInput: string;
@@ -11,12 +13,17 @@ interface MobileScriptSheetProps {
     classicTokensLeft?: number;
     classicMaxTokens?: number;
     onClassicEdit?: (script: string, tokensLeft: number) => void;
+    displayMode?: string;
+    matchPhase?: string;
 }
 
 export const MobileScriptSheet: React.FC<MobileScriptSheetProps> = ({
     scriptInput, setScriptInput, handleDeployBrain, onDeployDone,
-    isClassicMode = false, classicTokensLeft = 0, classicMaxTokens, onClassicEdit
+    isClassicMode = false, classicTokensLeft = 0, classicMaxTokens, onClassicEdit,
+    displayMode, matchPhase
 }) => {
+    const [isReady, setIsReady] = React.useState(false);
+
     if (isClassicMode && onClassicEdit) {
         return (
             <div className="mobile-zen-sheet flex min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -34,13 +41,26 @@ export const MobileScriptSheet: React.FC<MobileScriptSheetProps> = ({
     }
 
     return (
-        <div className="mobile-zen-sheet flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+        <div className="mobile-zen-sheet flex min-h-0 w-full flex-1 flex-col overflow-hidden relative">
+            {displayMode === 'TACTICAL' && (
+                <EditorCombatOverlay isActive={matchPhase === 'ROUND_ACTIVE'} />
+            )}
             <BlockEditor
                 scriptInput={scriptInput}
                 setScriptInput={setScriptInput}
                 handleDeployBrain={handleDeployBrain}
                 onDeployDone={onDeployDone}
             />
+            {displayMode === 'TACTICAL' && (
+                <div className="shrink-0 p-2 border-t border-cyan-900/50 bg-black/80">
+                    <BreakControls 
+                        isActive={matchPhase === 'BREAK'}
+                        isReady={isReady}
+                        opponentReady={false} // Placeholder until backend is wired
+                        onToggleReady={() => setIsReady(!isReady)}
+                    />
+                </div>
+            )}
         </div>
     );
 };

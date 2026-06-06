@@ -1,4 +1,5 @@
 'use client';
+'use client';
 import React, { memo, useRef, useEffect, useState, useMemo } from 'react';
 import { AnimationClip, CanvasTexture, Color, Group, LinearFilter, Material, MathUtils, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -6,7 +7,7 @@ import { Html, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import {
   RobotModelProps, HealthBarSpriteProps, FallbackRobotProps,
-  RobotErrorBoundaryProps, RobotErrorBoundaryState,
+  RobotErrorBoundaryProps, RobotErrorBoundaryState, ModeData
 } from '../../../types';
 import { HIT_FLASH_DURATION } from '../sceneConstants';
 import { EnergyBarSprite } from './EnergyBar';
@@ -50,7 +51,7 @@ export const FallbackRobot = ({ position, color }: FallbackRobotProps) => (
 
 /* ── Health bar sprite ──────────────────────────────────────────────────── */
 
-export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
+export const HealthBarSprite = ({ health, displayMode }: HealthBarSpriteProps) => {
   const canvas = useMemo(() => {
     const c = document.createElement('canvas');
     c.width = 64;
@@ -80,8 +81,15 @@ export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
     const ratio = Math.max(0, Math.min(1, health / 100));
     ctx.fillStyle = health > 30 ? '#00FF00' : '#FF0000';
     ctx.fillRect(1, 1, (canvas.width - 2) * ratio, canvas.height - 2);
+    
+    // 50% Marker for Tactical Mode
+    if (displayMode === 'TACTICAL') {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(canvas.width / 2 - 1, 0, 2, canvas.height);
+    }
+    
     textureRef.current.needsUpdate = true;
-  }, [canvas, health]);
+  }, [canvas, health, displayMode]);
 
   return (
     <sprite scale={[0.8, 0.12, 1]}>
@@ -98,6 +106,7 @@ interface RobotModelInnerProps extends RobotModelProps {
   scene: Group;
   animations?: AnimationClip[];
   scale?: number;
+  displayMode?: string;
 }
 
 interface MatchedAnimationClips {
@@ -115,6 +124,7 @@ export const RobotModelInner = memo(({
   energy = 1000, maxEnergy = 1000, inStasis = false, fovDirection,
   scale = 2, hideHealthBar = false, speechBubble, inFog = false,
   isShielded = false, isCloaked = false, animations = EMPTY_ANIMATION_CLIPS,
+  displayMode
 }: RobotModelInnerProps) => {
   const groupRef = useRef<Group>(null);
   const modelMotionRef = useRef<Group>(null);
@@ -435,11 +445,10 @@ export const RobotModelInner = memo(({
 
       {/* HUD billboard: health + energy bars */}
       <group position={[0, 2.1, 0]}>
-        {!hideHealthBar && <HealthBarSprite health={health} />}
+        {!hideHealthBar && <HealthBarSprite health={health} displayMode={displayMode} />}
         <EnergyBarSprite energy={energy} maxEnergy={maxEnergy} inStasis={inStasis} />
       </group>
     </group>
   );
 });
 RobotModelInner.displayName = 'RobotModelInner';
-

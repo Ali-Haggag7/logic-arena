@@ -4,6 +4,8 @@ import { BotSelector } from './BotSelector';
 import { ScriptEditor } from './ScriptEditor';
 import { NeuralHandbook, Recipe, DIFFICULTY_STYLES, CodeLine } from './NeuralHandbook';
 import { WordLevelEditor } from '../WordLevelEditor';
+import { EditorCombatOverlay } from '../Tactical/EditorCombatOverlay';
+import { BreakControls } from '../Tactical/BreakControls';
 
 interface DesktopConsoleProps {
     isMobile: boolean;
@@ -29,6 +31,8 @@ interface DesktopConsoleProps {
     classicTokensLeft?: number;
     classicMaxTokens?: number;
     onClassicEdit?: (script: string, tokensLeft: number) => void;
+    displayMode?: string;
+    matchPhase?: string;
 }
 
 export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
@@ -36,9 +40,10 @@ export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
     output, isLogsOpen, setIsLogsOpen, availableRobots, robotId, onRobotChange,
     scriptInput, setScriptInput, handleDeployBrain, isLibraryOpen, setIsLibraryOpen,
     setActivePrebuilt, appendScriptLine, isClassicMode = false, classicTokensLeft = 0,
-    classicMaxTokens, onClassicEdit
+    classicMaxTokens, onClassicEdit, displayMode, matchPhase
 }) => {
     const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
+    const [isReady, setIsReady] = useState(false);
 
     return (
         <div
@@ -96,14 +101,27 @@ export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
                             }}
                         />
                     ) : (
-                        <ScriptEditor
-                            scriptInput={scriptInput}
-                            setScriptInput={setScriptInput}
-                            handleDeployBrain={() => handleDeployBrain(scriptInput)}
-                            toggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
-                            clearPrebuilt={() => setActivePrebuilt(null)}
-                            isLibraryOpen={isLibraryOpen}
-                        />
+                        <div className="flex flex-col min-h-0 grow relative">
+                            {displayMode === 'TACTICAL' && (
+                                <EditorCombatOverlay isActive={matchPhase === 'ROUND_ACTIVE'} />
+                            )}
+                            <ScriptEditor
+                                scriptInput={scriptInput}
+                                setScriptInput={setScriptInput}
+                                handleDeployBrain={() => handleDeployBrain(scriptInput)}
+                                toggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
+                                clearPrebuilt={() => setActivePrebuilt(null)}
+                                isLibraryOpen={isLibraryOpen}
+                            />
+                            {displayMode === 'TACTICAL' && (
+                                <BreakControls 
+                                    isActive={matchPhase === 'BREAK'}
+                                    isReady={isReady}
+                                    opponentReady={false} // Placeholder until backend is wired
+                                    onToggleReady={() => setIsReady(!isReady)}
+                                />
+                            )}
+                        </div>
                     )}
                 </div>
                 <NeuralHandbook

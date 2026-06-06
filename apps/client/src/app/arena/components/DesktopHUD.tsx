@@ -8,6 +8,7 @@ import { TacticalRadar } from './TacticalRadar';
 import { RefreshCw, Eye, EyeOff, Lock, Unlock, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { RobotState, ProjectileState, ModeData } from '../types';
+import { PhaseBanner } from './Tactical/PhaseBanner';
 
 interface DesktopHUDProps {
   robots: RobotState[];
@@ -29,6 +30,8 @@ interface DesktopHUDProps {
   classicMaxTokens?: number;
   onClassicEdit?: (script: string, tokensLeft: number) => void;
   initialScript?: string;
+  matchPhase?: string;
+  phaseTimeRemaining?: number;
 }
 
 export function DesktopHUD({
@@ -51,6 +54,8 @@ export function DesktopHUD({
   classicMaxTokens,
   onClassicEdit,
   initialScript,
+  matchPhase,
+  phaseTimeRemaining = 0,
 }: DesktopHUDProps) {
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [lockVision, setLockVision] = useState(false);
@@ -80,6 +85,10 @@ export function DesktopHUD({
 
   return (
     <>
+      {displayMode === 'TACTICAL' && matchPhase && (
+        <PhaseBanner phase={matchPhase} timeRemaining={phaseTimeRemaining} />
+      )}
+      
       <button
         type="button"
         aria-label={isLeftPanelOpen ? 'Collapse arena HUD panel' : 'Expand arena HUD panel'}
@@ -246,6 +255,8 @@ export function DesktopHUD({
             classicMaxTokens={classicMaxTokens}
             onClassicEdit={onClassicEdit}
             initialScript={initialScript}
+            matchPhase={matchPhase}
+            displayMode={displayMode}
           />
         </div>
       </div>
