@@ -1,9 +1,13 @@
 "use client";
-import React, { useRef, useMemo, useEffect } from "react";
-import * as THREE from "three";
+import React, { useRef, useMemo, MutableRefObject } from "react";
+import { Points, PointsMaterial, BufferAttribute } from "three";
 import { useFrame } from "@react-three/fiber";
-import { HitBurstEffectProps, HitParticlesProps, HitBurst } from "../../../types";
+import { HitBurstEffectProps, HitBurst } from "../../../types";
 import { HIT_BURST_LIFETIME, HIT_BURST_PARTICLES } from "../sceneConstants";
+
+interface HitParticlesRefProps {
+  burstsRef: MutableRefObject<HitBurst[]>;
+}
 
 const hashStringToSeed = (value: string) => {
   // FNV-1a 32-bit
@@ -27,8 +31,8 @@ const mulberry32 = (seed: number) => {
 };
 
 export const HitBurstEffect = ({ burst }: HitBurstEffectProps) => {
-  const pointsRef = useRef<THREE.Points>(null);
-  const materialRef = useRef<THREE.PointsMaterial>(null);
+  const pointsRef = useRef<Points>(null);
+  const materialRef = useRef<PointsMaterial>(null);
 
   const { positions, velocities } = useMemo(() => {
     const rnd = mulberry32(hashStringToSeed(burst.id));
@@ -63,7 +67,7 @@ export const HitBurstEffect = ({ burst }: HitBurstEffectProps) => {
     const timeAlive = Math.max(0, currentTime - burst.createdAt);
     const progress = Math.min(1, timeAlive / HIT_BURST_LIFETIME);
 
-    const positionAttr = pointsRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+    const positionAttr = pointsRef.current?.geometry.getAttribute("position") as BufferAttribute | undefined;
     if (!positionAttr) return;
 
     for (let i = 0; i < HIT_BURST_PARTICLES; i += 1) {
@@ -89,30 +93,9 @@ export const HitBurstEffect = ({ burst }: HitBurstEffectProps) => {
   );
 };
 
-export const HitParticles = ({ bursts, setBursts }: HitParticlesProps) => {
-  // Keep a ref copy of bursts to avoid stale closure in useFrame
-  const burstsRef = useRef<HitBurst[]>(bursts);
-  const prevCountRef = useRef(bursts.length);
-
-  // Sync ref whenever bursts prop changes (driven by useSceneAnimation state)
-  useEffect(() => {
-    burstsRef.current = bursts;
-  }, [bursts]);
-
-  useFrame(() => {
-    if (burstsRef.current.length === 0) return;
-    const now = performance.now() / 1000;
-    const hasExpired = burstsRef.current.some(b => now - b.createdAt >= HIT_BURST_LIFETIME);
-    if (!hasExpired) return;
-
-    // Filter expired bursts — only call setBursts when count actually changes
-    const alive = burstsRef.current.filter(b => now - b.createdAt < HIT_BURST_LIFETIME);
-    if (alive.length !== prevCountRef.current) {
-      prevCountRef.current = alive.length;
-      burstsRef.current = alive;
-      setBursts(alive);
-    }
-  });
+export const HitParticles = ({ burstsRef }: HitParticlesRefProps) => {
+  // Read bursts from ref on every frame render — no useState re-render needed
+  const bursts = burstsRef.current;
 
   return (
     <>

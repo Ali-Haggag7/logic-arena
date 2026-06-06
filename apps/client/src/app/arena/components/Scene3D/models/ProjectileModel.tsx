@@ -1,13 +1,13 @@
 "use client";
 import { useRef, useEffect, memo } from "react";
-import * as THREE from "three";
+import { Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
 import { useFrame } from "@react-three/fiber";
 import { LaserModelProps } from "../../../types";
 
 // Shared across ALL projectile instances — created once, never disposed while the module lives.
 // This eliminates per-instance geometry/material allocation for potentially dozens of projectiles.
-const SHARED_PROJECTILE_GEO = new THREE.SphereGeometry(0.1, 16, 16);
-const SHARED_PROJECTILE_MAT = new THREE.MeshStandardMaterial({
+const SHARED_PROJECTILE_GEO = new SphereGeometry(0.1, 16, 16);
+const SHARED_PROJECTILE_MAT = new MeshStandardMaterial({
   color: "#FFFFFF",
   emissive: "#00FFFF",
   emissiveIntensity: 10,
@@ -15,9 +15,9 @@ const SHARED_PROJECTILE_MAT = new THREE.MeshStandardMaterial({
 });
 
 export const LaserModel = memo(({ position }: LaserModelProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const targetPos = useRef(new THREE.Vector3(...position));
-  const currentPos = useRef(new THREE.Vector3(...position));
+  const meshRef = useRef<Mesh>(null);
+  const targetPos = useRef(new Vector3(...position));
+  const currentPos = useRef(new Vector3(...position));
 
   useEffect(() => {
     targetPos.current.set(position[0], position[1], position[2]);

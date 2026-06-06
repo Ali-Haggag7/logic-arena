@@ -1,24 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { io, Socket } from "socket.io-client";
-import { apiClient, API_BASE_URL } from "../../../lib/api-client";
+import { apiClient } from "../../../lib/api-client";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { useSocket } from "../../../context/SocketContext";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { useAuthState } from "../../../hooks/useAuthState";
+import { useGlobalSocket } from "../../../hooks/useGlobalSocket";
+import { useVisibilityPause } from "../../../hooks/useVisibilityPause";
+import type { UserStatusSnapshotEntry, UserStatusUpdatePayload } from "../../../hooks/useGlobalSocket";
 import type { LeaderboardUser } from "./types";
 import { POLL_INTERVAL_MS } from "./types";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface UserStatusUpdatePayload {
-  userId: string;
-  status: "idle" | "in-match" | "online";
-  matchId?: string;
-  isOnline?: boolean; // absent = true (connect/in-match); explicit false = disconnected
-}
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -35,14 +28,7 @@ const LeaderboardPage = () => {
   const { sendChallenge } = useSocket();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // Dedicated socket for leaderboard presence (reuses existing WS connection)
-  const socketRef = useRef<Socket | null>(null);
-
   // Apply a status update to a single user in the users list.
-  // Any event from the server means the user is connected => isOnline = true
-  // unless the server explicitly sends isOnline:false (on disconnect).
-  // "idle"     = online but not in a match
-  // "in-match" = actively playing
   const applyStatusUpdate = useCallback(
     (payload: UserStatusUpdatePayload) => {
       setUsers((prev) =>
@@ -63,6 +49,38 @@ const LeaderboardPage = () => {
     [],
   );
 
+  const applySnapshot = useCallback(
+    (snapshot: UserStatusSnapshotEntry[]) => {
+      setUsers((prev) =>
+        prev.map((u) => {
+          const entry = snapshot.find((s) => s.userId === u.id);
+          if (!entry) return u;
+          return {
+            ...u,
+            isOnline: entry.isOnline,
+            inMatchId: entry.matchId,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
+  const socketHandlers = useMemo(() => ({
+    onUserStatusSnapshot: applySnapshot,
+    onUserStatusUpdate: applyStatusUpdate,
+  }), [applySnapshot, applyStatusUpdate]);
+
+  const { joinLeaderboard, leaveLeaderboard, emitSpectate } = useGlobalSocket(socketHandlers);
+
+  // Join the leaderboard presence room on mount, leave on unmount
+  useEffect(() => {
+    joinLeaderboard();
+    return () => {
+      leaveLeaderboard();
+    };
+  }, [joinLeaderboard, leaveLeaderboard]);
+
   const fetchLeaderboard = useCallback(async () => {
     try {
       const response = await apiClient.get<LeaderboardUser[]>(
@@ -77,78 +95,24 @@ const LeaderboardPage = () => {
     }
   }, []);
 
-  // Subscribe to leaderboard presence room over WebSocket
+  // Polling with visibility pause — fires once immediately, then every POLL_INTERVAL_MS
+  useVisibilityPause(fetchLeaderboard, POLL_INTERVAL_MS);
+
+  // Listen for global refresh events (e.g. from challenge completion)
   useEffect(() => {
-    const wsUrl = API_BASE_URL.replace("https://", "wss://")
-      .replace("http://", "ws://")
-      .replace(/\/api$/, "");
-
-    const socket = io(wsUrl, { withCredentials: true, autoConnect: false });
-    socketRef.current = socket;
-
-    // Snapshot: authoritative list of ALL online users sent on joinLeaderboard.
-    // isOnline is included so we can correct any stale value from the REST cache.
-    const handleSnapshot = (
-      snapshot: Array<{ userId: string; isOnline: boolean; matchId?: string }>,
-    ) => {
-      setUsers((prev) =>
-        prev.map((u) => {
-          const entry = snapshot.find((s) => s.userId === u.id);
-          if (!entry) return u;
-          return {
-            ...u,
-            isOnline: entry.isOnline,
-            inMatchId: entry.matchId,
-          };
-        }),
-      );
-    };
-
-    socket.on("connect", () => {
-      socket.emit("joinLeaderboard");
-    });
-
-    socket.on("userStatusSnapshot", handleSnapshot);
-    socket.on("userStatusUpdate", (payload: UserStatusUpdatePayload) => {
-      applyStatusUpdate(payload);
-    });
-
-    socket.connect();
-
-    return () => {
-      socket.emit("leaveLeaderboard");
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [applyStatusUpdate]);
-
-  useEffect(() => {
-    fetchLeaderboard();
-
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        fetchLeaderboard();
-      }
-    }, POLL_INTERVAL_MS);
-
     const handleGlobalRefresh = () => fetchLeaderboard();
     window.addEventListener("global-refresh", handleGlobalRefresh);
-
     return () => {
-      clearInterval(interval);
       window.removeEventListener("global-refresh", handleGlobalRefresh);
     };
   }, [fetchLeaderboard]);
 
   const handleSpectate = useCallback(
     (matchId: string) => {
-      const socket = socketRef.current;
-      if (socket?.connected) {
-        socket.emit("spectate", { matchId });
-      }
+      emitSpectate(matchId);
       router.push(`/arena?matchId=${matchId}&spectate=true`);
     },
-    [router],
+    [router, emitSpectate],
   );
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useRef, useEffect } from 'react';
-import * as THREE from 'three';
+import { AdditiveBlending, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, ShaderMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { FovConeProps } from '../../../types';
 
@@ -15,7 +15,7 @@ const ARENA_SCALE  = 40; // engine units → 3D units
  * Rotates to track fovDirection each frame via ref mutation (zero re-renders).
  */
 export const FovCone = ({ position, color, fov, fovDirection }: FovConeProps) => {
-  const groupRef    = useRef<THREE.Group>(null);
+  const groupRef    = useRef<Group>(null);
   const dirRef      = useRef(fovDirection);
 
   // Keep dirRef in sync when prop changes (R3F doesn't re-render every frame)
@@ -47,9 +47,9 @@ export const FovCone = ({ position, color, fov, fovDirection }: FovConeProps) =>
         indices.push(0, i, i + 1);
     }
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new Float32BufferAttribute(positions, 3));
+    geo.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
     geo.setIndex(indices);
     geo.computeVertexNormals();
     return geo;
@@ -57,13 +57,13 @@ export const FovCone = ({ position, color, fov, fovDirection }: FovConeProps) =>
 
   const material = useMemo(
     () =>
-      new THREE.ShaderMaterial({
+      new ShaderMaterial({
         transparent: true,
         depthWrite: false,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
+        side: DoubleSide,
+        blending: AdditiveBlending,
         uniforms: {
-          uColor: { value: new THREE.Color(color) },
+          uColor: { value: new Color(color) },
           uTime: { value: 0 },
         },
         vertexShader: `

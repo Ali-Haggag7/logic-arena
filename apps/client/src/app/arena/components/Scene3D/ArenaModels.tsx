@@ -5,7 +5,7 @@ import {
   GameState, RobotState, ObstacleState,
   FiredTracer, SpeechBubbleState,
 } from '../../types';
-import * as THREE from 'three';
+import { Group, Material, Mesh, Object3D } from 'three';
 import { useThree } from '@react-three/fiber';
 import { useSceneAnimation } from '../../hooks/useSceneAnimation';
 import { RobotModel } from './models/RobotModelLoaders';
@@ -60,7 +60,7 @@ export const ArenaModels = ({
   mapTheme?: string;
 }) => {
   const { scene } = useThree();
-  const robotMeshesRef = useRef<THREE.Group[]>([]);
+  const robotMeshesRef = useRef<Group[]>([]);
   const [, setRenderTick] = useState(0);
   const lastUpdateRef = useRef(0);
 
@@ -70,12 +70,12 @@ export const ArenaModels = ({
       robotMeshesRef.current.forEach(mesh => {
         if (mesh) {
           scene.remove(mesh);
-          mesh.traverse((child: THREE.Object3D) => {
-            if ((child as THREE.Mesh).isMesh) {
-              const m = child as THREE.Mesh;
+          mesh.traverse((child: Object3D) => {
+            if ((child as Mesh).isMesh) {
+              const m = child as Mesh;
               m.geometry?.dispose();
-              if (Array.isArray(m.material)) m.material.forEach((mat: THREE.Material) => mat.dispose());
-              else (m.material as THREE.Material)?.dispose();
+              if (Array.isArray(m.material)) m.material.forEach((mat: Material) => mat.dispose());
+              else (m.material as Material)?.dispose();
             }
           });
         }
@@ -97,7 +97,7 @@ export const ArenaModels = ({
   const robots = gameStateRef.current?.robots ?? [];
   const projectiles = gameStateRef.current?.projectiles ?? [];
 
-  const { hitBursts, setHitBursts, hitFlashMap, isSpotted } = useSceneAnimation(robots, firedTracer, soundFx);
+  const { hitBurstsRef, hitFlashMapRef, isSpotted } = useSceneAnimation(robots, firedTracer, soundFx);
 
   const boundaryPoints = useMemo(
     () => new Float32Array([-10, 0, -7.5, 10, 0, -7.5, 10, 0, 7.5, -10, 0, 7.5]),
@@ -121,7 +121,7 @@ export const ArenaModels = ({
   return (
     <>
       <BoundaryLine points={boundaryPoints} />
-      <HitParticles bursts={hitBursts} setBursts={setHitBursts} />
+      <HitParticles burstsRef={hitBurstsRef} />
 
       <ObstaclesInstanced obstacles={obstacles} mapTheme={mapTheme as any} />
 
@@ -181,7 +181,7 @@ export const ArenaModels = ({
                 position={robotPosition} 
                 color={robot.color} 
                 health={robot.health} 
-                hitTimestamp={hitFlashMap.get(robot.id)} 
+                hitTimestamp={hitFlashMapRef.current.get(robot.id)} 
               />
             ) : (
               <>
@@ -210,7 +210,7 @@ export const ArenaModels = ({
                       health={robot.health}
                       velocity={robot.velocity ?? { x: 0, y: 0 }}
                       rotation={typeof robot.rotation === 'number' ? robot.rotation : undefined}
-                      hitTimestamp={hitFlashMap.get(robot.id)}
+                      hitTimestamp={hitFlashMapRef.current.get(robot.id)}
                       spotted={isSpotted(robot)}
                       energy={robot.energy ?? 1000}
                       maxEnergy={robot.maxEnergy ?? 1000}

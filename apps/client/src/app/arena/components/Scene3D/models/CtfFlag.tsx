@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { DoubleSide, Group } from 'three';
 import { CtfFlag as CtfFlagType } from '../../../types';
 
 interface CtfFlagProps {
@@ -18,7 +18,7 @@ export const CtfFlagModel: React.FC<CtfFlagProps> = ({ flag, carrierPosition }) 
     : [toSceneX(flag.position.x), 0.3, toSceneZ(flag.position.y)];
 
   const teamColor = flag.team === 'A' ? '#22d3ee' : '#e879f9';
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   useFrame((state) => {
     if (groupRef.current && isCarried) {
@@ -41,7 +41,7 @@ export const CtfFlagModel: React.FC<CtfFlagProps> = ({ flag, carrierPosition }) 
           color={teamColor}
           emissive={teamColor}
           emissiveIntensity={0.6}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
     </group>

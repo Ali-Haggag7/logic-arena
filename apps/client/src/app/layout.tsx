@@ -5,13 +5,14 @@ import "./globals.css";
 import { ThemeProvider } from "../providers/ThemeProvider";
 import { SoundProvider } from "../context/SoundContext";
 import { AuthProvider } from "../context/AuthContext";
+import dynamic from "next/dynamic";
 import Footer from "../components/Footer";
 import { MobileHeader } from "../components/MobileHeader";
 import { MobileNav } from "../components/MobileNav";
 import PullToRefresh from "../components/PullToRefresh";
 import { ServiceWorkerRegistrar } from "../components/ServiceWorkerRegistrar";
-import { AiTutor } from "../components/AiTutor";
 import { PortraitGuard } from "../components/PortraitGuard";
+import { AiTutorClient } from "../components/AiTutorClient";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-geist-sans",
@@ -223,7 +224,7 @@ export default function RootLayout({
           <MobileNav />
 
           {/* Global AI Tutor — ARIA */}
-          <AiTutor />
+          <AiTutorClient />
           </AuthProvider>
           </SoundProvider>
         </ThemeProvider>

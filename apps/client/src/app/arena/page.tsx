@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useAuth } from '../../context/AuthContext';
 import { useGameState } from './hooks/game';
-import { Scene3D } from './components/Scene3D';
 import WinnerScreen from './components/WinnerScreen';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { getAuthUserId } from '../../lib/client-security';
@@ -21,6 +21,11 @@ import { ArenaStyles } from './components/ArenaStyles';
 import { TrainingHUD } from './components/TrainingMode/TrainingHUD';
 import { RacingHUD } from './components/TrainingMode/RacingHUD';
 import { SpectatorHUD } from './components/SpectatorHUD';
+
+const Scene3D = dynamic(
+  () => import('./components/Scene3D').then(m => m.Scene3D),
+  { ssr: false },
+);
 
 const ROBOT_FILES: Record<string, string> = {
   'unit-01': '/robots/robot.glb',

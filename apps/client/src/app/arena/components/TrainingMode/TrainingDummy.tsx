@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useMemo, useEffect, useState } from "react";
-import * as THREE from "three";
+import { CanvasTexture, Color, Group, LinearFilter, MathUtils, MeshStandardMaterial } from 'three';
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 
@@ -45,9 +45,9 @@ const DummyHealthBar = ({ health }: { health: number }) => {
   }, []);
 
   const [texture] = useState(() => {
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
+    const tex = new CanvasTexture(canvas);
+    tex.minFilter = LinearFilter;
+    tex.magFilter = LinearFilter;
     tex.needsUpdate = true;
     return tex;
   });
@@ -78,14 +78,14 @@ const DummyHealthBar = ({ health }: { health: number }) => {
 };
 
 export const TrainingDummy = ({ position, color, health, hitTimestamp }: TrainingDummyProps) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const coreMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const groupRef = useRef<Group>(null);
+  const coreMaterialRef = useRef<MeshStandardMaterial>(null);
 
   const [damageNumbers, setDamageNumbers] = useState<{ id: number; val: number; x: number; y: number }[]>([]);
   const [isRespawning, setIsRespawning] = useState(false);
   const prevHealthRef = useRef(health);
 
-  const targetColor = useMemo(() => new THREE.Color(color), [color]);
+  const targetColor = useMemo(() => new Color(color), [color]);
   const colors = useMemo(readArenaDummyColors, []);
 
   // Handle hits and respawns
@@ -120,7 +120,7 @@ export const TrainingDummy = ({ position, color, health, hitTimestamp }: Trainin
       groupRef.current.rotation.y += delta * 0.6;
     }
     if (coreMaterialRef.current) {
-      coreMaterialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+      coreMaterialRef.current.emissiveIntensity = MathUtils.lerp(
         coreMaterialRef.current.emissiveIntensity,
         0.4,
         0.08,

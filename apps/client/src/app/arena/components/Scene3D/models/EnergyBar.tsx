@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import * as THREE from 'three';
+import { CanvasTexture, LinearFilter } from 'three';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { EnergyBarSpriteProps } from '../../../types';
@@ -20,9 +20,9 @@ export const EnergyBarSprite = ({ energy, maxEnergy, inStasis }: EnergyBarSprite
   }, []);
 
   const [texture] = useState(() => {
-    const tex        = new THREE.CanvasTexture(canvas);
-    tex.minFilter    = THREE.LinearFilter;
-    tex.magFilter    = THREE.LinearFilter;
+    const tex        = new CanvasTexture(canvas);
+    tex.minFilter    = LinearFilter;
+    tex.magFilter    = LinearFilter;
     tex.needsUpdate  = true;
     return tex;
   });

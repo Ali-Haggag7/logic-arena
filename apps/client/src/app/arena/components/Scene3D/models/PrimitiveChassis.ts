@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { BoxGeometry, Color, Group, Mesh, MeshStandardMaterial } from 'three';
 
 /**
  * Builds a procedural Three.js group shaped like a combat robot.
@@ -8,28 +8,28 @@ import * as THREE from 'three';
  * Instead, all geometry is offset via an inner group so the outer group
  * origin sits exactly at the foot-of-tracks (Y = 0), ready for the Arena.
  */
-export function createPrimitiveChassis(chassisId: string): THREE.Group {
+export function createPrimitiveChassis(chassisId: string): Group {
   const isTitan  = chassisId.includes('titan');
   const isWraith = chassisId.includes('wraith');
 
   // ── Materials ─────────────────────────────────────────────────────────────
-  const bodyMat = new THREE.MeshStandardMaterial({
+  const bodyMat = new MeshStandardMaterial({
     color: '#888888',
     metalness: 0.85,
     roughness: 0.15,
-    emissive: new THREE.Color('#888888'),
+    emissive: new Color('#888888'),
     emissiveIntensity: 0.25,
   });
 
-  const trackMat = new THREE.MeshStandardMaterial({
+  const trackMat = new MeshStandardMaterial({
     color: '#222222',
     roughness: 0.9,
     metalness: 0.1,
   });
 
-  const eyeMat = new THREE.MeshStandardMaterial({
+  const eyeMat = new MeshStandardMaterial({
     color: '#ffffff',
-    emissive: new THREE.Color('#ffffff'),
+    emissive: new Color('#ffffff'),
     emissiveIntensity: 2.5,
     toneMapped: false,
   });
@@ -64,26 +64,26 @@ export function createPrimitiveChassis(chassisId: string): THREE.Group {
   const bodyCentreY = trackH + bodyH / 2;
 
   // ── Inner group (all geometry offset so track-bottom = Y 0) ───────────────
-  const inner = new THREE.Group();
+  const inner = new Group();
 
   // 1. Tracks
-  const leftTrack  = new THREE.Mesh(new THREE.BoxGeometry(trackW, trackH, trackD), trackMat);
-  const rightTrack = new THREE.Mesh(new THREE.BoxGeometry(trackW, trackH, trackD), trackMat);
+  const leftTrack  = new Mesh(new BoxGeometry(trackW, trackH, trackD), trackMat);
+  const rightTrack = new Mesh(new BoxGeometry(trackW, trackH, trackD), trackMat);
   leftTrack.position.set(-trackX, trackH / 2, 0);
   rightTrack.position.set( trackX, trackH / 2, 0);
   leftTrack.castShadow = rightTrack.castShadow = true;
   inner.add(leftTrack, rightTrack);
 
   // 2. Chassis body
-  const body = new THREE.Mesh(new THREE.BoxGeometry(bodyW, bodyH, bodyD), bodyMat);
+  const body = new Mesh(new BoxGeometry(bodyW, bodyH, bodyD), bodyMat);
   body.position.set(0, bodyCentreY, 0);
   body.castShadow = true;
   inner.add(body);
 
   // 3. Shoulder pads (Phantom + Titan only)
   if (!isWraith) {
-    const leftShl  = new THREE.Mesh(new THREE.BoxGeometry(shlW, shlH, shlD), bodyMat);
-    const rightShl = new THREE.Mesh(new THREE.BoxGeometry(shlW, shlH, shlD), bodyMat);
+    const leftShl  = new Mesh(new BoxGeometry(shlW, shlH, shlD), bodyMat);
+    const rightShl = new Mesh(new BoxGeometry(shlW, shlH, shlD), bodyMat);
     leftShl.position.set(-shlX, bodyCentreY + 0.10, 0);
     rightShl.position.set( shlX, bodyCentreY + 0.10, 0);
     leftShl.castShadow = rightShl.castShadow = true;
@@ -91,12 +91,12 @@ export function createPrimitiveChassis(chassisId: string): THREE.Group {
   }
 
   // 4. Eye / sensor strip on the FRONT face (+Z)
-  const eye = new THREE.Mesh(new THREE.BoxGeometry(eyeW, eyeH, 0.04), eyeMat);
+  const eye = new Mesh(new BoxGeometry(eyeW, eyeH, 0.04), eyeMat);
   eye.position.set(0, bodyCentreY + 0.05, bodyD / 2 + 0.025);
   inner.add(eye);
 
   // ── Outer wrapper (no position / scale — controlled by <primitive> in R3F) ─
-  const outer = new THREE.Group();
+  const outer = new Group();
   outer.add(inner);
   return outer;
 }

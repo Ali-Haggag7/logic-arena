@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { ThemeSwitcher } from "../../../../../components/ui/ThemeSwitcher";
 import { apiClient } from "../../../../../lib/api-client";
 import { useNotifications } from "../../../../../hooks/useNotifications";
 import { NotificationBell } from "./NotificationBell";
+import { useVisibilityPause } from "../../../../../hooks/useVisibilityPause";
 
 const POLL_INTERVAL = 30_000;
 
@@ -26,22 +27,17 @@ export function DashboardHeader({ username, avatarUrl }: DashboardHeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const notifications = useNotifications();
 
-  useEffect(() => {
+  const fetchUnread = async (): Promise<void> => {
     if (!username) return;
+    try {
+      const { data } = await apiClient.get<{ count: number }>('/ai/insights/unread-count');
+      setUnreadCount(data.count ?? 0);
+    } catch {
+      /* silently ignore — user may not be authed yet */
+    }
+  };
 
-      const fetchUnread = async () => {
-        try {
-          const { data } = await apiClient.get<{ count: number }>('/ai/insights/unread-count');
-          setUnreadCount(data.count ?? 0);
-        } catch {
-          /* silently ignore — user may not be authed yet */
-        }
-      };
-
-    fetchUnread();
-    const interval = setInterval(fetchUnread, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [username]);
+  useVisibilityPause(fetchUnread, POLL_INTERVAL, !!username);
 
   return (
     <header className="sticky top-0 z-[110] w-full bg-bg-primary/90 backdrop-blur-xl border-b border-accent/[0.08] p-[16px_28px] flex items-center justify-between shrink-0 shadow-[0_10px_40px_rgba(var(--accent-rgb),0.05)]">

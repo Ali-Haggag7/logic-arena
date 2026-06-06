@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Mesh, MeshStandardMaterial } from 'three';
 import { Vec2 } from '../../../types';
 
 interface CtfBaseProps {
@@ -12,11 +12,11 @@ const toSceneX = (x: number) => (x / 40) - 10;
 const toSceneZ = (y: number) => (y / 40) - 7.5;
 
 export const CtfBase: React.FC<CtfBaseProps> = ({ position, teamColor }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
-      const material = meshRef.current.material as THREE.MeshStandardMaterial;
+      const material = meshRef.current.material as MeshStandardMaterial;
       material.emissiveIntensity = 0.5 + Math.sin(state.clock.elapsedTime * 3) * 0.5;
     }
   });

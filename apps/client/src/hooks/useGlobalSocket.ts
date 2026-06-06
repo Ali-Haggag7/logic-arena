@@ -25,6 +25,19 @@ export interface FriendRemovedPayload {
   by: { id: string; username: string };
 }
 
+export interface UserStatusSnapshotEntry {
+  userId: string;
+  isOnline: boolean;
+  matchId?: string;
+}
+
+export interface UserStatusUpdatePayload {
+  userId: string;
+  status: "idle" | "in-match" | "online";
+  matchId?: string;
+  isOnline?: boolean;
+}
+
 interface Handlers {
   onChallengeReceived: (data: { challengerId: string; challengerName: string }) => void;
   onChallengeSent: () => void;
@@ -37,6 +50,8 @@ interface Handlers {
   onFriendsListInvalidate: () => void;
   onNotificationNew: (notification: NotificationEntry) => void;
   onNotificationsInvalidate: () => void;
+  onUserStatusSnapshot: (snapshot: UserStatusSnapshotEntry[]) => void;
+  onUserStatusUpdate: (payload: UserStatusUpdatePayload) => void;
 }
 
 export type PartialHandlers = Partial<Handlers>;
@@ -110,6 +125,12 @@ function getOrCreateManager(): SocketManager | null {
   socket.on('notifications:invalidate', () => {
     m.handlers.forEach((h) => h.onNotificationsInvalidate?.());
   });
+  socket.on('userStatusSnapshot', (data: UserStatusSnapshotEntry[]) => {
+    m.handlers.forEach((h) => h.onUserStatusSnapshot?.(data));
+  });
+  socket.on('userStatusUpdate', (data: UserStatusUpdatePayload) => {
+    m.handlers.forEach((h) => h.onUserStatusUpdate?.(data));
+  });
 
   manager = m;
   return m;
@@ -149,6 +170,8 @@ export function useGlobalSocket(handlers: PartialHandlers) {
       onFriendsListInvalidate: () => handlersRef.current.onFriendsListInvalidate?.(),
       onNotificationNew: (data) => handlersRef.current.onNotificationNew?.(data),
       onNotificationsInvalidate: () => handlersRef.current.onNotificationsInvalidate?.(),
+      onUserStatusSnapshot: (data) => handlersRef.current.onUserStatusSnapshot?.(data),
+      onUserStatusUpdate: (data) => handlersRef.current.onUserStatusUpdate?.(data),
     };
 
     m.handlers.add(wrapped);
@@ -190,6 +213,18 @@ export function useGlobalSocket(handlers: PartialHandlers) {
     manager?.socket.emit('friend:unfriend', { friendId });
   }, []);
 
+  const joinLeaderboard = useCallback(() => {
+    manager?.socket.emit('joinLeaderboard');
+  }, []);
+
+  const leaveLeaderboard = useCallback(() => {
+    manager?.socket.emit('leaveLeaderboard');
+  }, []);
+
+  const emitSpectate = useCallback((matchId: string) => {
+    manager?.socket.emit('spectate', { matchId });
+  }, []);
+
   return {
     sendChallenge,
     acceptChallenge,
@@ -197,5 +232,8 @@ export function useGlobalSocket(handlers: PartialHandlers) {
     acceptFriendRequest,
     declineFriendRequest,
     unfriendSocket,
+    joinLeaderboard,
+    leaveLeaderboard,
+    emitSpectate,
   };
 }

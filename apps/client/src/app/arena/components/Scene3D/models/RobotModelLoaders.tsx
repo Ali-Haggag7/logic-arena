@@ -1,6 +1,6 @@
 'use client';
 import React, { memo, useMemo } from 'react';
-import * as THREE from 'three';
+import { Group } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { RobotModelProps } from '../../../types';
 import { RobotModelInner } from './RobotModel';
@@ -20,7 +20,7 @@ const BotModel = memo((props: RobotModelProps & { file: string }) => {
   return (
     <RobotModelInner
       {...props}
-      scene={scene as unknown as THREE.Group}
+      scene={scene as unknown as Group}
       animations={animations}
       scale={scale}
     />

@@ -11,6 +11,7 @@ import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { AuthModal } from "../../../components/AuthModal";
 import { useAuthState } from "../../../hooks/useAuthState";
 import { getAuthUserId } from "../../../lib/client-security";
+import { useVisibilityPause } from "../../../hooks/useVisibilityPause";
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -41,11 +42,7 @@ export default function TournamentsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTournaments();
-    const interval = setInterval(fetchTournaments, 5000);
-    return () => clearInterval(interval);
-  }, [fetchTournaments]);
+  useVisibilityPause(fetchTournaments, 5000);
 
   const handleCreate = async (name: string) => {
     if (isGuest) {

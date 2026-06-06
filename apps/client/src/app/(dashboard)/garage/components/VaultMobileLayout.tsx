@@ -2,12 +2,17 @@
 
 import React, { useCallback, useRef, useState } from "react";
 import { PackageOpen, Loader2, ChevronUp } from "lucide-react";
-import { RobotShowroom } from "../../black-market/components/RobotShowroom";
+import dynamic from "next/dynamic";
 import { MarketItem } from "../../black-market/types";
 import { CATEGORY_LABELS } from "../../black-market/constants";
 import { VaultCategoryTabs, CategoryKey } from "./VaultCategoryTabs";
 import { VaultItemCard } from "./VaultItemCard";
 import { VaultEmptyState } from "./VaultEmptyState";
+
+const RobotShowroom = dynamic(
+  () => import("../../black-market/components/RobotShowroom").then((m) => m.RobotShowroom),
+  { ssr: false },
+);
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

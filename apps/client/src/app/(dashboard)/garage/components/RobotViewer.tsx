@@ -3,7 +3,7 @@
 import React, { Suspense, useRef, useMemo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useGLTF, OrbitControls, Environment, useProgress } from "@react-three/drei";
-import * as THREE from "three";
+import { Group } from 'three';
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useRobotColorTint } from "../hooks/useRobotColorTint";
 import { ROBOTS } from "../constants/robots.constants";
@@ -23,11 +23,11 @@ function RobotModel({
 }) {
   const { scene } = useGLTF(file);
   const clonedScene = useMemo(() => SkeletonUtils.clone(scene), [scene]);
-  const groupRef = useRef<THREE.Group>(null!);
+  const groupRef = useRef<Group>(null!);
   const { invalidate } = useThree();
 
   // Shared hook handles tinting + disposal (fixes the material leak)
-  useRobotColorTint(clonedScene as unknown as THREE.Group, color);
+  useRobotColorTint(clonedScene as unknown as Group, color);
 
   // Explicitly trigger a re-render when the color changes since we use frameloop="demand"
   React.useEffect(() => {

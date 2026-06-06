@@ -1,6 +1,6 @@
 'use client';
 import React, { useRef } from 'react';
-import * as THREE from 'three';
+import { BackSide, Mesh, MeshBasicMaterial, PointLight } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { StasisEffectProps } from '../../../types';
 
@@ -9,8 +9,8 @@ import { StasisEffectProps } from '../../../types';
  * Renders a point light + ring mesh that animate in/out via sine wave.
  */
 export const StasisEffect = ({ position }: StasisEffectProps) => {
-  const lightRef    = useRef<THREE.PointLight>(null);
-  const ringRef     = useRef<THREE.Mesh>(null);
+  const lightRef    = useRef<PointLight>(null);
+  const ringRef     = useRef<Mesh>(null);
   const phaseRef    = useRef(0);
 
   useFrame((_, delta) => {
@@ -24,7 +24,7 @@ export const StasisEffect = ({ position }: StasisEffectProps) => {
     if (ringRef.current) {
       const s = 0.8 + (t * 0.5 + 0.5) * 0.5;
       ringRef.current.scale.setScalar(s);
-      (ringRef.current.material as THREE.MeshBasicMaterial).opacity =
+      (ringRef.current.material as MeshBasicMaterial).opacity =
         0.15 + (t * 0.5 + 0.5) * 0.35;
     }
   });
@@ -57,7 +57,7 @@ export const StasisEffect = ({ position }: StasisEffectProps) => {
           transparent
           opacity={0.08}
           depthWrite={false}
-          side={THREE.BackSide}
+          side={BackSide}
         />
       </mesh>
     </group>

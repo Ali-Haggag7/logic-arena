@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { ReactNode, MutableRefObject } from 'react';
 import { GameState } from './game.types';
 

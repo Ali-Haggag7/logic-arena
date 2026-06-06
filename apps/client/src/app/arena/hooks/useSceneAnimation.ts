@@ -1,10 +1,8 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useCallback, MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
 import { HitBurst, RobotState, FiredTracer } from "../types";
 import { useGameSounds } from "./useGameSounds";
 import {
-  HIT_FLASH_DURATION,
   HIT_BURST_LIFETIME,
   COLLISION_RADIUS,
   COLLISION_COOLDOWN,
@@ -12,16 +10,27 @@ import {
   FOV_DOT_THRESHOLD,
 } from "../components/Scene3D/sceneConstants";
 
+export interface SceneAnimationResult {
+  hitBurstsRef: MutableRefObject<HitBurst[]>;
+  hitFlashMapRef: MutableRefObject<Map<string, number>>;
+  isSpotted: (robot: RobotState) => boolean;
+}
+
 /**
  * Manages scene animations, including robot movement, hit effects, and collision sounds.
+ * hitBursts and hitFlashMap are stored as refs to prevent 60fps re-renders.
  */
-export const useSceneAnimation = (robots: RobotState[], firedTracer: FiredTracer | null, soundFx = true) => {
+export const useSceneAnimation = (
+  robots: RobotState[],
+  firedTracer: FiredTracer | null,
+  soundFx = true,
+): SceneAnimationResult => {
   const { playHit, playClang, playLaser } = useGameSounds({ enabled: soundFx });
   const collisionCooldownRef = useRef<Map<string, number>>(new Map());
   const lastLaserRef = useRef<string | null>(null);
 
-  const [hitBursts, setHitBursts] = useState<HitBurst[]>([]);
-  const [hitFlashMap, setHitFlashMap] = useState<Map<string, number>>(() => new Map());
+  const hitBurstsRef = useRef<HitBurst[]>([]);
+  const hitFlashMapRef = useRef<Map<string, number>>(new Map());
   const prevHealthRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -36,17 +45,27 @@ export const useSceneAnimation = (robots: RobotState[], firedTracer: FiredTracer
           color: robot.color,
           createdAt: now
         };
-        setHitBursts(current => [...current, burst]);
-        setHitFlashMap(current => {
-          const next = new Map(current);
-          next.set(robot.id, now);
-          return next;
-        });
+        hitBurstsRef.current = [...hitBurstsRef.current, burst];
+
+        const next = new Map(hitFlashMapRef.current);
+        next.set(robot.id, now);
+        hitFlashMapRef.current = next;
+
         playHit();
       }
       prevHealthRef.current.set(robot.id, robot.health);
     });
   }, [robots, playHit]);
+
+  // Garbage-collect expired bursts inside the render loop (no state updates)
+  useFrame(() => {
+    if (hitBurstsRef.current.length === 0) return;
+    const now = performance.now() / 1000;
+    const alive = hitBurstsRef.current.filter(b => now - b.createdAt < HIT_BURST_LIFETIME);
+    if (alive.length !== hitBurstsRef.current.length) {
+      hitBurstsRef.current = alive;
+    }
+  });
 
   useEffect(() => {
     const now = performance.now() / 1000;
@@ -82,7 +101,7 @@ export const useSceneAnimation = (robots: RobotState[], firedTracer: FiredTracer
     }
   }, [firedTracer, playLaser]);
 
-  const getClosestTarget = (robot: RobotState) => {
+  const getClosestTarget = useCallback((robot: RobotState) => {
     const targets = robots.filter(other => other.id !== robot.id && other.health > 0);
     if (targets.length === 0) return null;
 
@@ -97,9 +116,9 @@ export const useSceneAnimation = (robots: RobotState[], firedTracer: FiredTracer
 
       return currentDistance < closestDistance ? current : closest;
     });
-  };
+  }, [robots]);
 
-  const isSpotted = (robot: RobotState) => {
+  const isSpotted = useCallback((robot: RobotState) => {
     const target = getClosestTarget(robot);
     if (!target) return false;
 
@@ -116,9 +135,7 @@ export const useSceneAnimation = (robots: RobotState[], firedTracer: FiredTracer
 
     const dot = (vx * dx + vy * dy) / (speed * distance);
     return dot >= FOV_DOT_THRESHOLD;
-  };
+  }, [getClosestTarget]);
 
-  return { hitBursts, setHitBursts, hitFlashMap, isSpotted };
+  return { hitBurstsRef, hitFlashMapRef, isSpotted };
 };
-
-

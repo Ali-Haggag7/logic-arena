@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useEffect, useRef } from "react";
-import * as THREE from "three";
+import { CylinderGeometry, Mesh, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
 import { LaserBeamProps } from "../../../types";
 
 const DEFAULT_TRACER_COLOR = "#22d3ee";
@@ -10,7 +10,7 @@ const DEFAULT_TRACER_COLOR = "#22d3ee";
  * Geometry and material are memoized and disposed on unmount to prevent GPU memory leaks.
  */
 export const LaserBeam = ({ start, end, color }: LaserBeamProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
 
   const resolvedColor = useMemo(() => {
     if (
@@ -32,13 +32,13 @@ export const LaserBeam = ({ start, end, color }: LaserBeamProps) => {
   }, [start, end]);
 
   const geometry = useMemo(
-    () => new THREE.CylinderGeometry(0.025, 0.04, length, 12),
+    () => new CylinderGeometry(0.025, 0.04, length, 12),
     [length]
   );
 
   const material = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({
+      new MeshStandardMaterial({
         color: resolvedColor,
         emissive: resolvedColor,
         emissiveIntensity: 8,
@@ -57,7 +57,7 @@ export const LaserBeam = ({ start, end, color }: LaserBeamProps) => {
 
   const midpoint = useMemo(
     () =>
-      new THREE.Vector3(
+      new Vector3(
         (start[0] + end[0]) / 2,
         (start[1] + end[1]) / 2,
         (start[2] + end[2]) / 2
@@ -66,13 +66,13 @@ export const LaserBeam = ({ start, end, color }: LaserBeamProps) => {
   );
 
   const quaternion = useMemo(() => {
-    const direction = new THREE.Vector3(
+    const direction = new Vector3(
       end[0] - start[0],
       end[1] - start[1],
       end[2] - start[2]
     ).normalize();
-    const axis = new THREE.Vector3(0, 1, 0);
-    return new THREE.Quaternion().setFromUnitVectors(axis, direction);
+    const axis = new Vector3(0, 1, 0);
+    return new Quaternion().setFromUnitVectors(axis, direction);
   }, [start, end]);
 
   return (

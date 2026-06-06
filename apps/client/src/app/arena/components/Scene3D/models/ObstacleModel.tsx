@@ -1,6 +1,6 @@
 "use client";
 import React, { memo, useRef, useEffect, useMemo } from "react";
-import * as THREE from "three";
+import { BoxGeometry, CircleGeometry, CylinderGeometry, DoubleSide, InstancedMesh, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PlaneGeometry } from 'three';
 import { useFrame } from "@react-three/fiber";
 import { ObstacleState, MapTheme } from "../../../types";
 
@@ -8,8 +8,8 @@ const toSceneX = (x: number) => (x / 40) - 10;
 const toSceneZ = (y: number) => (y / 40) - 7.5;
 
 const EmpStrikeModel = ({ obstacle }: { obstacle: ObstacleState }) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
+    const meshRef = useRef<Mesh>(null);
+    const materialRef = useRef<MeshPhysicalMaterial>(null);
     const startTimeRef = useRef<number | null>(null);
     const radius = Math.max(0.15, obstacle.width / 80);
 
@@ -51,13 +51,13 @@ const EmpStrikeModel = ({ obstacle }: { obstacle: ObstacleState }) => {
 };
 
 export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, mapTheme = 'CYBER' }: { obstacles: ObstacleState[], mapTheme?: MapTheme }) {
-    const solidMeshRef = useRef<THREE.InstancedMesh>(null);
-    const trapMeshRef = useRef<THREE.InstancedMesh>(null);
-    const lavaMeshRef = useRef<THREE.InstancedMesh>(null);
-    const finishMeshRef = useRef<THREE.InstancedMesh>(null);
-    const mineMeshRef = useRef<THREE.InstancedMesh>(null);
-    const lavaPoolMeshRef = useRef<THREE.InstancedMesh>(null);
-    const icePatchMeshRef = useRef<THREE.InstancedMesh>(null);
+    const solidMeshRef = useRef<InstancedMesh>(null);
+    const trapMeshRef = useRef<InstancedMesh>(null);
+    const lavaMeshRef = useRef<InstancedMesh>(null);
+    const finishMeshRef = useRef<InstancedMesh>(null);
+    const mineMeshRef = useRef<InstancedMesh>(null);
+    const lavaPoolMeshRef = useRef<InstancedMesh>(null);
+    const icePatchMeshRef = useRef<InstancedMesh>(null);
 
     const uniforms = useMemo(() => ({
         uTime: { value: 0 }
@@ -79,17 +79,17 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
         return { solid, trap, lava, finish, mine, lavaPool, icePatch, empStrike };
     }, [obstacles, mapTheme]);
 
-    const solidGeo = useMemo(() => new THREE.BoxGeometry(1, 0.7, 1), []);
-    const trapGeo = useMemo(() => new THREE.CircleGeometry(1, 32), []);
-    const lavaGeo = useMemo(() => new THREE.CylinderGeometry(1, 1.15, 0.18, 6), []);
-    const finishGeo = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
-    const mineGeo = useMemo(() => new THREE.CylinderGeometry(1, 0.75, 0.16, 12), []);
-    const lavaPoolGeo = useMemo(() => new THREE.CylinderGeometry(1, 1, 0.1, 32), []);
-    const icePatchGeo = useMemo(() => new THREE.CylinderGeometry(1, 1, 0.08, 32), []);
+    const solidGeo = useMemo(() => new BoxGeometry(1, 0.7, 1), []);
+    const trapGeo = useMemo(() => new CircleGeometry(1, 32), []);
+    const lavaGeo = useMemo(() => new CylinderGeometry(1, 1.15, 0.18, 6), []);
+    const finishGeo = useMemo(() => new PlaneGeometry(1, 1), []);
+    const mineGeo = useMemo(() => new CylinderGeometry(1, 0.75, 0.16, 12), []);
+    const lavaPoolGeo = useMemo(() => new CylinderGeometry(1, 1, 0.1, 32), []);
+    const icePatchGeo = useMemo(() => new CylinderGeometry(1, 1, 0.08, 32), []);
 
     const solidMat = useMemo(() => {
         if (mapTheme === 'LAVA') {
-            return new THREE.MeshStandardMaterial({
+            return new MeshStandardMaterial({
                 color: "#050505",
                 emissive: "#2a0500",
                 emissiveIntensity: 0.8,
@@ -98,7 +98,7 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
             });
         }
         if (mapTheme === 'ICE') {
-            return new THREE.MeshPhysicalMaterial({
+            return new MeshPhysicalMaterial({
                 color: "#e0f7fa",
                 emissive: "#0088ff",
                 emissiveIntensity: 0.2,
@@ -109,7 +109,7 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
                 opacity: 0.8,
             });
         }
-        return new THREE.MeshStandardMaterial({
+        return new MeshStandardMaterial({
             color: "#0d0d2e",
             emissive: "#4444FF",
             emissiveIntensity: 0.55,
@@ -119,14 +119,14 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [mapTheme]);
 
     const trapMat = useMemo(() => {
-        const mat = new THREE.MeshStandardMaterial({
+        const mat = new MeshStandardMaterial({
             color: "#12003e",
             emissive: "#6600FF",
             metalness: 0.6,
             roughness: 0.3,
             transparent: true,
             opacity: 0.88,
-            side: THREE.DoubleSide,
+            side: DoubleSide,
         });
         mat.onBeforeCompile = (shader) => {
             shader.uniforms.uTime = uniforms.uTime;
@@ -146,7 +146,7 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [uniforms]);
 
     const lavaMat = useMemo(() => {
-        const mat = new THREE.MeshStandardMaterial({
+        const mat = new MeshStandardMaterial({
             color: "#3e0500",
             emissive: "#FF2200",
             metalness: 0.85,
@@ -170,14 +170,14 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [uniforms]);
 
     const finishMat = useMemo(() => {
-        const mat = new THREE.MeshStandardMaterial({
+        const mat = new MeshStandardMaterial({
             color: "#00ff00",
             emissive: "#00ff00",
             metalness: 0.2,
             roughness: 0.8,
             transparent: true,
             opacity: 0.7,
-            side: THREE.DoubleSide,
+            side: DoubleSide,
         });
         mat.onBeforeCompile = (shader) => {
             shader.uniforms.uTime = uniforms.uTime;
@@ -197,7 +197,7 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [uniforms]);
 
     const mineMat = useMemo(() => {
-        const mat = new THREE.MeshStandardMaterial({
+        const mat = new MeshStandardMaterial({
             color: "#2a0000",
             emissive: "#ff0000",
             metalness: 0.75,
@@ -221,7 +221,7 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [uniforms]);
 
     const lavaPoolMat = useMemo(() => {
-        const mat = new THREE.MeshPhysicalMaterial({
+        const mat = new MeshPhysicalMaterial({
             color: "#ff6a00",
             emissive: "#ff5500",
             emissiveIntensity: 1.7,
@@ -248,7 +248,7 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
         return mat;
     }, [uniforms]);
 
-    const icePatchMat = useMemo(() => new THREE.MeshPhysicalMaterial({
+    const icePatchMat = useMemo(() => new MeshPhysicalMaterial({
         color: "#bfefff",
         emissive: "#38bdf8",
         emissiveIntensity: 0.35,
@@ -269,9 +269,9 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [solidGeo, trapGeo, lavaGeo, finishGeo, mineGeo, lavaPoolGeo, icePatchGeo, solidMat, trapMat, lavaMat, finishMat, mineMat, lavaPoolMat, icePatchMat]);
 
     useEffect(() => {
-        const dummy = new THREE.Object3D();
+        const dummy = new Object3D();
 
-        const updateInstances = (mesh: THREE.InstancedMesh | null, arr: ObstacleState[], yOffset: number, rotX: number) => {
+        const updateInstances = (mesh: InstancedMesh | null, arr: ObstacleState[], yOffset: number, rotX: number) => {
             if (!mesh) return;
             arr.forEach((obs, i) => {
                 const w = obs.width / 40;

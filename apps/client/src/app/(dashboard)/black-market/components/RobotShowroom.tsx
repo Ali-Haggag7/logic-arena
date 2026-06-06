@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Environment, useGLTF } from "@react-three/drei";
-import * as THREE from "three";
+import { Box3, Group, Vector3 } from 'three';
 import { useRobotColorTint } from "../../garage/hooks/useRobotColorTint";
 
 const CHASSIS_MODEL_PATHS: Record<string, string> = {
@@ -37,7 +37,7 @@ interface RobotMeshProps {
 }
 
 function RobotMesh({ chassisId, paintColor, tracerColor, animate }: RobotMeshProps) {
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   const modelPath = CHASSIS_MODEL_PATHS[chassisId];
 
@@ -60,10 +60,10 @@ function RobotMesh({ chassisId, paintColor, tracerColor, animate }: RobotMeshPro
   const TARGET_MODEL_HEIGHT = 2.0;
   const { modelScale, modelOffsetY } = useMemo(() => {
     if (!activeScene) return { modelScale: 1.5, modelOffsetY: -0.85 };
-    const box = new THREE.Box3().setFromObject(activeScene);
-    const size = new THREE.Vector3();
+    const box = new Box3().setFromObject(activeScene);
+    const size = new Vector3();
     box.getSize(size);
-    const center = new THREE.Vector3();
+    const center = new Vector3();
     box.getCenter(center);
     if (size.y === 0) return { modelScale: 1.5, modelOffsetY: -0.85 };
     const scale = TARGET_MODEL_HEIGHT / size.y;

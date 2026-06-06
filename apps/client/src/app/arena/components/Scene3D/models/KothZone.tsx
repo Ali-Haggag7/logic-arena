@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { DoubleSide, Mesh, MeshStandardMaterial } from 'three';
 
 interface KothZoneProps {
   zone: { x: number; y: number; radius: number };
@@ -11,12 +11,12 @@ const toSceneZ = (y: number) => (y / 40) - 7.5;
 
 export const KothZone: React.FC<KothZoneProps> = ({ zone }) => {
   const sceneRadius = zone.radius / 40;
-  const cylinderRef = useRef<THREE.Mesh>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
+  const cylinderRef = useRef<Mesh>(null);
+  const ringRef = useRef<Mesh>(null);
 
   useFrame((state) => {
     if (cylinderRef.current) {
-      const material = cylinderRef.current.material as THREE.MeshStandardMaterial;
+      const material = cylinderRef.current.material as MeshStandardMaterial;
       material.opacity = 0.15 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
     }
     if (ringRef.current) {
@@ -35,7 +35,7 @@ export const KothZone: React.FC<KothZoneProps> = ({ zone }) => {
           opacity={0.2}
           emissive="#f59e0b"
           emissiveIntensity={0.5}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
 

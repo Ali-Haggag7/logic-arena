@@ -2,8 +2,8 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import "../garage.css";
-import { RobotViewer } from "../components/RobotViewer";
 import { Toast, type ToastState } from "../components/Toast";
 import { useAuth } from "../../../../context/AuthContext";
 import { apiClient } from "../../../../lib/api-client";
@@ -12,6 +12,11 @@ import { ControlsPanel } from "./components/ControlsPanel";
 import { NotFoundState } from "./components/NotFoundState";
 import { SaveButton } from "./components/SaveButton";
 import { ROBOTS_MAP, MOBILE_BREAKPOINT, TOAST_DURATION_MS } from "../constants/robots.constants";
+
+const RobotViewer = dynamic(
+  () => import("../components/RobotViewer").then((m) => m.RobotViewer),
+  { ssr: false },
+);
 
 export default function RobotDetailPage() {
   const params = useParams();

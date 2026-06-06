@@ -1,6 +1,6 @@
 'use client';
 import React, { memo, useRef, useEffect, useState, useMemo } from 'react';
-import * as THREE from 'three';
+import { AnimationClip, CanvasTexture, Color, Group, LinearFilter, Material, MathUtils, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { Html, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -12,7 +12,7 @@ import { HIT_FLASH_DURATION } from '../sceneConstants';
 import { EnergyBarSprite } from './EnergyBar';
 import { SpeechBubble } from './SpeechBubble';
 
-const EMPTY_ANIMATION_CLIPS: THREE.AnimationClip[] = [];
+const EMPTY_ANIMATION_CLIPS: AnimationClip[] = [];
 const MOVEMENT_THRESHOLD = 0.01;
 const FALLBACK_ROTATION_THRESHOLD = 0.001;
 const POSITION_LERP_DECAY = 0.01;
@@ -59,9 +59,9 @@ export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
   }, []);
 
   const [texture] = useState(() => {
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
+    const tex = new CanvasTexture(canvas);
+    tex.minFilter = LinearFilter;
+    tex.magFilter = LinearFilter;
     tex.needsUpdate = true;
     return tex;
   });
@@ -95,8 +95,8 @@ export const HealthBarSprite = ({ health }: HealthBarSpriteProps) => {
 type RobotAnimationState = 'idle' | 'moving';
 
 interface RobotModelInnerProps extends RobotModelProps {
-  scene: THREE.Group;
-  animations?: THREE.AnimationClip[];
+  scene: Group;
+  animations?: AnimationClip[];
   scale?: number;
 }
 
@@ -106,9 +106,9 @@ interface MatchedAnimationClips {
 }
 
 const findClipName = (
-  animations: THREE.AnimationClip[],
+  animations: AnimationClip[],
   pattern: RegExp,
-): string | undefined => animations.find((clip: THREE.AnimationClip): boolean => pattern.test(clip.name))?.name;
+): string | undefined => animations.find((clip: AnimationClip): boolean => pattern.test(clip.name))?.name;
 
 export const RobotModelInner = memo(({
   scene, color, position, health, velocity, rotation, hitTimestamp, spotted,
@@ -116,15 +116,15 @@ export const RobotModelInner = memo(({
   scale = 2, hideHealthBar = false, speechBubble, inFog = false,
   isShielded = false, isCloaked = false, animations = EMPTY_ANIMATION_CLIPS,
 }: RobotModelInnerProps) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const modelMotionRef = useRef<THREE.Group>(null);
-  const targetPosition = useRef(new THREE.Vector3(...position));
-  const basePosition = useRef(new THREE.Vector3(...position));
+  const groupRef = useRef<Group>(null);
+  const modelMotionRef = useRef<Group>(null);
+  const targetPosition = useRef(new Vector3(...position));
+  const basePosition = useRef(new Vector3(...position));
   const hoverOffset = useRef(0);
   const activeClipNameRef = useRef<string | null>(null);
-  const flashWhite = useRef(new THREE.Color('#ffffff'));
-  const stasisBlue = useRef(new THREE.Color('#4488ff'));
-  const fogGray = useRef(new THREE.Color('#3a4a5c'));
+  const flashWhite = useRef(new Color('#ffffff'));
+  const stasisBlue = useRef(new Color('#4488ff'));
+  const fogGray = useRef(new Color('#3a4a5c'));
   // Dirty-flag refs: only iterate meshList when these change
   const prevHitTimestampRef = useRef<number | null | undefined>(hitTimestamp);
   const prevInStasisRef = useRef(inStasis);
@@ -135,10 +135,10 @@ export const RobotModelInner = memo(({
   const clonedScene = useMemo(() => {
     const clone = SkeletonUtils.clone(scene);
     clone.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        const applyMat = (m: THREE.Material) => {
-          const mat = (m as THREE.MeshStandardMaterial).clone();
+      if ((child as Mesh).isMesh) {
+        const mesh = child as Mesh;
+        const applyMat = (m: Material) => {
+          const mat = (m as MeshStandardMaterial).clone();
 
           // Skip tinting for native/default paint — preserve original GLTF materials
           const isDefaultPaint = !color
@@ -147,18 +147,18 @@ export const RobotModelInner = memo(({
 
           if (!isDefaultPaint) {
             try {
-              const parsedColor = new THREE.Color(color.trim());
+              const parsedColor = new Color(color.trim());
               mat.color = parsedColor;
               // We intentionally DO NOT overwrite mat.emissive here!
               // Overwriting it destroys the original glowing textures built into the GLTF.
               // The Environment map (HDRI) handles the general illumination.
             } catch {
-              mat.color = new THREE.Color('#22d3ee');
+              mat.color = new Color('#22d3ee');
             }
           }
 
           // Store original emissive properties for hit flash / stasis
-          mat.userData.origEmissive = mat.emissive ? mat.emissive.clone() : new THREE.Color(0x000000);
+          mat.userData.origEmissive = mat.emissive ? mat.emissive.clone() : new Color(0x000000);
           mat.userData.origEmissiveIntensity = mat.emissiveIntensity !== undefined ? mat.emissiveIntensity : 1;
 
           return mat;
@@ -172,9 +172,9 @@ export const RobotModelInner = memo(({
   }, [scene, color]);
 
   const meshList = useMemo(() => {
-    const list: THREE.Mesh[] = [];
+    const list: Mesh[] = [];
     clonedScene.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) list.push(child as THREE.Mesh);
+      if ((child as Mesh).isMesh) list.push(child as Mesh);
     });
     return list;
   }, [clonedScene]);
@@ -202,11 +202,11 @@ export const RobotModelInner = memo(({
   // Fix 10: Dispose cloned materials on unmount to prevent GPU memory leak
   useEffect(() => {
     return () => {
-      clonedScene.traverse((child: THREE.Object3D) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh;
-          const disposeMat = (mat: THREE.Material) => {
-            (mat as THREE.MeshStandardMaterial).map?.dispose();
+      clonedScene.traverse((child: Object3D) => {
+        if ((child as Mesh).isMesh) {
+          const mesh = child as Mesh;
+          const disposeMat = (mat: Material) => {
+            (mat as MeshStandardMaterial).map?.dispose();
             mat.dispose();
           };
           if (Array.isArray(mesh.material)) {
@@ -221,7 +221,7 @@ export const RobotModelInner = memo(({
 
   const resolveRotation = (value?: number): number | null => {
     if (typeof value !== 'number' || Number.isNaN(value)) return null;
-    return Math.abs(value) > Math.PI * 2 ? THREE.MathUtils.degToRad(value) : value;
+    return Math.abs(value) > Math.PI * 2 ? MathUtils.degToRad(value) : value;
   };
 
   // Arena 2D uses X-right / Y-down. Three.js XZ plane: X-right / Z-south.
@@ -229,10 +229,10 @@ export const RobotModelInner = memo(({
   // Formula: rotation.y = Math.PI / 2 - arenaAngle
   const HALF_PI = Math.PI / 2;
 
-  const getMeshMaterials = (mesh: THREE.Mesh): THREE.MeshStandardMaterial[] => {
+  const getMeshMaterials = (mesh: Mesh): MeshStandardMaterial[] => {
     const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     return materials.filter(
-      (mat): mat is THREE.MeshStandardMaterial => mat instanceof THREE.MeshStandardMaterial,
+      (mat): mat is MeshStandardMaterial => mat instanceof MeshStandardMaterial,
     );
   };
 
@@ -284,7 +284,7 @@ export const RobotModelInner = memo(({
       const spd = Math.hypot(velocity.x, velocity.y);
       if (spd > FALLBACK_ROTATION_THRESHOLD) {
         const fallback = HALF_PI - Math.atan2(velocity.y, velocity.x);
-        group.rotation.y = THREE.MathUtils.lerp(
+        group.rotation.y = MathUtils.lerp(
           group.rotation.y, fallback, 1 - Math.pow(ROTATION_LERP_DECAY, delta),
         );
       }
@@ -315,7 +315,7 @@ export const RobotModelInner = memo(({
           ? MOVEMENT_TILT_RADIANS
           : 0;
       const tiltLerp = 1 - Math.pow(ROTATION_LERP_DECAY, delta * PROCEDURAL_TILT_LERP_SPEED);
-      motionGroup.rotation.x = THREE.MathUtils.lerp(motionGroup.rotation.x, targetTilt, tiltLerp);
+      motionGroup.rotation.x = MathUtils.lerp(motionGroup.rotation.x, targetTilt, tiltLerp);
     }
 
     // Fix 11: Dirty flag — only iterate meshes when hit/stasis/fog state actually changed
