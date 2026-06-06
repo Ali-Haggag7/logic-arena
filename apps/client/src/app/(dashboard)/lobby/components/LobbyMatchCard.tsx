@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { useMediaQuery } from "../../../../hooks/useMediaQuery";
 import { UserLink } from "../../../../components/ui/UserLink";
-import { Lock } from "lucide-react";
+import { Lock, Clock, Hash, Gamepad2, ChevronRight } from "lucide-react";
 import type { MatchMode } from "../../../../context/SocketContext";
 
 export interface LobbyMatch {
@@ -24,21 +24,39 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
 
   const DesktopCard = (
     <div
-      className="bg-card/55 backdrop-blur-md p-5 rounded-lg border border-accent/10 flex justify-between items-center group transition-all duration-300 hover:border-accent/40 hover:-translate-y-[2px] animate-[fadeIn_0.3s_ease_both]"
-      style={{ boxShadow: 'var(--card-shadow)', animationDelay: `${index * 0.08}s` }}
+      className="bg-white/[0.03] backdrop-blur-2xl p-6 rounded-[24px] border border-white/[0.08] flex justify-between items-center group transition-all duration-300 hover:bg-white/[0.06] hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] animate-[fadeIn_0.4s_ease_both] overflow-hidden relative"
+      style={{ animationDelay: `${index * 0.05}s` }}
     >
-      <div>
-        <h3 className="text-[14px] font-black tracking-[0.14em] text-accent transition-all group-hover:drop-shadow-[0_0_10px_rgba(var(--accent-rgb),0.5)]">
-          HOST:{" "}
-          <UserLink
-            username={match.hostName}
-            className="hover:text-accent/80 transition-colors"
-          />
-        </h3>
-        <p className="text-[10px] text-accent/70 tracking-[0.18em] uppercase mt-2">
-          ID: {match.matchId} <span className="opacity-50 mx-2">|</span> DETECTED: {new Date(match.createdAt).toLocaleTimeString()}
-          <span className="opacity-50 mx-2">|</span> MODE: {match.mode ?? "CLASSIC"}
-        </p>
+      <div className="absolute inset-0 bg-gradient-to-r from-accent/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      <div className="relative z-10 flex items-center gap-6">
+        <div className="h-14 w-14 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shadow-inner">
+          <span className="text-xl font-bold text-accent">{match.hostName.charAt(0).toUpperCase()}</span>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight text-white mb-1">
+            <UserLink
+              username={match.hostName}
+              className="hover:text-accent transition-colors"
+            />
+            <span className="text-white/40 font-normal ml-2 text-sm">/ HOST</span>
+          </h3>
+          <div className="flex items-center gap-4 text-xs font-medium text-white/50">
+            <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-full border border-white/5">
+              <Hash size={12} className="text-accent/70" />
+              <span className="truncate max-w-[100px]">{match.matchId}</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-full border border-white/5">
+              <Gamepad2 size={12} className="text-accent/70" />
+              <span>{match.mode ?? "CLASSIC"}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-white/40">
+              <Clock size={12} />
+              <span>{new Date(match.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <button
@@ -46,41 +64,76 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
         aria-label="Join match"
         onClick={() => onJoin(match)}
         disabled={isGuest}
-        className="px-8 py-2.5 rounded-md text-[10px] font-black tracking-[0.18em] font-mono transition-all duration-200 border disabled:opacity-50 disabled:cursor-not-allowed bg-accent/5 border-accent/30 text-accent/70 hover:bg-accent/20 hover:border-accent/70 hover:text-accent hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)]"
+        className="relative z-10 px-8 py-3.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-accent text-bg-primary hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.4)] flex items-center gap-2"
       >
-        {isGuest ? <span className="flex items-center gap-1.5 justify-center"><Lock size={12} /> LOCKED</span> : "JOIN"}
+        {isGuest ? (
+          <>
+            <Lock size={16} />
+            <span>LOCKED</span>
+          </>
+        ) : (
+          <>
+            <span>JOIN MATCH</span>
+            <ChevronRight size={16} className="opacity-70 group-hover:translate-x-1 transition-transform" />
+          </>
+        )}
       </button>
     </div>
   );
 
   const MobileCard = (
     <div
-      className="bg-card backdrop-blur-md px-4 pt-4 pb-0 rounded-xl border border-accent/15 flex flex-col gap-3 shadow-md animate-[fadeIn_0.3s_ease_both]"
-      style={{ animationDelay: `${index * 0.08}s` }}
+      className="bg-white/[0.04] backdrop-blur-2xl p-5 rounded-[28px] border border-white/[0.08] flex flex-col gap-5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-[fadeIn_0.4s_ease_both] relative overflow-hidden"
+      style={{ animationDelay: `${index * 0.05}s` }}
     >
-      <div className="flex flex-col gap-2">
-        <h3 className="text-[14px] font-black tracking-[0.14em] text-accent">
-          <UserLink
-            username={match.hostName}
-            className="hover:text-accent/80 transition-colors"
-          />
-        </h3>
-        <div className="flex items-center gap-1 text-[9px] text-accent/70 tracking-[0.15em] uppercase w-full">
-          <span>ID: </span>
-          <span className="truncate flex-1 max-w-[80px]">{match.matchId}</span>
-          <span className="opacity-50 mx-1">|</span> {new Date(match.createdAt).toLocaleTimeString()}
-          <span className="opacity-50 mx-1">|</span> {match.mode ?? "CLASSIC"}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/3 opacity-50" />
+      
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="h-12 w-12 shrink-0 rounded-[18px] bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center shadow-inner">
+          <span className="text-lg font-bold text-accent">{match.hostName.charAt(0).toUpperCase()}</span>
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold tracking-tight text-white truncate">
+            <UserLink
+              username={match.hostName}
+              className="hover:text-accent transition-colors"
+            />
+          </h3>
+          <p className="text-xs text-white/50 mt-0.5">Host Player</p>
+        </div>
+        
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          <div className="flex items-center gap-1 text-[10px] font-semibold text-accent/80 bg-accent/10 px-2.5 py-1 rounded-full">
+            <Gamepad2 size={10} />
+            {match.mode ?? "CLASSIC"}
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-white/40">
+            <Clock size={10} />
+            {new Date(match.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
         </div>
       </div>
-      <div className="w-full mt-1 border-t border-accent/10 pt-3 pb-3">
+      
+      <div className="relative z-10 w-full">
         <button
           type="button"
           aria-label="Join match"
           onClick={() => onJoin(match)}
           disabled={isGuest}
-          className="w-full h-[44px] flex items-center justify-center bg-accent/10 border border-accent/40 text-accent font-black tracking-[0.2em] text-[10px] rounded-lg transition-transform active:scale-95 shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-14 flex items-center justify-center gap-2 bg-accent text-bg-primary font-bold tracking-wide text-sm rounded-full transition-transform active:scale-[0.97] shadow-[0_8px_16px_rgba(var(--accent-rgb),0.25)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isGuest ? <span className="flex items-center gap-1.5 justify-center"><Lock size={12} /> LOCKED</span> : "JOIN MATCH"}
+          {isGuest ? (
+            <>
+              <Lock size={16} />
+              <span>LOGIN TO JOIN</span>
+            </>
+          ) : (
+            <>
+              <span>JOIN BATTLE</span>
+              <ChevronRight size={18} className="opacity-70" />
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -88,3 +141,4 @@ export const LobbyMatchCard = React.memo(function LobbyMatchCard({ match, index,
 
   return isMobile ? MobileCard : DesktopCard;
 });
+

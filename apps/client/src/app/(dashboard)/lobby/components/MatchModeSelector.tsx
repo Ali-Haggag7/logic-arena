@@ -1,7 +1,8 @@
 "use client";
 
-import { Brain, Swords } from "lucide-react";
-import type { ComponentType, SVGProps } from "react";
+import { Brain, Check, PencilLine, Shield, Swords, Timer, Zap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { ReactElement } from "react";
 import type { MatchMode } from "../../../../context/SocketContext";
 
 interface MatchModeSelectorProps {
@@ -10,25 +11,42 @@ interface MatchModeSelectorProps {
   isMobile: boolean;
 }
 
+interface MatchModeFeature {
+  label: string;
+  Icon: LucideIcon;
+}
+
 interface MatchModeOption {
   value: MatchMode;
+  eyebrow: string;
   label: string;
-  description: string[];
-  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  summary: string;
+  Icon: LucideIcon;
+  features: MatchModeFeature[];
 }
 
 const MATCH_MODE_OPTIONS: MatchModeOption[] = [
   {
     value: "CLASSIC",
-    label: "CLASSIC MODE",
-    description: ["Write script before match.", "10 live edit tokens."],
+    eyebrow: "FAST DUEL",
+    label: "Classic",
+    summary: "Script first. Adapt live with limited edits.",
     Icon: Swords,
+    features: [
+      { label: "Pre-match script", Icon: PencilLine },
+      { label: "10 edit tokens", Icon: Zap },
+    ],
   },
   {
     value: "TACTICAL",
-    label: "TACTICAL MODE",
-    description: ["3 rounds + breaks.", "Edit code between rounds. No limits."],
+    eyebrow: "ROUND PLAY",
+    label: "Tactical",
+    summary: "Three rounds with breaks between fights.",
     Icon: Brain,
+    features: [
+      { label: "3 rounds", Icon: Timer },
+      { label: "No edit limit", Icon: Shield },
+    ],
   },
 ];
 
@@ -36,45 +54,144 @@ export function MatchModeSelector({
   selectedMode,
   onSelectMode,
   isMobile,
-}: MatchModeSelectorProps) {
-  return (
-    <section
-      aria-label="Match mode"
-      className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-2 min-w-[430px]"}`}
-    >
-      {MATCH_MODE_OPTIONS.map(({ value, label, description, Icon }) => {
-        const isSelected = selectedMode === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={isSelected}
-            onClick={() => onSelectMode(value)}
-            className={`group cursor-pointer rounded-lg border p-4 text-left font-mono transition-all duration-200 hover:-translate-y-[1px] hover:border-accent/70 hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
-              isSelected
-                ? "border-accent bg-accent/10 shadow-[0_0_20px_rgba(var(--accent-rgb),0.22)]"
-                : "border-accent/20 bg-card/45"
-            }`}
-          >
-            <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-accent">
-              <Icon className="h-4 w-4" />
-              {label}
-            </span>
-            <span className="mt-4 block min-h-12 text-[10px] uppercase leading-5 tracking-[0.12em] text-accent/60">
-              {description.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
-            </span>
-            <span
-              className={`mt-4 inline-flex h-8 items-center rounded-md border px-3 text-[9px] font-black uppercase tracking-[0.18em] transition-all ${
+}: MatchModeSelectorProps): ReactElement {
+  if (isMobile) {
+    return (
+      <section aria-label="Match mode" className="flex flex-col gap-2.5">
+        {MATCH_MODE_OPTIONS.map((option) => {
+          const isSelected = selectedMode === option.value;
+          const Icon = option.Icon;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => onSelectMode(option.value)}
+              className={`group flex min-h-[94px] w-full cursor-pointer items-center gap-4 rounded-[28px] border p-4 text-left transition-all duration-300 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 shadow-lg ${
                 isSelected
-                  ? "border-accent bg-accent text-bg-primary"
-                  : "border-accent/30 bg-accent/5 text-accent/70 group-hover:text-accent"
+                    ? "border-accent/50 bg-accent/[0.12] shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)]"
+                    : "border-white/[0.08] bg-white/[0.04] backdrop-blur-xl hover:border-white/[0.15] hover:bg-white/[0.08]"
               }`}
             >
-              {isSelected ? "SELECTED" : "SELECT"}
+              <span
+                  className={`grid h-14 w-14 shrink-0 place-items-center rounded-[20px] border transition-all ${
+                  isSelected
+                    ? "border-accent/60 bg-gradient-to-br from-accent/80 to-accent shadow-[0_0_24px_rgba(var(--accent-rgb),0.4)] text-bg-primary"
+                    : "border-white/[0.1] bg-white/[0.05] text-white/70 group-hover:text-white"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-base font-bold tracking-tight text-white">
+                    {option.label}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/60">
+                    {option.eyebrow}
+                  </span>
+                </span>
+                <span className="mt-1 block text-xs font-medium leading-relaxed text-white/50">
+                  {option.summary}
+                </span>
+                <span className="mt-2.5 flex flex-wrap gap-2">
+                  {option.features.map((feature) => {
+                    const FeatureIcon = feature.Icon;
+                    return (
+                      <span
+                        key={feature.label}
+                        className="inline-flex h-6 items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 text-[9px] font-semibold uppercase tracking-wider text-white/70"
+                      >
+                        <FeatureIcon className="h-3 w-3 opacity-70" />
+                        {feature.label}
+                      </span>
+                    );
+                  })}
+                </span>
+              </span>
+
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-all ${
+                  isSelected
+                    ? "border-accent bg-accent text-bg-primary"
+                    : "border-white/10 bg-black/20 text-transparent group-hover:border-white/20"
+                }`}
+              >
+                <Check className="h-4 w-4" />
+              </span>
+            </button>
+          );
+        })}
+      </section>
+    );
+  }
+
+  return (
+    <section aria-label="Match mode" className="grid grid-cols-2 gap-3">
+      {MATCH_MODE_OPTIONS.map((option) => {
+        const isSelected = selectedMode === option.value;
+        const Icon = option.Icon;
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={isSelected}
+            onClick={() => onSelectMode(option.value)}
+            className={`group relative min-h-[110px] cursor-pointer overflow-hidden rounded-[20px] border p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
+              isSelected
+                ? "border-accent/50 bg-accent/[0.12] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)]"
+                : "border-white/[0.08] bg-white/[0.03] backdrop-blur-2xl hover:border-white/[0.15] hover:bg-white/[0.06]"
+            }`}
+          >
+            <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-45" />
+            <span className="flex items-start justify-between gap-4">
+              <span
+                className={`grid h-10 w-10 place-items-center rounded-xl border transition-all ${
+                  isSelected
+                    ? "border-accent/60 bg-gradient-to-br from-accent/80 to-accent text-bg-primary shadow-[0_0_16px_rgba(var(--accent-rgb),0.4)]"
+                    : "border-white/10 bg-white/5 text-white/70 group-hover:text-white"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <span
+                className={`inline-flex h-7 items-center gap-2 rounded-full border px-3 text-[10px] font-bold transition-all ${
+                  isSelected
+                    ? "border-accent bg-accent text-bg-primary"
+                    : "border-white/10 bg-black/20 text-white/50 group-hover:text-white"
+                }`}
+              >
+                {isSelected && <Check className="h-3.5 w-3.5" />}
+                {isSelected ? "Selected" : "Select"}
+              </span>
+            </span>
+
+            <span className="mt-3 block text-[9px] font-bold uppercase tracking-wider text-white/50">
+              {option.eyebrow}
+            </span>
+            <span className="mt-1 block text-xl font-bold tracking-tight text-white">
+              {option.label}
+            </span>
+            <span className="mt-1 block text-[11px] font-medium leading-relaxed text-white/50">
+              {option.summary}
+            </span>
+
+            <span className="mt-3 flex flex-wrap gap-2">
+              {option.features.map((feature) => {
+                const FeatureIcon = feature.Icon;
+                return (
+                  <span
+                    key={feature.label}
+                    className="inline-flex h-6 items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 text-[9px] font-semibold uppercase tracking-wider text-white/70"
+                  >
+                    <FeatureIcon className="h-3 w-3 opacity-70" />
+                    {feature.label}
+                  </span>
+                );
+              })}
             </span>
           </button>
         );

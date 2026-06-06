@@ -35,34 +35,32 @@ export default function LobbyPage() {
 
 
   const DesktopLayout = (
-    <div className="max-w-[1000px] mx-auto px-6 pt-12 pb-[100px] relative z-10 animate-[fadeIn_0.35s_ease]">
-      <div className="border-b border-accent/10 pb-7 mb-10 flex justify-between items-end flex-wrap gap-5">
-        <div>
-          <p className="text-[10px] tracking-[0.4em] text-accent/30 mb-2.5 uppercase">// LIVE</p>
-          <h1 className="m-0 text-[clamp(24px,5vw,40px)] font-black tracking-[0.2em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.8)]">
-            MULTIPLAYER_LOBBY
+    <div className="mx-auto flex min-h-full max-w-[1120px] flex-col px-6 py-6 relative z-10 animate-[fadeIn_0.35s_ease]">
+      <div className="shrink-0 border-b border-white/[0.08] pb-4 mb-4 relative">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="relative z-10">
+          <h1 className="m-0 text-4xl font-bold tracking-tight text-white mb-2">
+            Multiplayer Lobby
           </h1>
           <ConnectionStatusBar connectionStatus={connectionStatus} isMobile={false} />
         </div>
-        <div className="flex flex-col items-stretch gap-4">
+        <div className="mt-5 flex max-w-[980px] flex-col gap-4 relative z-10">
           <MatchModeSelector selectedMode={selectedMode} onSelectMode={setSelectedMode} isMobile={false} />
           <button
             type="button"
             onClick={handleDeployMatch}
             disabled={isGuest}
-            className={`px-7 py-3 rounded-md text-[10px] font-black tracking-[0.25em] font-mono transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed 
-            bg-accent/10 border border-accent/30 text-accent/70 hover:bg-accent/20 hover:border-accent/70 hover:text-accent hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)]
-            ${isGuest ? 'text-accent/40 cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`group relative min-h-[50px] overflow-hidden rounded-full border border-white/10 px-8 text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-accent text-bg-primary hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.3)] flex justify-center items-center shadow-lg ${isGuest ? '' : 'cursor-pointer'}`}
           >
-            {isGuest ? "LOGIN TO DEPLOY" : "[+] CREATE MATCH"}
+            <span>{isGuest ? "LOGIN TO DEPLOY" : `CREATE ${selectedMode} MATCH`}</span>
           </button>
         </div>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex-1 pr-2 flex flex-col gap-4 relative z-10">
         {connectionStatus === "connecting" ? <LobbySkeleton /> : connectionStatus === "error" ? <ErrorPanel onRetry={() => setRetryKey((k) => k + 1)} /> : matches.length === 0 ? (
-          <div className="text-center p-[60px_24px] text-accent/25 text-[11px] tracking-[0.2em] border border-dashed border-accent/10 rounded-xl bg-bg-secondary/30 backdrop-blur-md">
-            NO ACTIVE MATCHES FOUND.<br />
-            <span className="text-[10px] text-accent/15 mt-2 block">Create a new match to challenge other players.</span>
+          <div className="text-center p-10 text-white/50 text-sm font-medium border border-white/5 rounded-[24px] bg-white/[0.02] backdrop-blur-xl">
+            No active matches found.<br />
+            <span className="text-xs text-white/30 mt-2 block font-normal">Create a new match to challenge other players.</span>
           </div>
         ) : matches.map((match, idx) => <LobbyMatchCard key={match.matchId} match={match} index={idx} onJoin={handleJoinMatch} isGuest={isGuest} />)}
       </div>
@@ -70,25 +68,25 @@ export default function LobbyPage() {
   );
 
   const MobileLayout = (
-    <div className="w-full px-4 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] relative z-10 animate-[fadeIn_0.35s_ease] flex flex-col min-h-[calc(100vh-80px)]">
-      <div className="border-b border-accent/20 pb-5 mb-5 flex flex-col text-center">
-        <p className="text-[9px] tracking-[0.4em] text-accent/70 mb-1.5 uppercase">// LIVE</p>
-        <h1 className="m-0 text-2xl font-black tracking-[0.2em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.8)] leading-tight">LOBBY</h1>
-        <ConnectionStatusBar connectionStatus={connectionStatus} isMobile={true} />
-        <div className="mt-5">
+    <div className="w-full px-5 pt-6 pb-[calc(20px+env(safe-area-inset-bottom))] relative z-10 animate-[fadeIn_0.35s_ease] flex min-h-full flex-col">
+      <div className="shrink-0 pb-5 flex flex-col relative">
+        <div className="absolute -top-20 -right-20 w-56 h-56 bg-accent/15 rounded-full blur-[60px] pointer-events-none" />
+        <h1 className="m-0 text-[32px] font-bold tracking-tight text-white mb-2 relative z-10">Lobby</h1>
+        <div className="relative z-10"><ConnectionStatusBar connectionStatus={connectionStatus} isMobile={true} /></div>
+        <div className="mt-6 relative z-10">
           <MatchModeSelector selectedMode={selectedMode} onSelectMode={setSelectedMode} isMobile={true} />
         </div>
-        <button type="button" disabled={isGuest} onClick={handleDeployMatch} className="mt-5 w-full h-[44px] rounded-lg text-[10px] font-black tracking-[0.25em] font-mono transition-transform active:scale-95 bg-accent/10 border border-accent/40 text-accent shadow-[0_0_8px_rgba(var(--accent-rgb),0.15)] uppercase flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-          {isGuest ? "LOGIN TO CREATE MATCH" : "[+] CREATE MATCH"}
+        <button type="button" disabled={isGuest} onClick={handleDeployMatch} className="mt-5 w-full h-[56px] rounded-full text-sm font-bold tracking-wide transition-all duration-300 active:scale-[0.96] bg-accent text-bg-primary shadow-[0_12px_30px_rgba(var(--accent-rgb),0.3)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed relative z-10">
+          {isGuest ? "LOGIN TO CREATE" : `CREATE ${selectedMode} MATCH`}
         </button>
       </div>
-      <div className="flex flex-col gap-3 flex-1">
+      <div className="flex flex-col gap-4 flex-1 relative z-10 px-1 -mx-1 pt-2">
         {connectionStatus === "connecting" ? Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[100px] rounded-xl border border-accent/10 bg-accent/5 animate-[shimmer_1.5s_infinite]" />
+          <div key={i} className="h-[120px] rounded-[28px] border border-white/[0.05] bg-white/[0.03] backdrop-blur-xl animate-pulse" />
         )) : connectionStatus === "error" ? <ErrorPanel onRetry={() => setRetryKey((k) => k + 1)} /> : matches.length === 0 ? (
-          <div className="text-center p-8 text-accent/30 text-[10px] tracking-[0.2em] border border-accent/10 rounded-xl bg-accent/5 uppercase">
-            NO ACTIVE MATCHES FOUND.<br />
-            <span className="text-[9px] text-accent/20 mt-2 block">Create a new match to challenge other players.</span>
+          <div className="text-center p-8 text-white/50 text-sm font-medium border border-white/5 rounded-[28px] bg-white/[0.02] backdrop-blur-xl">
+            No active matches found.<br />
+            <span className="text-xs text-white/30 mt-2 block font-normal">Create a new match to challenge other players.</span>
           </div>
         ) : matches.map((match, idx) => <LobbyMatchCard key={match.matchId} match={match} index={idx} onJoin={handleJoinMatch} isGuest={isGuest} />)}
       </div>
@@ -97,8 +95,8 @@ export default function LobbyPage() {
 
   return (
     <>
-      <div className={`min-h-screen bg-bg-primary font-mono text-accent/90 relative overflow-hidden ${isMobile ? "pb-[calc(80px+env(safe-area-inset-bottom))]" : "pb-12"}`}>
-        <div className="fixed inset-0 pointer-events-none z-0" style={{ backgroundImage: "linear-gradient(rgba(var(--accent-rgb),0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.06) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+      <div className={`bg-bg-primary font-sans text-white relative min-h-[calc(100vh-80px)]`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-bg-primary via-bg-primary to-accent/10 pointer-events-none z-0" />
         {isMobile ? MobileLayout : DesktopLayout}
       </div>
       {showScriptWarning && <NoScriptModal onClose={() => setShowScriptWarning(false)} />}
