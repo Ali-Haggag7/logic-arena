@@ -91,6 +91,7 @@ export class CampaignService {
   }
 
   private async getBestStars(userId: string, levelId: string): Promise<number> {
+    if (userId === 'guest') return 0;
     const s = await this.redis.get<number>(campaignStarsKey(userId, levelId));
     console.log(`[DEBUG getBestStars] user=${userId} level=${levelId} s=${s}`);
     return s ?? 0;
@@ -119,6 +120,7 @@ export class CampaignService {
     userId: string,
     levelId: string,
   ): Promise<number> {
+    if (userId === 'guest') return 0;
     const indices = await this.redis.get<number[]>(
       campaignHintsKey(userId, levelId),
     );
@@ -129,6 +131,7 @@ export class CampaignService {
     userId: string,
     levelId: string,
   ): Promise<number[]> {
+    if (userId === 'guest') return [];
     return (
       (await this.redis.get<number[]>(campaignHintsKey(userId, levelId))) ?? []
     );
@@ -171,6 +174,8 @@ export class CampaignService {
   }
 
   private async getCompletedLevelIds(userId: string): Promise<string[]> {
+    if (userId === 'guest') return [];
+
     const version = await this.getCampaignCacheVersion(userId);
     const cached = await this.redis.get<string[]>(
       campaignProgressKey(userId, version),

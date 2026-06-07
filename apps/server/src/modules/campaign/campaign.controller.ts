@@ -22,6 +22,7 @@ import {
   ERR_INVALID_HINT_INDEX,
 } from './campaign.service';
 import { AuthGuard } from '../../common/auth.guard';
+import { OptionalAuthGuard } from '../../common/optional-auth.guard';
 import { RedisService } from '../../common/redis.service';
 import { CompleteLevelDto, RevealHintDto } from './campaign.dto';
 
@@ -35,7 +36,7 @@ function completionTokenKey(userId: string, levelId: string): string {
 
 @SkipThrottle({ auth: true })
 @Controller('campaign')
-@UseGuards(AuthGuard)
+@UseGuards(OptionalAuthGuard)
 export class CampaignController {
   constructor(
     private readonly campaignService: CampaignService,
@@ -77,6 +78,7 @@ export class CampaignController {
    * Returns { hint, pointsDeducted, remainingPoints }.
    */
   @Post('levels/:id/hint')
+  @UseGuards(AuthGuard)
   async revealHint(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
@@ -113,6 +115,7 @@ export class CampaignController {
    * Requires a single-use completionToken issued by the campaign fight endpoint.
    */
   @Post('levels/:id/complete')
+  @UseGuards(AuthGuard)
   async completeLevel(
     @Req() req: RequestWithUser,
     @Param('id') id: string,

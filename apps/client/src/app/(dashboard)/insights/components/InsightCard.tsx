@@ -63,7 +63,7 @@ export function InsightCard({ insight, actionLoading, onMarkRead, onDelete }: In
                 type="button"
                 onClick={() => onMarkRead(insight.id)}
                 disabled={actionLoading === insight.id}
-                className="p-1.5 rounded text-accent/30 hover:text-accent hover:bg-accent/10 transition-all"
+                className="p-1.5 rounded text-accent/30 hover:text-accent hover:bg-accent/10 transition-all cursor-pointer"
                 aria-label="Mark as read"
               >
                 <CheckCheck size={14} />
@@ -73,7 +73,7 @@ export function InsightCard({ insight, actionLoading, onMarkRead, onDelete }: In
               type="button"
               onClick={() => onDelete(insight.id)}
               disabled={actionLoading === insight.id}
-              className="p-1.5 rounded text-accent/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+              className="p-1.5 rounded text-accent/20 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
               aria-label="Delete insight"
             >
               <Trash2 size={14} />

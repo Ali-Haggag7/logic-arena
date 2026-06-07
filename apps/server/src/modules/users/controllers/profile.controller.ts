@@ -17,6 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from '../../../common/prisma.service';
 import { RedisService } from '../../../common/redis.service';
 import { AuthGuard } from '../../../common/auth.guard';
+import { OptionalAuthGuard } from '../../../common/optional-auth.guard';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ProfileQueryService } from '../queries/profile-query.service';
 import { ProfileCommandService } from '../commands/profile-command.service';
@@ -127,7 +128,7 @@ export class ProfileController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get('matches/:matchId/replay')
   async getReplay(@Param('matchId') matchId: string) {
     const cached = await this.redis.get<unknown>(replayKey(matchId));

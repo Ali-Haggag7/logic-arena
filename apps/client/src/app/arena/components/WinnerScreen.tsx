@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Socket } from 'socket.io-client';
 import { getAuthUsername } from '../../../lib/client-security';
 import { apiClient } from '../../../lib/api-client';
+import { useAuthState } from '../../../hooks/useAuthState';
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const THREE_STAR_THRESHOLD = 50;
@@ -110,6 +111,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
   const scriptId = searchParams.get('scriptId');
   const { winner, draw, efficiencyScores, playerStats } = matchResult;
   const username = getAuthUsername() ?? 'PLAYER';
+  const { isGuest } = useAuthState();
 
   useEffect(() => {
     apiClient.post(`/ai/insights/generate/${matchId}`).catch(() => {});
@@ -163,6 +165,33 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
 
   return (
     <div className={`ws-root ws-root--${resultTheme}`}>
+      {/* ── Guest Victory Modal ───────────────────────────────── */}
+      {isWinner && searchParams.get('mode') === 'CAMPAIGN' && isGuest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md p-6 bg-bg-primary border border-arena-cyan/30 rounded-xl shadow-[0_0_30px_rgba(var(--arena-cyan-rgb),0.2)] text-center font-mono">
+            <h2 className="text-xl font-bold text-arena-cyan tracking-widest mb-4">GUEST VICTORY!</h2>
+            <p className="text-sm text-accent/80 mb-6 leading-relaxed">
+              Congratulations on winning! However, as a guest, your progress is not saved. 
+              Please log in or create an account to save your progress and unlock the next level.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => router.push('/login')}
+                className="px-6 py-2 bg-arena-cyan/10 border border-arena-cyan text-arena-cyan font-bold rounded tracking-widest hover:bg-arena-cyan/20 transition-all cursor-pointer"
+              >
+                LOG IN
+              </button>
+              <button
+                onClick={handleReturnToLobby}
+                className="px-6 py-2 border border-accent/20 text-accent/60 font-bold rounded tracking-widest hover:bg-accent/10 hover:text-accent transition-all cursor-pointer"
+              >
+                LOBBY
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Background ─────────────────────────────────────────── */}
       <div className="ws-bg">
         <div className="ws-bg__dots" />
@@ -338,8 +367,8 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
         .ws-bg__grid {
           position: absolute; inset: 0; opacity: 0.06;
           background:
-            linear-gradient(to right, var(--accent) 1px, transparent 1px),
-            linear-gradient(to bottom, var(--accent) 1px, transparent 1px);
+            linear-gradient(to right, var(--arena-cyan) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--arena-cyan) 1px, transparent 1px);
           background-size: 50px 50px;
           transform: perspective(600px) rotateX(65deg);
           transform-origin: top;
@@ -351,7 +380,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           background: radial-gradient(ellipse at 50% 30%, rgba(var(--arena-cyan-rgb), 0.25), transparent 60%);
         }
         .ws-bg__radial--defeat {
-          background: radial-gradient(ellipse at 50% 30%, rgba(var(--sem-danger-rgb), 0.25), transparent 60%);
+          background: radial-gradient(ellipse at 50% 30%, rgba(var(--arena-red-rgb), 0.25), transparent 60%);
         }
         .ws-bg__radial--draw {
           background: radial-gradient(ellipse at 50% 30%, rgba(var(--arena-fps-warn-rgb), 0.25), transparent 60%);
@@ -390,8 +419,8 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           filter: drop-shadow(0 0 20px rgba(var(--arena-cyan-rgb), 0.7));
         }
         .ws-title--defeat {
-          color: var(--sem-danger);
-          filter: drop-shadow(0 0 20px rgba(var(--sem-danger-rgb), 0.7));
+          color: var(--arena-red);
+          filter: drop-shadow(0 0 20px rgba(var(--arena-red-rgb), 0.7));
         }
         .ws-title--draw {
           color: var(--arena-fps-warn);
@@ -453,7 +482,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           opacity: 0.3;
         }
         .ws-mini-orb-ring--victory { border-color: var(--arena-cyan); }
-        .ws-mini-orb-ring--defeat  { border-color: var(--sem-danger); }
+        .ws-mini-orb-ring--defeat  { border-color: var(--arena-red); }
         .ws-mini-orb {
           width: 100%; height: 100%; border-radius: 50%;
           border: 1.5px solid; display: flex;
@@ -464,8 +493,8 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           box-shadow: 0 0 24px rgba(var(--arena-cyan-rgb), 0.4);
         }
         .ws-mini-orb--defeat {
-          border-color: rgba(var(--sem-danger-rgb), 0.4);
-          box-shadow: 0 0 24px rgba(var(--sem-danger-rgb), 0.4);
+          border-color: rgba(var(--arena-red-rgb), 0.4);
+          box-shadow: 0 0 24px rgba(var(--arena-red-rgb), 0.4);
         }
         .ws-mini-orb__core {
           width: 1.75rem; height: 1.75rem; border-radius: 50%;
@@ -485,16 +514,16 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           letter-spacing: -0.03em; line-height: 1.1;
         }
         .ws-eff__num--optimal {
-          color: var(--eff-optimal);
+          color: var(--arena-cyan);
           filter: drop-shadow(0 0 6px rgba(var(--arena-cyan-rgb), 0.5));
         }
         .ws-eff__num--moderate {
-          color: var(--eff-moderate);
+          color: var(--arena-amber);
           filter: drop-shadow(0 0 6px rgba(var(--arena-amber-rgb), 0.4));
         }
         .ws-eff__num--low {
-          color: var(--eff-low);
-          filter: drop-shadow(0 0 6px rgba(var(--sem-danger-rgb), 0.4));
+          color: var(--arena-red);
+          filter: drop-shadow(0 0 6px rgba(var(--arena-red-rgb), 0.4));
         }
         .ws-eff__verdict {
           font-size: 7px; letter-spacing: 0.12em;
@@ -518,11 +547,11 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           animation: wsBarGrow 1s ease-out;
         }
         .ws-bar__fill--optimal {
-          background: var(--eff-optimal);
-          box-shadow: 0 0 6px var(--accent);
+          background: var(--arena-cyan);
+          box-shadow: 0 0 6px var(--arena-cyan);
         }
-        .ws-bar__fill--moderate { background: var(--eff-moderate); }
-        .ws-bar__fill--low      { background: var(--eff-low); }
+        .ws-bar__fill--moderate { background: var(--arena-amber); }
+        .ws-bar__fill--low      { background: var(--arena-red); }
 
         /* ── Stats Grid ─────────────────────────────────────────── */
         .ws-stats {
@@ -570,21 +599,21 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           border: 1px solid rgba(var(--arena-cyan-rgb), 0.2);
         }
         .ws-elo__badge--defeat {
-          color: var(--sem-danger);
-          background: rgba(var(--sem-danger-rgb), 0.08);
-          border: 1px solid rgba(var(--sem-danger-rgb), 0.2);
+          color: var(--arena-red);
+          background: rgba(var(--arena-red-rgb), 0.08);
+          border: 1px solid rgba(var(--arena-red-rgb), 0.2);
         }
         .ws-elo__delta {
           font-size: 1.25rem; font-weight: 900;
           letter-spacing: -0.02em;
         }
         .ws-elo__delta--victory {
-          color: var(--sem-success);
-          filter: drop-shadow(0 0 4px rgba(var(--sem-success-rgb), 0.4));
+          color: var(--arena-green);
+          filter: drop-shadow(0 0 4px rgba(var(--arena-green-rgb), 0.4));
         }
         .ws-elo__delta--defeat {
-          color: var(--sem-danger);
-          filter: drop-shadow(0 0 4px rgba(var(--sem-danger-rgb), 0.4));
+          color: var(--arena-red);
+          filter: drop-shadow(0 0 4px rgba(var(--arena-red-rgb), 0.4));
         }
 
         /* ── Action buttons — side by side ──────────────────────── */

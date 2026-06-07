@@ -5,11 +5,12 @@ import { apiClient } from "../../../lib/api-client";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import type { ApiTabInfo } from "./types/campaign.types";
 import { CampaignLayout } from "./components/CampaignLayout";
+import { useAuthState } from "../../../hooks/useAuthState";
 
 export default function CampaignPage() {
   const [tabs, setTabs] = useState<ApiTabInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isGuest, setIsGuest] = useState(false);
+  const { isGuest } = useAuthState();
 
   useEffect(() => {
     let cancelled = false;
@@ -23,9 +24,7 @@ export default function CampaignPage() {
         })
         .catch((err) => {
           if (cancelled) return;
-          if (err.response?.status === 401 || err.response?.status === 403) {
-            setIsGuest(true);
-          }
+          if (process.env.NODE_ENV === 'development') console.error(err);
         })
         .finally(() => {
           if (!cancelled) setLoading(false);

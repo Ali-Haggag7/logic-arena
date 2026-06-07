@@ -138,7 +138,6 @@ export const ScriptCard = React.memo(({
                         <ScriptModeSelector 
                             currentMode={script.matchMode as any || "HYBRID"} 
                             onChange={(m) => onChangeMode(script.id, m)} 
-                            disabled={isGuest}
                         />
                         <span className="opacity-30">·</span>
                         <span className="truncate">
@@ -165,7 +164,6 @@ export const ScriptCard = React.memo(({
                         <ScriptModeSelector 
                             currentMode={script.matchMode as any || "HYBRID"} 
                             onChange={(m) => onChangeMode(script.id, m)} 
-                            disabled={isGuest}
                         />
                         <span className="w-1 h-1 rounded-full bg-white/20" />
                         <span className="truncate">INIT: {mounted ? new Date(script.createdAt).toLocaleDateString() : ""}</span>

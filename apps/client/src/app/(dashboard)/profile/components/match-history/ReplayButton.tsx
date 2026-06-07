@@ -11,22 +11,6 @@ interface Props {
 export function ReplayButton({ matchId, isGuest }: Props) {
     const router = useRouter();
 
-    if (isGuest) {
-        return (
-            <button
-                type="button"
-                disabled
-                className="px-3 py-1.5 rounded-[4px] text-[8px] font-bold tracking-[0.2em] opacity-40 cursor-not-allowed"
-                style={{
-                    background: "rgba(var(--accent-rgb),0.05)",
-                    border: "1px solid rgba(var(--accent-rgb),0.1)",
-                    color: "var(--accent)",
-                }}
-            >
-                LOCKED
-            </button>
-        );
-    }
 
     return (
         <button

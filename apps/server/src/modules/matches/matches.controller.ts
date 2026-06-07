@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { AuthGuard } from '../../common/auth.guard';
+import { OptionalAuthGuard } from '../../common/optional-auth.guard';
 import {
   CampaignService,
   ERR_LEVEL_LOCKED,
@@ -45,7 +46,7 @@ function completionTokenKey(userId: string, levelId: string): string {
 
 @SkipThrottle({ auth: true })
 @Controller('matches')
-@UseGuards(AuthGuard)
+@UseGuards(OptionalAuthGuard)
 export class MatchesController {
   constructor(
     private readonly campaignService: CampaignService,
@@ -87,14 +88,17 @@ export class MatchesController {
     }
 
     // ── Load user loadout ────────────────────────────────────────────────────
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        equippedChassis: true,
-        equippedPaint: true,
-        equippedTracer: true,
-      },
-    });
+    let user: { equippedChassis: string | null; equippedPaint: string | null; equippedTracer: string | null; } | null = null;
+    if (userId !== 'guest') {
+      user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          equippedChassis: true,
+          equippedPaint: true,
+          equippedTracer: true,
+        },
+      });
+    }
 
     let userColor = '#22d3ee';
     let userTracerColor = '#22d3ee';
@@ -156,7 +160,7 @@ export class MatchesController {
 
           let completionToken: string | null = null;
           const storeToken = async () => {
-            if (won) {
+            if (won && userId !== 'guest') {
               completionToken = crypto.randomUUID();
               await this.redis.set(
                 completionTokenKey(userId, levelId),

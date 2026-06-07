@@ -45,7 +45,7 @@ export default function InsightsPage() {
                 type="button"
                 onClick={handleMarkAllRead}
                 disabled={actionLoading === 'all'}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-[0.15em] uppercase text-accent/60 hover:text-accent border border-accent/20 hover:border-accent/50 rounded transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-[0.15em] uppercase text-accent/60 hover:text-accent border border-accent/20 hover:border-accent/50 rounded transition-all cursor-pointer"
               >
                 <CheckCheck size={12} />
                 {isMobile ? '' : 'Mark all read'}
@@ -56,7 +56,7 @@ export default function InsightsPage() {
                 type="button"
                 onClick={handleDeleteAll}
                 disabled={actionLoading === 'all'}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-[0.15em] uppercase text-red-500/50 hover:text-red-400 border border-red-500/20 hover:border-red-500/50 rounded transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-[0.15em] uppercase text-red-500/50 hover:text-red-400 border border-red-500/20 hover:border-red-500/50 rounded transition-all cursor-pointer"
               >
                 <Trash2 size={12} />
                 {isMobile ? '' : 'Delete all'}

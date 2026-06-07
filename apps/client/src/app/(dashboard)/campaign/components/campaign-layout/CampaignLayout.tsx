@@ -16,7 +16,7 @@ export function CampaignLayout({ tabs, loading, isGuest, isMobile }: CampaignLay
   const [selectedLevel, setSelectedLevel] = useState<ApiLevelInfo | null>(null);
 
   if (loading) return <LoadingState />;
-  if (isGuest || tabs.length === 0) return <GuestState />;
+  if (tabs.length === 0) return <GuestState />;
 
   const Layout = isMobile ? MobileLayout : DesktopLayout;
 
