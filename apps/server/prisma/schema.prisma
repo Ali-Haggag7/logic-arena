@@ -14,6 +14,12 @@ enum MatchMode {
   TACTICAL
 }
 
+enum ScriptMode {
+  CLASSIC
+  TACTICAL
+  HYBRID
+}
+
 enum MatchPhase {
   WAITING
   ROUND_ACTIVE
@@ -73,6 +79,7 @@ model RobotScript {
   title               String
   content             String
   userId              String
+  matchMode           ScriptMode         @default(HYBRID)
   user                User               @relation(fields: [userId], references: [id])
   version             Int                @default(1)
   createdAt           DateTime           @default(now())

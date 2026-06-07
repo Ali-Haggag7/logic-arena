@@ -79,6 +79,7 @@ export async function createAndStartMatch(
     tracerColor: string;
   },
   mode: GameMode,
+  matchMode: 'CLASSIC' | 'TACTICAL' | 'HYBRID' = 'CLASSIC',
   mapTheme: MapTheme = 'CYBER',
 ): Promise<MatchEngine> {
   const engineMode: GameMode =
@@ -140,13 +141,13 @@ export async function createAndStartMatch(
   state.matchModes.set(matchId, mode);
   state.arenaMatchModes.set(
     matchId,
-    mode === 'TACTICAL' ? 'TACTICAL' : 'CLASSIC',
+    matchMode !== 'CLASSIC' ? 'TACTICAL' : 'CLASSIC',
   );
   state.matchPhases.set(matchId, 'ROUND_ACTIVE');
   state.roundNumbers.set(matchId, 1);
-  if (mode === 'TACTICAL') {
+  if (matchMode !== 'CLASSIC') {
     const config = {
-      durations: [15, 30, 25],
+      durations: [90, 60, 90],
       breakDuration: 60,
       healthTrigger: 50,
     };

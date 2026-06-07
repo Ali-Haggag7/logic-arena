@@ -40,6 +40,7 @@ export class MatchLobbyManager {
       matchId: string;
       scriptId: string;
       mode?: GameMode;
+      matchMode?: 'CLASSIC' | 'TACTICAL' | 'HYBRID';
       mapTheme?: MapTheme;
     },
   ) {
@@ -64,9 +65,9 @@ export class MatchLobbyManager {
 
     let match = this.state.matches.get(data.matchId);
     const currentMode = this.state.matchModes.get(data.matchId);
+    const currentTheme = match?.getState().mapTheme || 'CYBER';
     const waitingMatch = this.state.lobbyMatches.get(data.matchId);
     const mode = data.mode || waitingMatch?.mode || 'COMBAT';
-    const currentTheme = match?.getState().mapTheme || 'CYBER';
     const requestedTheme = data.mapTheme || 'CYBER';
 
     if (
@@ -92,6 +93,7 @@ export class MatchLobbyManager {
           tracerColor: loadout.selectedTracerColor,
         },
         mode,
+        data.matchMode || 'CLASSIC',
         data.mapTheme || 'CYBER',
       );
     } else {
@@ -102,6 +104,7 @@ export class MatchLobbyManager {
           script: loadout.scriptContent,
           color: loadout.selectedColor,
           model: loadout.selectedRobotId,
+          tracerColor: loadout.selectedTracerColor,
         });
         this.state.lobbyMatches.delete(data.matchId);
         await this.publishLobbySnapshot();
@@ -119,6 +122,7 @@ export class MatchLobbyManager {
           script: loadout.scriptContent,
           color: loadout.selectedColor,
           model: loadout.selectedRobotId,
+          tracerColor: loadout.selectedTracerColor,
         });
         match.updateInitialPlayer(client.userId, loadout.scriptContent);
       }
@@ -126,10 +130,15 @@ export class MatchLobbyManager {
 
     client.matchId = data.matchId;
     client.join(data.matchId);
+    const phaseEndsAt = this.state.phaseEndsAt.get(data.matchId) ?? Date.now();
+    const timeLeft = Math.max(0, Math.ceil((phaseEndsAt - Date.now()) / 1000));
+
     client.emit('matchJoinedInfo', {
       mode,
       phase: this.state.matchPhases.get(data.matchId) ?? 'ROUND_ACTIVE',
       roundNumber: this.state.roundNumbers.get(data.matchId) ?? 1,
+      timeLeft,
+      phaseEndsAt,
     });
     this.server
       .to(data.matchId)

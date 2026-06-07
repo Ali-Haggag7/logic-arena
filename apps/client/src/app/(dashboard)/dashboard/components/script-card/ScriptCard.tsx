@@ -11,6 +11,7 @@ interface ScriptCardProps {
     onDeployToLobby: (id: string) => void;
     onDeployToArena: (id: string) => void;
     onDelete: (id: string) => void;
+    onChangeMode: (id: string, newMode: "CLASSIC"|"TACTICAL"|"HYBRID") => void;
     isGuest?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const ScriptCard = React.memo(({
     onDeployToLobby,
     onDeployToArena,
     onDelete,
+    onChangeMode,
     isGuest,
 }: ScriptCardProps) => {
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -127,12 +129,17 @@ export const ScriptCard = React.memo(({
             {/* Mobile Card */}
             <div className="md:hidden group relative flex flex-col gap-3 w-full bg-card/45 backdrop-blur-xl p-4 px-5 rounded-xl border border-accent/25 overflow-hidden transition-all duration-200 pl-6" style={{ boxShadow: "inset 3px 0 0 var(--accent), 0 1px 3px rgba(0,0,0,0.2)" }}>
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent/40 rounded-l-xl" />
-                <div className="flex flex-col gap-1 min-w-0 w-full">
+                <div className="flex flex-col gap-1 min-w-0 w-full relative z-20">
                     <h3 className="text-sm font-black text-accent tracking-wide group-active:text-accent/80 truncate break-words whitespace-normal leading-tight">
                         {script.title}
                     </h3>
                     <div className="flex items-center gap-2 text-[10px] text-text-secondary font-bold tracking-widest mt-0.5">
                         <span className="bg-accent/5 px-1.5 py-0.5 rounded border border-accent/10 text-accent">v{script.version}</span>
+                        <ScriptModeSelector 
+                            currentMode={script.matchMode as any || "HYBRID"} 
+                            onChange={(m) => onChangeMode(script.id, m)} 
+                            disabled={isGuest}
+                        />
                         <span className="opacity-30">·</span>
                         <span className="truncate">
                             {mounted ? new Date(script.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "2-digit" }) : ""}
@@ -149,12 +156,17 @@ export const ScriptCard = React.memo(({
                 {/* Left accent glowing line */}
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-accent/20 rounded-l-2xl group-hover:bg-accent group-hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.8)] transition-all duration-500" />
 
-                <div className="flex flex-col gap-1 w-full relative z-10">
+                <div className="flex flex-col gap-1 w-full relative z-20">
                     <h3 className="text-sm lg:text-base font-black text-text-primary tracking-widest group-hover:text-accent transition-colors duration-300 break-words line-clamp-2 leading-tight uppercase drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]">
                         {script.title}
                     </h3>
                     <div className="flex items-center gap-3 text-[9px] lg:text-[10px] text-text-secondary tracking-[0.2em] font-black uppercase mt-1">
                         <span className="bg-accent/10 text-accent px-2 py-0.5 rounded border border-accent/20 group-hover:bg-accent/20 group-hover:border-accent/40 transition-colors">V.{script.version}</span>
+                        <ScriptModeSelector 
+                            currentMode={script.matchMode as any || "HYBRID"} 
+                            onChange={(m) => onChangeMode(script.id, m)} 
+                            disabled={isGuest}
+                        />
                         <span className="w-1 h-1 rounded-full bg-white/20" />
                         <span className="truncate">INIT: {mounted ? new Date(script.createdAt).toLocaleDateString() : ""}</span>
                     </div>
@@ -169,3 +181,58 @@ export const ScriptCard = React.memo(({
 });
 
 ScriptCard.displayName = "ScriptCard";
+
+const ScriptModeSelector = ({ 
+    currentMode, 
+    onChange, 
+    disabled 
+}: { 
+    currentMode: "CLASSIC" | "TACTICAL" | "HYBRID", 
+    onChange: (mode: "CLASSIC" | "TACTICAL" | "HYBRID") => void,
+    disabled?: boolean 
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const options = ["HYBRID", "CLASSIC", "TACTICAL"] as const;
+
+    return (
+        <div className="relative" onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                setIsOpen(false);
+            }
+        }}>
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                className={`bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 transition-all uppercase flex items-center gap-1 group ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            >
+                {currentMode}
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+
+            {isOpen && (
+                <div className="absolute z-[100] top-full left-0 mt-1.5 bg-bg-primary border border-purple-500/30 rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden min-w-[100px] animate-in fade-in zoom-in-95 duration-150">
+                    {options.map((opt) => (
+                        <button
+                            key={opt}
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onChange(opt);
+                                setIsOpen(false);
+                            }}
+                            className={`w-full text-left px-2 py-1.5 text-[9px] font-black tracking-widest uppercase transition-colors cursor-pointer ${currentMode === opt ? "bg-purple-500/20 text-purple-600 dark:text-purple-400" : "text-text-secondary hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300"}`}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}

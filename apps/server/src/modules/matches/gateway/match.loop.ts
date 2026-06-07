@@ -202,11 +202,13 @@ export class MatchLoopManager {
     this.server.to(matchId).emit('match:break-started', {
       scripts,
       timeLeft: config.breakDuration,
+      phaseEndsAt: this.state.phaseEndsAt.get(matchId) ?? Date.now(),
     });
     this.server.to(matchId).emit('match:phase-changed', {
       phase: 'BREAK',
       roundNumber,
       timeLeft: config.breakDuration,
+      phaseEndsAt: this.state.phaseEndsAt.get(matchId) ?? Date.now(),
     });
   }
 
@@ -230,6 +232,7 @@ export class MatchLoopManager {
       phase: 'ROUND_ACTIVE',
       roundNumber: nextRound,
       timeLeft: config.durations[nextRound - 1],
+      phaseEndsAt: this.state.phaseEndsAt.get(matchId) ?? Date.now(),
     });
     match.start();
   }

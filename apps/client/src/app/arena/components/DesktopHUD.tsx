@@ -31,7 +31,7 @@ interface DesktopHUDProps {
   onClassicEdit?: (script: string, tokensLeft: number) => void;
   initialScript?: string;
   matchPhase?: string;
-  phaseTimeRemaining?: number;
+  phaseEndsAt?: number;
 }
 
 export function DesktopHUD({
@@ -55,7 +55,7 @@ export function DesktopHUD({
   onClassicEdit,
   initialScript,
   matchPhase,
-  phaseTimeRemaining = 0,
+  phaseEndsAt = 0,
 }: DesktopHUDProps) {
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [lockVision, setLockVision] = useState(false);
@@ -86,7 +86,7 @@ export function DesktopHUD({
   return (
     <>
       {displayMode === 'TACTICAL' && matchPhase && (
-        <PhaseBanner phase={matchPhase} timeRemaining={phaseTimeRemaining} />
+        <PhaseBanner phase={matchPhase} phaseEndsAt={phaseEndsAt} />
       )}
       
       <button

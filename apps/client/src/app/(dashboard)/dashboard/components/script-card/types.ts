@@ -4,4 +4,5 @@ export interface RobotScript {
     content: string;
     version: number;
     createdAt: string;
+    matchMode?: "CLASSIC" | "TACTICAL" | "HYBRID";
 }

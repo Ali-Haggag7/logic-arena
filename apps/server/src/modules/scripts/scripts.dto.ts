@@ -13,4 +13,7 @@ export class UpsertScriptDto {
   @MinLength(1)
   @MaxLength(MAX_SCRIPT_CONTENT_LENGTH)
   content!: string;
+
+  @IsString()
+  matchMode?: string;
 }

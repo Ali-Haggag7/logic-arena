@@ -20,9 +20,11 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({
     const [hubTab, setHubTab] = useState<'controls' | 'bots' | 'handbook' | 'generate'>('controls');
 
     const lastSnippetVersion = useRef(snippetVersion ?? 0);
+    const initialScriptSet = useRef(false);
     useEffect(() => {
-        if (initialScript && consoleState.scriptInput.length === 0) {
+        if (initialScript && consoleState.scriptInput.length === 0 && !initialScriptSet.current) {
             consoleState.setScriptInput(initialScript);
+            initialScriptSet.current = true;
         }
     }, [initialScript, consoleState.scriptInput, consoleState.setScriptInput]);
 

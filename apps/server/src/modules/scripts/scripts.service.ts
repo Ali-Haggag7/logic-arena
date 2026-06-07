@@ -41,13 +41,13 @@ export class ScriptsService {
     }
   }
 
-  async createScript(userId: string, title: string, content: string) {
+  async createScript(userId: string, title: string, content: string, matchMode?: string) {
     if (!content) {
       throw new BadRequestException('Script content cannot be empty.');
     }
     this.validateScriptSize(content);
     const script = await this.prisma.robotScript.create({
-      data: { userId, title, content },
+      data: { userId, title, content, matchMode: matchMode as any || 'HYBRID' },
     });
     await this.redis.del(scriptListKey(userId));
     await this.redis.set(scriptKey(userId, script.id), script, SCRIPT_TTL);
@@ -85,6 +85,7 @@ export class ScriptsService {
     userId: string,
     title: string,
     content: string,
+    matchMode?: string,
   ) {
     if (!content) {
       throw new BadRequestException('Script content cannot be empty.');
@@ -98,12 +99,15 @@ export class ScriptsService {
       throw new NotFoundException('Script not found or unauthorized.');
     }
 
-    const updateData: { content: string; version: number; title?: string } = {
+    const updateData: { content: string; version: number; title?: string; matchMode?: any } = {
       content,
       version: script.version + 1,
     };
     if (title) {
       updateData.title = title;
+    }
+    if (matchMode) {
+      updateData.matchMode = matchMode as any;
     }
 
     const updated = await this.prisma.robotScript.update({

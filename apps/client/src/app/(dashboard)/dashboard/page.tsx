@@ -19,11 +19,12 @@ const EditScriptModal = dynamic(
 export default function DashboardPage() {
     const {
         scripts, initialLoad, newScriptTitle, setNewScriptTitle,
+        newScriptMode, setNewScriptMode,
         status, isLoading, selectedMode, setSelectedMode,
         selectedTheme, setSelectedTheme,
         editingScript, setEditingScript, isGuest, showAuthModal, setShowAuthModal,
         handleCreateScript, handleGoToArena, handleGoToLobby, handleEditScript,
-        handleOptimisticUpdate, handleRevert, handleDeleteScript
+        handleOptimisticUpdate, handleChangeScriptMode, handleRevert, handleDeleteScript
     } = useScripts();
 
     return (
@@ -119,6 +120,8 @@ export default function DashboardPage() {
                             <ScriptForm
                                 newScriptTitle={newScriptTitle}
                                 setNewScriptTitle={setNewScriptTitle}
+                                newScriptMode={newScriptMode}
+                                setNewScriptMode={setNewScriptMode}
                                 isLoading={isLoading}
                                 onSubmit={handleCreateScript}
                                 isGuest={isGuest}
@@ -146,6 +149,7 @@ export default function DashboardPage() {
                                         key={script.id}
                                         script={script}
                                         onEditBrain={handleEditScript}
+                                        onChangeMode={handleChangeScriptMode}
                                         onDeployToLobby={handleGoToLobby}
                                         onDeployToArena={handleGoToArena}
                                         onDelete={handleDeleteScript}

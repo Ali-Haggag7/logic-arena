@@ -52,7 +52,7 @@ export class ScriptsController {
   ) {
     const userId = req.user.sub;
     await this.enforceScriptSaveLimit(userId);
-    return this.scriptsService.createScript(userId, body.title, body.content);
+    return this.scriptsService.createScript(userId, body.title, body.content, body.matchMode);
   }
 
   @Get(':id')
@@ -83,6 +83,7 @@ export class ScriptsController {
       userId,
       body.title,
       body.content,
+      body.matchMode,
     );
   }
 

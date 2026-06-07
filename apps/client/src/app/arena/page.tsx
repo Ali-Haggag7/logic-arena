@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGameState } from './hooks/game';
 import WinnerScreen from './components/WinnerScreen';
@@ -44,6 +45,7 @@ const ArenaPageContent = () => {
   const searchParams = useSearchParams();
   const urlScriptId = searchParams.get('scriptId');
   const urlMode = searchParams.get('mode') || 'COMBAT';
+  const urlMatchMode = searchParams.get('matchMode') || 'HYBRID';
   const isSpectator = searchParams.get('spectate') === 'true';
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const isPortrait = useMediaQuery("(orientation: portrait)");
@@ -66,9 +68,11 @@ const ArenaPageContent = () => {
     spectatorCount,
     matchPhase,
     clearMatchResult,
-  } = useGameState(isSpectator ? null : resolvedScriptId, urlMode, isSpectator);
+  } = useGameState(isSpectator ? null : resolvedScriptId, urlMode, urlMatchMode, isSpectator);
 
-  const displayMode = serverConfirmedMode;
+  const displayMode = ['CLASSIC', 'TACTICAL'].includes(serverConfirmedMode) 
+    ? serverConfirmedMode 
+    : urlMatchMode;
   const isClassicMode = displayMode === 'CLASSIC';
 
 
@@ -160,7 +164,7 @@ const ArenaPageContent = () => {
           }}
           aria-label={`${spectatorCount} spectator${spectatorCount !== 1 ? 's' : ''} watching`}
         >
-          <span aria-hidden="true">👁️</span>
+          <Eye size={14} aria-hidden="true" />
           <span>{spectatorCount}</span>
         </div>
       )}
@@ -186,7 +190,7 @@ const ArenaPageContent = () => {
       )}
 
       {displayMode === 'TACTICAL' && matchPhase && (
-        <RoundTransitionOverlay phase={matchPhase as unknown as string} />
+        <RoundTransitionOverlay phase={matchPhase.phase as unknown as string} />
       )}
 
       <div className="absolute inset-0 z-0">
@@ -254,7 +258,7 @@ const ArenaPageContent = () => {
                 onClassicEdit={handleClassicEdit}
                 initialScript={script?.content ?? ''}
                 displayMode={displayMode}
-                matchPhase={matchPhase as unknown as string}
+                matchPhase={matchPhase.phase as unknown as string}
               />
             </>
           ) : (
@@ -278,8 +282,8 @@ const ArenaPageContent = () => {
               classicMaxTokens={CLASSIC_TOKEN_BUDGET}
               onClassicEdit={handleClassicEdit}
               initialScript={script?.content ?? ''}
-              matchPhase={matchPhase as unknown as string}
-              phaseTimeRemaining={(modeData as any)?.phaseTimeRemaining}
+              matchPhase={matchPhase.phase as unknown as string}
+              phaseEndsAt={matchPhase.phaseEndsAt}
             />
           )}
         </>

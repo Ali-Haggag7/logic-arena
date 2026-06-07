@@ -20,6 +20,7 @@ export function useScripts() {
     const [scripts, setScripts] = useState<RobotScript[]>([]);
     const [initialLoad, setInitialLoad] = useState(true);
     const [newScriptTitle, setNewScriptTitle] = useState("");
+    const [newScriptMode, setNewScriptMode] = useState<"CLASSIC" | "TACTICAL" | "HYBRID">("HYBRID");
     const [status, setStatus] = useState<{ message: string; type: "error" | "success" | null }>({ message: "", type: null });
     const [isLoading, setIsLoading] = useState(false);
     const [selectedMode, setSelectedMode] = useState<GameMode>("COMBAT");
@@ -93,9 +94,14 @@ export function useScripts() {
         setStatus({ message: "CREATING NEW SCRIPT...", type: null });
 
         try {
-            const response = await apiClient.post("/scripts", { title: newScriptTitle, content: "// Write your AliScript here" });
+            const response = await apiClient.post("/scripts", { 
+                title: newScriptTitle, 
+                content: "// Write your AliScript here",
+                matchMode: newScriptMode 
+            });
             setScripts((prev) => [...prev, response.data]);
             setNewScriptTitle("");
+            setNewScriptMode("HYBRID");
             setStatus({ message: "[SYS] SCRIPT CREATED.", type: "success" });
             clearStatusAfter(3000);
         } catch (error: unknown) {
@@ -114,8 +120,10 @@ export function useScripts() {
     };
 
     const handleGoToArena = useCallback((scriptId: string) => {
-        router.push(`/arena?scriptId=${scriptId}&mode=${selectedMode}&theme=${selectedTheme}`);
-    }, [router, selectedMode, selectedTheme]);
+        const script = scripts.find((s) => s.id === scriptId);
+        const matchMode = script?.matchMode || "HYBRID";
+        router.push(`/arena?scriptId=${scriptId}&mode=${selectedMode}&theme=${selectedTheme}&matchMode=${matchMode}`);
+    }, [router, selectedMode, selectedTheme, scripts]);
 
     const handleGoToLobby = useCallback((scriptId: string) => {
         setSelectedScriptId(scriptId);
@@ -134,6 +142,29 @@ export function useScripts() {
     const handleOptimisticUpdate = useCallback((updated: RobotScript) => {
         setScripts((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     }, []);
+
+    const handleChangeScriptMode = useCallback(async (id: string, newMode: "CLASSIC" | "TACTICAL" | "HYBRID") => {
+        const target = scripts.find(s => s.id === id);
+        if (!target) return;
+
+        // Optimistic update
+        const optimisticUpdated = { ...target, matchMode: newMode };
+        handleOptimisticUpdate(optimisticUpdated);
+
+        try {
+            await apiClient.put(`/scripts/${id}`, {
+                title: target.title,
+                content: target.content,
+                matchMode: newMode
+            });
+        } catch (error) {
+            console.error("Failed to update script mode:", error);
+            // Revert on failure
+            setScripts((prev) => prev.map((s) => (s.id === target.id ? target : s)));
+            setStatus({ message: "[ERR] MODE UPDATE FAILED", type: "error" });
+            setTimeout(() => setStatus({ message: "", type: null }), 3000);
+        }
+    }, [scripts, handleOptimisticUpdate]);
 
     const handleRevert = useCallback((original: RobotScript) => {
         setScripts((prev) => prev.map((s) => (s.id === original.id ? original : s)));
@@ -175,6 +206,8 @@ export function useScripts() {
         initialLoad,
         newScriptTitle,
         setNewScriptTitle,
+        newScriptMode,
+        setNewScriptMode,
         status,
         isLoading,
         selectedMode,
@@ -191,6 +224,7 @@ export function useScripts() {
         handleGoToLobby,
         handleEditScript,
         handleOptimisticUpdate,
+        handleChangeScriptMode,
         handleRevert,
         handleDeleteScript
     };

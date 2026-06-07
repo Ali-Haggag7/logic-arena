@@ -14,13 +14,15 @@ export interface MatchPhaseState {
   phase: 'WAITING' | 'ROUND_ACTIVE' | 'BREAK' | 'FINISHED';
   roundNumber: number;
   timeLeft: number;
+  phaseEndsAt: number;
   scripts: { userId: string; script: string }[];
   readyUserIds: string[];
 }
 
 export const useGameState = (
   scriptId: string | null,
-  mode: string | null,
+  mode?: string,
+  matchMode?: string,
   isSpectator = false,
 ) => {
   const searchParams = useSearchParams();
@@ -54,6 +56,7 @@ export const useGameState = (
     phase: 'ROUND_ACTIVE',
     roundNumber: 1,
     timeLeft: 0,
+    phaseEndsAt: 0,
     scripts: [],
     readyUserIds: [],
   });
@@ -84,17 +87,19 @@ export const useGameState = (
       if (isSpectator) {
         socket.emit('spectate', { matchId });
       } else if (scriptId) {
-        socket.emit('joinMatch', { matchId, scriptId, mode: mode || 'COMBAT', mapTheme: themeFromUrl });
+        socket.emit('joinMatch', { matchId, scriptId, mode: mode || 'COMBAT', matchMode: matchMode || 'HYBRID', mapTheme: themeFromUrl });
       }
     };
 
-    const handleMatchJoinedInfo = (data: { mode: string; phase?: MatchPhaseState['phase']; roundNumber?: number }) => {
+    const handleMatchJoinedInfo = (data: { mode: string; phase?: MatchPhaseState['phase']; roundNumber?: number; timeLeft?: number; phaseEndsAt?: number }) => {
       setServerConfirmedMode(data.mode);
       if (data.phase) {
         setMatchPhase((prev) => ({
           ...prev,
           phase: data.phase ?? prev.phase,
           roundNumber: data.roundNumber ?? prev.roundNumber,
+          timeLeft: data.timeLeft ?? prev.timeLeft,
+          phaseEndsAt: data.phaseEndsAt ?? prev.phaseEndsAt,
         }));
       }
     };
@@ -243,21 +248,23 @@ export const useGameState = (
       });
     };
 
-    const handlePhaseChanged = (data: { phase: MatchPhaseState['phase']; roundNumber: number; timeLeft: number }) => {
+    const handlePhaseChanged = (data: { phase: MatchPhaseState['phase']; roundNumber: number; timeLeft: number; phaseEndsAt?: number }) => {
       setMatchPhase((prev) => ({
         ...prev,
         phase: data.phase,
         roundNumber: data.roundNumber,
         timeLeft: data.timeLeft,
+        phaseEndsAt: data.phaseEndsAt ?? (Date.now() + data.timeLeft * 1000),
         readyUserIds: data.phase === 'BREAK' ? prev.readyUserIds : [],
       }));
     };
 
-    const handleBreakStarted = (data: { scripts: MatchPhaseState['scripts']; timeLeft: number }) => {
+    const handleBreakStarted = (data: { scripts: MatchPhaseState['scripts']; timeLeft: number; phaseEndsAt?: number }) => {
       setMatchPhase((prev) => ({
         ...prev,
         phase: 'BREAK',
         timeLeft: data.timeLeft,
+        phaseEndsAt: data.phaseEndsAt ?? (Date.now() + data.timeLeft * 1000),
         scripts: data.scripts,
         readyUserIds: [],
       }));
