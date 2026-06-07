@@ -27,7 +27,7 @@ export function MobileHeader() {
   ];
 
   const isArenaPage = pathname === "/arena" || pathname.startsWith("/arena/");
-  if (isArenaPage || pathname.startsWith("/replay")) {
+  if (isArenaPage || pathname.startsWith("/replay") || pathname === "/") {
     return null;
   }
 

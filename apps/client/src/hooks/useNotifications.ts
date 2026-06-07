@@ -261,7 +261,13 @@ async function initialUnreadFetch(): Promise<void> {
       store.fetchedOnce = true;
       notify();
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (store) {
+      store.fetchedOnce = true;
+    }
+    if (err?.response?.status === 401) {
+      return; // Guest user, safely ignore
+    }
     console.error('[useNotifications] initial unreadCount failed', err);
   }
 }
