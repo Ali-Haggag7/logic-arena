@@ -68,7 +68,7 @@ function AdminUserSortSelect({ value, onChange }: AdminUserSortSelectProps): Rea
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((current) => !current)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-accent/20 bg-bg-primary px-3 text-left text-sm font-black uppercase tracking-widest text-accent outline-none transition-colors hover:border-accent/50 focus:border-accent"
+        className="cursor-pointer flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-accent/20 bg-bg-primary px-3 text-left text-sm font-black uppercase tracking-widest text-accent outline-none transition-colors hover:border-accent/50 focus:border-accent"
       >
         <span>{selectedOption.label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
@@ -92,7 +92,7 @@ function AdminUserSortSelect({ value, onChange }: AdminUserSortSelectProps): Rea
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-3 text-left text-sm font-black uppercase tracking-widest transition-colors ${
+                className={`cursor-pointer flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-3 text-left text-sm font-black uppercase tracking-widest transition-colors ${
                   isSelected
                     ? "bg-accent/15 text-accent"
                     : "text-text-secondary hover:bg-accent/10 hover:text-text-primary"

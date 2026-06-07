@@ -102,14 +102,14 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => router.push("/register")}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="cursor-pointer text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Don&apos;t have an account? <span className="text-accent font-semibold">Create one</span>
           </button>
           <button
             type="button"
             onClick={() => router.push("/forgot-password")}
-            className="text-sm transition-colors"
+            className="cursor-pointer text-sm transition-colors"
             style={{ color: 'rgba(252,165,165,0.7)' }}
             onMouseEnter={(e) => { (e.currentTarget).style.color = 'rgb(252,165,165)'; }}
             onMouseLeave={(e) => { (e.currentTarget).style.color = 'rgba(252,165,165,0.7)'; }}
@@ -120,7 +120,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => router.push("/dashboard")}
-            className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors"
+            className="cursor-pointer text-xs text-text-secondary/50 hover:text-text-secondary transition-colors"
           >
             Continue as guest
           </button>

@@ -751,9 +751,9 @@ textarea::selection,
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes heroReveal {
-  from { opacity: 0; transform: translateY(40px) scale(0.97); filter: blur(8px); }
-  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes heroGlowPulse {
@@ -833,7 +833,8 @@ textarea::selection,
 /* ── Hero Section ── */
 
 .hero-word {
-  animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards, heroGlowPulse 4s ease-in-out infinite 0.8s;
+  animation: heroFadeUp 0.4s ease-out forwards;
+  text-shadow: 0 0 40px rgba(var(--accent-rgb), 0.4);
   opacity: 0;
 }
 
@@ -1206,7 +1207,7 @@ textarea::selection,
   }
 
   .hero-word {
-    animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards, heroGlowPulse 6s ease-in-out infinite 0.8s;
+    animation: heroFadeUp 0.4s ease-out forwards;
   }
 }
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, FileCode2, HeartPulse, RefreshCcw, Swords, Users } from "lucide-react";
+import { Activity, FileCode2, HeartPulse, RefreshCcw, Swords, Users, Zap } from "lucide-react";
 import { AdminErrorBoundary, AreaChart, BarChart, ChartSkeleton, KpiCard } from "@/components/admin";
 import type { AreaChartDatum, BarChartDatum } from "@/components/admin";
 import { apiClient } from "@/lib/api-client";
+import { useAdminEngagement } from "./hooks/useAdminEngagement";
 import { useAdminStats } from "./hooks/useAdminStats";
 import { useAdminViewport } from "./components/AdminViewportContext";
 import { ADMIN_STAGGER_DELAY_MS, delay, requestAdminWithRetry } from "./hooks/adminRequest";
@@ -71,6 +72,7 @@ function formatUptime(seconds: number): string {
 export default function AdminOverviewPage(): React.ReactElement {
   const { isMobile } = useAdminViewport();
   const { stats, isLoading, error, refetch } = useAdminStats({ initialDelayMs: ADMIN_STAGGER_DELAY_MS });
+  const { stats: engagementStats, isLoading: engagementLoading } = useAdminEngagement();
   const [details, setDetails] = useState<DashboardDetails>({
     userStats: null,
     matchStats: null,
@@ -128,7 +130,7 @@ export default function AdminOverviewPage(): React.ReactElement {
               void refetch();
               void loadDetails();
             }}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-accent/30 bg-card px-4 text-xs font-black uppercase tracking-[0.16em] text-accent transition-colors hover:border-accent hover:bg-accent/10"
+            className="cursor-pointer inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-accent/30 bg-card px-4 text-xs font-black uppercase tracking-[0.16em] text-accent transition-colors hover:border-accent hover:bg-accent/10"
           >
             <RefreshCcw className="h-4 w-4" />
             Sync
@@ -187,6 +189,61 @@ export default function AdminOverviewPage(): React.ReactElement {
                   <p className="mt-2 text-lg font-black text-text-primary">{health ? formatUptime(health.uptimeSeconds) : "N/A"}</p>
                 </div>
               </div>
+              </div>
+            )}
+          </section>
+
+          <section className="mt-6">
+            {engagementLoading ? (
+              <ChartSkeleton height={isMobile ? 220 : 180} />
+            ) : (
+              <div className="rounded-lg border border-accent/20 bg-card p-5 shadow-[var(--card-shadow)]">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-text-primary">Engagement</h2>
+                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-text-secondary">User activity and retention metrics</p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-accent/20 bg-bg-primary px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-accent">
+                    <Zap className="h-4 w-4" />
+                    {engagementStats?.engagementRate ?? 0}% engaged
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-accent/15 bg-bg-primary p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">DAU (24h)</p>
+                    <p className="mt-2 text-lg font-black text-text-primary">{engagementStats?.dailyActiveUsers.toLocaleString() ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg border border-accent/15 bg-bg-primary p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">WAU (7d)</p>
+                    <p className="mt-2 text-lg font-black text-text-primary">{engagementStats?.weeklyActiveUsers.toLocaleString() ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg border border-accent/15 bg-bg-primary p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">MAU (30d)</p>
+                    <p className="mt-2 text-lg font-black text-text-primary">{engagementStats?.monthlyActiveUsers.toLocaleString() ?? "—"}</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-accent/15 bg-bg-primary p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">Match Completion Rate</p>
+                    <p className="mt-2 text-lg font-black text-text-primary">{engagementStats?.matchCompletionRate ?? 0}%</p>
+                  </div>
+                  <div className="rounded-lg border border-accent/15 bg-bg-primary p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">Avg Matches / Active User</p>
+                    <p className="mt-2 text-lg font-black text-text-primary">{engagementStats?.avgMatchesPerActiveUser.toLocaleString() ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg border border-accent/15 bg-bg-primary p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">Engagement Rate</p>
+                    <p className="mt-2 text-lg font-black text-text-primary">{engagementStats?.engagementRate ?? 0}%</p>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <BarChart
+                    data={mapBarData(engagementStats?.activityTimeline)}
+                    title="Active Users Per Day (30d)"
+                    height={chartHeight}
+                    isLoading={engagementLoading}
+                  />
+                </div>
               </div>
             )}
           </section>

@@ -83,7 +83,7 @@ export default function AdminHealthPage(): React.ReactElement {
               onClick={() => {
                 void refetch();
               }}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-accent/30 bg-card px-4 text-xs font-black uppercase tracking-[0.16em] text-accent transition-colors hover:border-accent hover:bg-accent/10"
+              className="cursor-pointer inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-accent/30 bg-card px-4 text-xs font-black uppercase tracking-[0.16em] text-accent transition-colors hover:border-accent hover:bg-accent/10"
             >
               <RefreshCcw className="h-4 w-4" />
               Sync

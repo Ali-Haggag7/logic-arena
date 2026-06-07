@@ -14,7 +14,7 @@ import {
   PaginationQueryDto,
 } from './feedback.dto';
 
-const FEEDBACK_CACHE_TTL = 60;
+const FEEDBACK_CACHE_TTL = 120;
 
 function listCacheKey(entity: string, query: PaginationQueryDto): string {
   const { page, pageSize, status, sortBy, sortOrder } = query;
@@ -232,6 +232,35 @@ export class FeedbackService {
     await this.assertContactMessageExists(id);
     await this.prisma.contactMessage.delete({ where: { id } });
     await this.redis.delPattern('feedback:contactMessage:*');
+  }
+
+  // ── Aggregated counts (for admin sidebar badge) ────────────────────────────
+
+  async getFeedbackCounts(): Promise<{
+    openBugReports: number;
+    submittedFeatureRequests: number;
+    unreadContactMessages: number;
+  }> {
+    const cacheKey = 'feedback:admin:counts';
+    const cached = await this.redis.get<{
+      openBugReports: number;
+      submittedFeatureRequests: number;
+      unreadContactMessages: number;
+    }>(cacheKey);
+    if (cached) return cached;
+
+    const [openBugReports, submittedFeatureRequests, unreadContactMessages] =
+      await Promise.all([
+        this.prisma.bugReport.count({ where: { status: 'OPEN' } }),
+        this.prisma.featureRequest.count({
+          where: { status: 'SUBMITTED' },
+        }),
+        this.prisma.contactMessage.count({ where: { status: 'UNREAD' } }),
+      ]);
+
+    const result = { openBugReports, submittedFeatureRequests, unreadContactMessages };
+    await this.redis.set(cacheKey, result, FEEDBACK_CACHE_TTL);
+    return result;
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────

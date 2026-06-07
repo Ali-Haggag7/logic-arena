@@ -11,10 +11,17 @@ import { NAV_SECTIONS, isActivePath, useCommunityFeedbackCount } from "./AdminSi
 const DRAWER_ANIMATION_DURATION = 0.2;
 const FEEDBACK_PATH_PREFIX = "/admin/feedback";
 
+function itemCountForHref(href: string, counts: { total: number; bugReports: number; featureRequests: number; contact: number }): number {
+  if (href.includes("bug-reports")) return counts.bugReports;
+  if (href.includes("feature-requests")) return counts.featureRequests;
+  if (href.includes("contact")) return counts.contact;
+  return 0;
+}
+
 export function AdminMobileNav(): React.ReactElement {
   const pathname = usePathname() || "";
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const communityFeedbackCount = useCommunityFeedbackCount();
+  const communityCounts = useCommunityFeedbackCount();
   const currentTitle = useMemo((): string => {
     for (const section of NAV_SECTIONS) {
       const match = section.items.find((item) => isActivePath(pathname, item));
@@ -35,7 +42,7 @@ export function AdminMobileNav(): React.ReactElement {
           aria-label="Open admin navigation"
           title="Open navigation"
           onClick={() => setIsOpen(true)}
-          className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-accent/20 bg-card text-accent"
+          className="cursor-pointer grid min-h-11 min-w-11 place-items-center rounded-lg border border-accent/20 bg-card text-accent"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -78,7 +85,7 @@ export function AdminMobileNav(): React.ReactElement {
                 aria-label="Close admin navigation"
                 title="Close navigation"
                 onClick={() => setIsOpen(false)}
-                className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-accent/20 bg-card text-text-secondary"
+                className="cursor-pointer grid min-h-11 min-w-11 place-items-center rounded-lg border border-accent/20 bg-card text-text-secondary"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -92,7 +99,9 @@ export function AdminMobileNav(): React.ReactElement {
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const active = isActivePath(pathname, item);
-                      const hasFeedbackNotice = item.href.startsWith(FEEDBACK_PATH_PREFIX) && communityFeedbackCount > 0;
+                      const itemCount = item.href.startsWith(FEEDBACK_PATH_PREFIX)
+                        ? itemCountForHref(item.href, communityCounts)
+                        : 0;
                       return (
                         <Link
                           key={item.href}
@@ -104,8 +113,14 @@ export function AdminMobileNav(): React.ReactElement {
                           }`}
                         >
                           <Icon className="h-5 w-5 shrink-0" />
-                          <span>{item.label}</span>
-                          {hasFeedbackNotice && <span className="ml-auto h-2 w-2 rounded-full bg-[var(--sem-danger)]" />}
+                          <span className="flex flex-1 items-center justify-between gap-2">
+                            <span>{item.label}</span>
+                            {itemCount > 0 && (
+                              <span className="rounded-full border border-[var(--sem-danger)] bg-[rgba(var(--sem-danger-rgb),0.12)] px-1.5 py-0.5 text-[10px] font-black leading-none text-[var(--sem-danger)]">
+                                {itemCount.toLocaleString()}
+                              </span>
+                            )}
+                          </span>
                         </Link>
                       );
                     })}

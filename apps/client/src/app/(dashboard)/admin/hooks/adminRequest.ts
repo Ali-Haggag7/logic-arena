@@ -1,7 +1,9 @@
 "use client";
 
 const RATE_LIMIT_STATUS = 429;
-const ADMIN_RETRY_DELAY_MS = 2_000;
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 1_000;
+const RETRY_BACKOFF_FACTOR = 2;
 
 export const ADMIN_STAGGER_DELAY_MS = 500;
 
@@ -15,15 +17,16 @@ export function delay(ms: number): Promise<void> {
   });
 }
 
-export async function requestAdminWithRetry<TResult>(request: () => Promise<TResult>): Promise<TResult> {
+export async function requestAdminWithRetry<TResult>(request: () => Promise<TResult>, retries = MAX_RETRIES): Promise<TResult> {
   try {
     return await request();
   } catch (error: unknown) {
-    if (!isRateLimitError(error)) {
+    if (!isRateLimitError(error) || retries <= 0) {
       throw error;
     }
 
-    await delay(ADMIN_RETRY_DELAY_MS);
-    return request();
+    const waitMs = BASE_RETRY_DELAY_MS * Math.pow(RETRY_BACKOFF_FACTOR, MAX_RETRIES - retries);
+    await delay(waitMs);
+    return requestAdminWithRetry(request, retries - 1);
   }
 }

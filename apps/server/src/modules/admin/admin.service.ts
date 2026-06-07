@@ -8,6 +8,7 @@ import {
   AdminUserListItem,
   CampaignStats,
   DailyCount,
+  EngagementStats,
   FunnelStep,
   HealthStats,
   HistogramBucket,
@@ -37,9 +38,9 @@ const TOP_TOURNAMENT_WINNERS_LIMIT = 5;
 const TOP_FAILED_LEVELS_LIMIT = 10;
 const DEFAULT_PAGE_SIZE = 20;
 const OVERVIEW_CACHE_KEY = 'admin:stats:overview';
-const OVERVIEW_CACHE_TTL = 60;
+const OVERVIEW_CACHE_TTL = 120;
 const HEALTH_CACHE_KEY = 'admin:health';
-const HEALTH_CACHE_TTL = 30;
+const HEALTH_CACHE_TTL = 60;
 
 function startOfToday(): Date {
   const d = new Date();
@@ -511,6 +512,94 @@ export class AdminService {
       })),
       avgInsightsPerUser:
         userCount > 0 ? Math.round((totalInsights / userCount) * 10) / 10 : 0,
+    };
+  }
+
+  // ── Engagement ───────────────────────────────────────────────────────────────
+
+  async getEngagementStats(): Promise<EngagementStats> {
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 86_400_000);
+    const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
+    const monthAgo = new Date(now.getTime() - 30 * 86_400_000);
+
+    const [
+      totalUsers,
+      dailyParticipants,
+      weeklyParticipants,
+      monthlyParticipants,
+      activityTimelineRaw,
+      matchCompletionRaw,
+      totalParticipants,
+    ] = await Promise.all([
+      this.prisma.user.count(),
+      // DAU: distinct users who participated in matches in last 24h
+      this.prisma.matchParticipant.findMany({
+        select: { userId: true },
+        where: { createdAt: { gte: dayAgo } },
+        distinct: ['userId'],
+      }),
+      // WAU: distinct users in last 7 days
+      this.prisma.matchParticipant.findMany({
+        select: { userId: true },
+        where: { createdAt: { gte: weekAgo } },
+        distinct: ['userId'],
+      }),
+      // MAU: distinct users in last 30 days
+      this.prisma.matchParticipant.findMany({
+        select: { userId: true },
+        where: { createdAt: { gte: monthAgo } },
+        distinct: ['userId'],
+      }),
+      // activity per day over 30 days
+      this.prisma.$queryRaw<{ date: Date; count: bigint }[]>`
+        SELECT DATE_TRUNC('day', mp."createdAt") AS date, COUNT(DISTINCT mp."userId") AS count
+        FROM "MatchParticipant" mp
+        WHERE mp."createdAt" >= ${daysAgo(DAYS_30)}
+        GROUP BY DATE_TRUNC('day', mp."createdAt")
+        ORDER BY date ASC
+      `,
+      // match completion rate
+      this.prisma.match.aggregate({
+        _count: true,
+        _max: { status: true },
+      }),
+      // total participants ever
+      this.prisma.matchParticipant.count(),
+    ]);
+
+    const dailyActiveUsers = dailyParticipants.length;
+    const weeklyActiveUsers = weeklyParticipants.length;
+    const monthlyActiveUsers = monthlyParticipants.length;
+    const activityTimeline = buildTimeline(activityTimelineRaw);
+
+    const completedMatches = await this.prisma.match.count({
+      where: { status: 'completed' },
+    });
+    const totalMatches = await this.prisma.match.count();
+    const matchCompletionRate =
+      totalMatches > 0
+        ? Math.round((completedMatches / totalMatches) * 100 * 10) / 10
+        : 0;
+
+    const avgMatchesPerActiveUser =
+      monthlyActiveUsers > 0
+        ? Math.round((totalParticipants / monthlyActiveUsers) * 10) / 10
+        : 0;
+
+    const engagementRate =
+      totalUsers > 0
+        ? Math.round((monthlyActiveUsers / totalUsers) * 100 * 10) / 10
+        : 0;
+
+    return {
+      dailyActiveUsers,
+      weeklyActiveUsers,
+      monthlyActiveUsers,
+      engagementRate,
+      activityTimeline,
+      matchCompletionRate,
+      avgMatchesPerActiveUser,
     };
   }
 

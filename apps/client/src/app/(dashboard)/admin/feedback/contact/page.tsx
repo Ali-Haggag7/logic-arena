@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
 import { AdminErrorBoundary, DataTable, StatusBadge, type DataTableColumn } from "@/components/admin";
+import { CyberSelect } from "../../../../../components/ui/CyberSelect";
 import { useAdminViewport } from "../../components/AdminViewportContext";
 import {
   useAdminFeedback,
@@ -45,7 +46,7 @@ function DetailModal({ message, onClose }: DetailModalProps): React.ReactElement
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-accent/70">Contact Message</p>
             <h2 className="mt-2 break-words text-2xl font-black uppercase tracking-[0.12em] text-text-primary">{message.subject}</h2>
           </div>
-          <button type="button" aria-label="Close contact message details" title="Close" onClick={onClose} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-accent/20 text-text-secondary transition-colors hover:border-accent hover:text-accent">
+          <button type="button" aria-label="Close contact message details" title="Close" onClick={onClose} className="cursor-pointer grid min-h-11 min-w-11 place-items-center rounded-lg border border-accent/20 text-text-secondary transition-colors hover:border-accent hover:text-accent">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -127,7 +128,7 @@ export default function AdminContactMessagesPage(): React.ReactElement {
           <button
             type="button"
             onClick={() => message && setSelectedMessage(message)}
-            className={`min-h-11 w-full min-w-56 rounded-lg border bg-bg-primary px-3 text-left text-sm font-black text-text-primary transition-colors hover:border-accent hover:text-accent ${isUnread ? "border-accent shadow-[0_0_18px_rgba(var(--accent-rgb),0.18)]" : "border-accent/20"}`}
+            className={`cursor-pointer min-h-11 w-full min-w-56 rounded-lg border bg-bg-primary px-3 text-left text-sm font-black text-text-primary transition-colors hover:border-accent hover:text-accent ${isUnread ? "border-accent shadow-[0_0_18px_rgba(var(--accent-rgb),0.18)]" : "border-accent/20"}`}
           >
             {String(value ?? "Untitled")}
           </button>
@@ -147,16 +148,16 @@ export default function AdminContactMessagesPage(): React.ReactElement {
         return (
           <div className="flex min-w-56 flex-wrap items-center gap-2">
             <label className="sr-only" htmlFor={`contact-status-${message.id}`}>Change contact message status</label>
-            <select
-              id={`contact-status-${message.id}`}
-              value={message.status}
-              disabled={updateState.isLoading}
-              onChange={(event) => void handleStatusChange(message, event.target.value as ContactMessageStatus)}
-              className="min-h-11 rounded-lg border border-accent/20 bg-bg-primary px-3 text-xs font-black uppercase tracking-widest text-accent outline-none transition-colors focus:border-accent disabled:opacity-50"
-            >
-              {STATUSES.map((option) => <option key={option} value={option}>{formatLabel(option)}</option>)}
-            </select>
-            <button type="button" aria-label={`Delete ${message.subject}`} title="Delete" disabled={deleteState.isLoading} onClick={() => void handleDelete(message)} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--sem-danger)] bg-[rgba(var(--sem-danger-rgb),0.1)] text-[var(--sem-danger)] transition-colors disabled:opacity-50">
+            <div className="w-48">
+              <CyberSelect
+                id={`contact-status-${message.id}`}
+                value={message.status}
+                disabled={updateState.isLoading}
+                onChange={(val) => void handleStatusChange(message, val as ContactMessageStatus)}
+                options={STATUSES.map((option) => ({ value: option, label: formatLabel(option) }))}
+              />
+            </div>
+            <button type="button" aria-label={`Delete ${message.subject}`} title="Delete" disabled={deleteState.isLoading} onClick={() => void handleDelete(message)} className="cursor-pointer grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--sem-danger)] bg-[rgba(var(--sem-danger-rgb),0.1)] text-[var(--sem-danger)] transition-colors disabled:opacity-50">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
@@ -182,7 +183,7 @@ export default function AdminContactMessagesPage(): React.ReactElement {
 
           <section className={`mb-4 gap-2 ${isMobile ? "flex overflow-x-auto whitespace-nowrap pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "grid grid-cols-4"}`}>
             {FILTERS.map((filter) => (
-              <button key={filter} type="button" onClick={() => { setPage(DEFAULT_PAGE); setStatus(filter); }} className={`min-h-11 shrink-0 rounded-lg border px-3 text-xs font-black uppercase tracking-widest transition-colors ${status === filter ? "border-accent bg-accent/15 text-accent" : "border-accent/20 bg-card text-text-secondary hover:border-accent/50 hover:text-text-primary"}`}>
+              <button key={filter} type="button" onClick={() => { setPage(DEFAULT_PAGE); setStatus(filter); }} className={`cursor-pointer min-h-11 shrink-0 rounded-lg border px-3 text-xs font-black uppercase tracking-widest transition-colors ${status === filter ? "border-accent bg-accent/15 text-accent" : "border-accent/20 bg-card text-text-secondary hover:border-accent/50 hover:text-text-primary"}`}>
                 {formatLabel(filter)}
               </button>
             ))}

@@ -14,7 +14,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 import { AuthGuard } from '../../common/auth.guard';
 import { AdminGuard } from '../../common/admin.guard';
@@ -76,12 +76,19 @@ export class FeedbackController {
 
 // ── Admin controller ──────────────────────────────────────────────────────────
 
-@SkipThrottle({ global: true })
-@Throttle({ admin: { ttl: 60000, limit: 300 } })
+@SkipThrottle()
 @UseGuards(AuthGuard, AdminGuard)
 @Controller('admin/feedback')
 export class AdminFeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
+
+  // ── Aggregated counts (single endpoint for sidebar badge) ──────────────────
+
+  @Get('counts')
+  @HttpCode(HttpStatus.OK)
+  async getFeedbackCounts() {
+    return this.feedbackService.getFeedbackCounts();
+  }
 
   // ── Bug Reports ─────────────────────────────────────────────────────────────
 
@@ -94,10 +101,9 @@ export class AdminFeedbackController {
 
   @Patch('bug-reports/:id')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(UpdateStatusSchema))
   async updateBugReportStatus(
     @Param('id') id: string,
-    @Body() body: UpdateStatusDto,
+    @Body(new ZodValidationPipe(UpdateStatusSchema)) body: UpdateStatusDto,
   ) {
     return this.feedbackService.updateBugReportStatus(id, body.status);
   }
@@ -119,10 +125,9 @@ export class AdminFeedbackController {
 
   @Patch('feature-requests/:id')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(UpdateStatusSchema))
   async updateFeatureRequestStatus(
     @Param('id') id: string,
-    @Body() body: UpdateStatusDto,
+    @Body(new ZodValidationPipe(UpdateStatusSchema)) body: UpdateStatusDto,
   ) {
     return this.feedbackService.updateFeatureRequestStatus(id, body.status);
   }
@@ -144,10 +149,9 @@ export class AdminFeedbackController {
 
   @Patch('contact/:id')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(UpdateStatusSchema))
   async updateContactMessageStatus(
     @Param('id') id: string,
-    @Body() body: UpdateStatusDto,
+    @Body(new ZodValidationPipe(UpdateStatusSchema)) body: UpdateStatusDto,
   ) {
     return this.feedbackService.updateContactMessageStatus(id, body.status);
   }

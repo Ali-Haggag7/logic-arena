@@ -139,7 +139,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="cursor-pointer text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Already have an account? <span className="text-accent font-semibold">Sign in</span>
           </button>
@@ -147,7 +147,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => router.push("/dashboard")}
-            className="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors"
+            className="cursor-pointer text-xs text-text-secondary/50 hover:text-text-secondary transition-colors"
           >
             Continue as guest
           </button>

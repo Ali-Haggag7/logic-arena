@@ -120,7 +120,7 @@ function VerifyEmailContent() {
         <button
           type="button"
           onClick={() => router.push("/forgot-password")}
-          className="flex items-center justify-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mx-auto"
+          className="cursor-pointer flex items-center justify-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mx-auto"
         >
           <RotateCcw size={13} />
           Didn&apos;t receive a code?

@@ -71,14 +71,14 @@ export function MatchModeSelector({
               className={`group flex min-h-[94px] w-full cursor-pointer items-center gap-4 rounded-[28px] border p-4 text-left transition-all duration-300 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 shadow-lg ${
                 isSelected
                     ? "border-accent/50 bg-accent/[0.12] shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)]"
-                    : "border-white/[0.08] bg-white/[0.04] backdrop-blur-xl hover:border-white/[0.15] hover:bg-white/[0.08]"
+                    : "border-accent/10 bg-bg-secondary/50 backdrop-blur-xl hover:border-accent/20 hover:bg-bg-secondary"
               }`}
             >
               <span
                   className={`grid h-14 w-14 shrink-0 place-items-center rounded-[20px] border transition-all ${
                   isSelected
                     ? "border-accent/60 bg-gradient-to-br from-accent/80 to-accent shadow-[0_0_24px_rgba(var(--accent-rgb),0.4)] text-bg-primary"
-                    : "border-white/[0.1] bg-white/[0.05] text-white/70 group-hover:text-white"
+                    : "border-accent/10 bg-bg-secondary text-text-secondary group-hover:text-text-primary"
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -86,14 +86,14 @@ export function MatchModeSelector({
 
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
-                  <span className="truncate text-base font-bold tracking-tight text-white">
+                  <span className="truncate text-base font-bold tracking-tight text-text-primary">
                     {option.label}
                   </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/60">
+                  <span className="rounded-full border border-accent/10 bg-bg-secondary px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-text-secondary">
                     {option.eyebrow}
                   </span>
                 </span>
-                <span className="mt-1 block text-xs font-medium leading-relaxed text-white/50">
+                <span className="mt-1 block text-xs font-medium leading-relaxed text-text-secondary">
                   {option.summary}
                 </span>
                 <span className="mt-2.5 flex flex-wrap gap-2">
@@ -102,7 +102,7 @@ export function MatchModeSelector({
                     return (
                       <span
                         key={feature.label}
-                        className="inline-flex h-6 items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 text-[9px] font-semibold uppercase tracking-wider text-white/70"
+                        className="inline-flex h-6 items-center gap-1.5 rounded-full border border-accent/10 bg-bg-primary px-2.5 text-[9px] font-semibold uppercase tracking-wider text-text-secondary"
                       >
                         <FeatureIcon className="h-3 w-3 opacity-70" />
                         {feature.label}
@@ -116,7 +116,7 @@ export function MatchModeSelector({
                 className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-all ${
                   isSelected
                     ? "border-accent bg-accent text-bg-primary"
-                    : "border-white/10 bg-black/20 text-transparent group-hover:border-white/20"
+                    : "border-accent/10 bg-bg-primary text-transparent group-hover:border-accent/20"
                 }`}
               >
                 <Check className="h-4 w-4" />
@@ -143,7 +143,7 @@ export function MatchModeSelector({
             className={`group relative min-h-[110px] cursor-pointer overflow-hidden rounded-[20px] border p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
               isSelected
                 ? "border-accent/50 bg-accent/[0.12] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)]"
-                : "border-white/[0.08] bg-white/[0.03] backdrop-blur-2xl hover:border-white/[0.15] hover:bg-white/[0.06]"
+                : "border-accent/10 bg-bg-secondary/50 backdrop-blur-2xl hover:border-accent/20 hover:bg-bg-secondary"
             }`}
           >
             <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-45" />
@@ -152,7 +152,7 @@ export function MatchModeSelector({
                 className={`grid h-10 w-10 place-items-center rounded-xl border transition-all ${
                   isSelected
                     ? "border-accent/60 bg-gradient-to-br from-accent/80 to-accent text-bg-primary shadow-[0_0_16px_rgba(var(--accent-rgb),0.4)]"
-                    : "border-white/10 bg-white/5 text-white/70 group-hover:text-white"
+                    : "border-accent/10 bg-bg-secondary text-text-secondary group-hover:text-text-primary"
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -161,7 +161,7 @@ export function MatchModeSelector({
                 className={`inline-flex h-7 items-center gap-2 rounded-full border px-3 text-[10px] font-bold transition-all ${
                   isSelected
                     ? "border-accent bg-accent text-bg-primary"
-                    : "border-white/10 bg-black/20 text-white/50 group-hover:text-white"
+                    : "border-accent/10 bg-bg-secondary text-text-secondary group-hover:text-text-primary"
                 }`}
               >
                 {isSelected && <Check className="h-3.5 w-3.5" />}
@@ -169,13 +169,13 @@ export function MatchModeSelector({
               </span>
             </span>
 
-            <span className="mt-3 block text-[9px] font-bold uppercase tracking-wider text-white/50">
+            <span className="mt-3 block text-[9px] font-bold uppercase tracking-wider text-text-secondary">
               {option.eyebrow}
             </span>
-            <span className="mt-1 block text-xl font-bold tracking-tight text-white">
+            <span className="mt-1 block text-xl font-bold tracking-tight text-text-primary">
               {option.label}
             </span>
-            <span className="mt-1 block text-[11px] font-medium leading-relaxed text-white/50">
+            <span className="mt-1 block text-[11px] font-medium leading-relaxed text-text-secondary">
               {option.summary}
             </span>
 
@@ -185,7 +185,7 @@ export function MatchModeSelector({
                 return (
                   <span
                     key={feature.label}
-                    className="inline-flex h-6 items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 text-[9px] font-semibold uppercase tracking-wider text-white/70"
+                    className="inline-flex h-6 items-center gap-1.5 rounded-full border border-accent/10 bg-bg-primary px-2.5 text-[9px] font-semibold uppercase tracking-wider text-text-secondary"
                   >
                     <FeatureIcon className="h-3 w-3 opacity-70" />
                     {feature.label}

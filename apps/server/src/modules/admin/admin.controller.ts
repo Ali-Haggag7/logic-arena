@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AuthGuard } from '../../common/auth.guard';
 import { AdminGuard } from '../../common/admin.guard';
 import { AdminService } from './admin.service';
@@ -30,8 +30,7 @@ function parseSortBy(raw: string | undefined): AdminSortBy {
   );
 }
 
-@SkipThrottle({ global: true })
-@Throttle({ admin: { ttl: 60000, limit: 300 } })
+@SkipThrottle()
 @UseGuards(AuthGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
@@ -77,6 +76,11 @@ export class AdminController {
   @Get('stats/ai')
   getAIStats() {
     return this.adminService.getAIStats();
+  }
+
+  @Get('stats/engagement')
+  getEngagementStats() {
+    return this.adminService.getEngagementStats();
   }
 
   @Get('health')

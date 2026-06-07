@@ -28,7 +28,6 @@ import { FriendsModule } from './modules/friends/friends.module';
     ThrottlerModule.forRoot([
       { name: 'global', ttl: 60_000, limit: 60 }, // 60 req / min
       { name: 'auth', ttl: 900_000, limit: 5 }, // 5 req / 15 min (auth only)
-      { name: 'admin', ttl: 60_000, limit: 300 }, // 300 req / min (admin)
     ]),
 
     // ── Feature modules ──────────────────────────────────────────────────────

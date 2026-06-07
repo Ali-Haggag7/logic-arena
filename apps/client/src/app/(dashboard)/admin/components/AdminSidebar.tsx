@@ -29,12 +29,11 @@ import {
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { apiClient } from "@/lib/api-client";
-import { ADMIN_STAGGER_DELAY_MS, delay, requestAdminWithRetry } from "../hooks/adminRequest";
+import { requestAdminWithRetry } from "../hooks/adminRequest";
 
 const EXPANDED_WIDTH_CLASS = "w-[280px]";
 const COLLAPSED_WIDTH_CLASS = "w-[84px]";
 const COMMUNITY_SECTION_TITLE = "COMMUNITY";
-const FEEDBACK_PAGE_SIZE = 1;
 const SECTION_ANIMATION_DURATION = 0.18;
 
 type AdminNavItem = {
@@ -49,8 +48,17 @@ type AdminNavSection = {
   items: AdminNavItem[];
 };
 
-interface FeedbackCountResponse {
+interface FeedbackCountsResponse {
+  openBugReports: number;
+  submittedFeatureRequests: number;
+  unreadContactMessages: number;
+}
+
+interface CommunityCounts {
   total: number;
+  bugReports: number;
+  featureRequests: number;
+  contact: number;
 }
 
 type SectionOpenState = Record<string, boolean>;
@@ -102,29 +110,26 @@ function getInitialSectionState(): SectionOpenState {
   }, {});
 }
 
-export function useCommunityFeedbackCount(): number {
-  const [count, setCount] = useState<number>(0);
+export function useCommunityFeedbackCount(): CommunityCounts {
+  const [counts, setCounts] = useState<CommunityCounts>({ total: 0, bugReports: 0, featureRequests: 0, contact: 0 });
 
   useEffect((): (() => void) => {
     let cancelled = false;
 
     async function loadCount(): Promise<void> {
       try {
-        const contactResponse = await requestAdminWithRetry(() => (
-          apiClient.get<FeedbackCountResponse>("/admin/feedback/contact", { params: { status: "UNREAD", pageSize: FEEDBACK_PAGE_SIZE } })
+        const response = await requestAdminWithRetry(() => (
+          apiClient.get<FeedbackCountsResponse>("/admin/feedback/counts")
         ));
-        await delay(ADMIN_STAGGER_DELAY_MS);
-        if (cancelled) return;
-        const bugResponse = await requestAdminWithRetry(() => (
-          apiClient.get<FeedbackCountResponse>("/admin/feedback/bug-reports", { params: { status: "OPEN", pageSize: FEEDBACK_PAGE_SIZE } })
-        ));
+        const { openBugReports, submittedFeatureRequests, unreadContactMessages } = response.data;
 
         if (!cancelled) {
-          setCount(contactResponse.data.total + bugResponse.data.total);
+          const total = openBugReports + submittedFeatureRequests + unreadContactMessages;
+          setCounts({ total, bugReports: openBugReports, featureRequests: submittedFeatureRequests, contact: unreadContactMessages });
         }
       } catch {
         if (!cancelled) {
-          setCount(0);
+          setCounts({ total: 0, bugReports: 0, featureRequests: 0, contact: 0 });
         }
       }
     }
@@ -136,7 +141,7 @@ export function useCommunityFeedbackCount(): number {
     };
   }, []);
 
-  return count;
+  return counts;
 }
 
 interface AdminSidebarProps {
@@ -144,10 +149,17 @@ interface AdminSidebarProps {
   onToggleCollapse: () => void;
 }
 
+function itemCountForHref(href: string, counts: CommunityCounts): number {
+  if (href.includes("bug-reports")) return counts.bugReports;
+  if (href.includes("feature-requests")) return counts.featureRequests;
+  if (href.includes("contact")) return counts.contact;
+  return 0;
+}
+
 export function AdminSidebar({ isCollapsed, onToggleCollapse }: AdminSidebarProps): React.ReactElement {
   const pathname = usePathname() || "";
   const [openSections, setOpenSections] = useState<SectionOpenState>(() => getInitialSectionState());
-  const communityFeedbackCount = useCommunityFeedbackCount();
+  const communityCounts = useCommunityFeedbackCount();
   const widthClass = isCollapsed ? COLLAPSED_WIDTH_CLASS : EXPANDED_WIDTH_CLASS;
   const activeTitle = useMemo((): string => {
     for (const section of NAV_SECTIONS) {
@@ -169,7 +181,7 @@ export function AdminSidebar({ isCollapsed, onToggleCollapse }: AdminSidebarProp
         aria-label={isCollapsed ? "Expand admin sidebar" : "Collapse admin sidebar"}
         title={isCollapsed ? "Expand" : "Collapse"}
         onClick={onToggleCollapse}
-        className="absolute right-0 top-1/2 z-[71] -translate-y-1/2 translate-x-1/2 grid h-8 w-5 place-items-center rounded-r border border-accent/20 bg-card text-text-secondary shadow-sm transition-colors hover:border-accent/50 hover:text-accent"
+        className="cursor-pointer absolute right-0 top-1/2 z-[71] -translate-y-1/2 translate-x-1/2 grid h-8 w-5 place-items-center rounded-r border border-accent/20 bg-card text-text-secondary shadow-sm transition-colors hover:border-accent/50 hover:text-accent"
       >
         {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
       </button>
@@ -216,7 +228,7 @@ export function AdminSidebar({ isCollapsed, onToggleCollapse }: AdminSidebarProp
               <button
                 type="button"
                 onClick={() => toggleSection(section.title)}
-                className="mb-2 flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 text-left transition-colors hover:bg-accent/5"
+                className="cursor-pointer mb-2 flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 text-left transition-colors hover:bg-accent/5"
                 aria-expanded={openSections[section.title]}
               >
                 <span className="flex min-w-0 items-center gap-2">
@@ -224,9 +236,9 @@ export function AdminSidebar({ isCollapsed, onToggleCollapse }: AdminSidebarProp
                   <span className="truncate text-[10px] font-black uppercase tracking-[0.24em] text-text-secondary">{section.title}</span>
                 </span>
                 <span className="flex items-center gap-2">
-                  {section.title === COMMUNITY_SECTION_TITLE && communityFeedbackCount > 0 && (
+                  {section.title === COMMUNITY_SECTION_TITLE && communityCounts.total > 0 && (
                     <span className="rounded-full border border-[var(--sem-danger)] bg-[rgba(var(--sem-danger-rgb),0.12)] px-2 py-0.5 text-[10px] font-black text-[var(--sem-danger)]">
-                      {communityFeedbackCount.toLocaleString()}
+                      {communityCounts.total.toLocaleString()}
                     </span>
                   )}
                   <ChevronRight className={`h-3.5 w-3.5 text-text-secondary transition-transform ${openSections[section.title] ? "rotate-90" : ""}`} />
@@ -245,6 +257,9 @@ export function AdminSidebar({ isCollapsed, onToggleCollapse }: AdminSidebarProp
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const active = isActivePath(pathname, item);
+                    const itemCount = section.title === COMMUNITY_SECTION_TITLE
+                      ? itemCountForHref(item.href, communityCounts)
+                      : 0;
                     return (
                       <Link
                         key={item.href}
@@ -257,8 +272,17 @@ export function AdminSidebar({ isCollapsed, onToggleCollapse }: AdminSidebarProp
                         } ${isCollapsed ? "justify-center" : ""}`}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
-                        {!isCollapsed && <span className="truncate">{item.label}</span>}
-                        {isCollapsed && section.title === COMMUNITY_SECTION_TITLE && communityFeedbackCount > 0 && (
+                        {!isCollapsed && (
+                          <span className="flex flex-1 items-center justify-between gap-2">
+                            <span className="truncate">{item.label}</span>
+                            {itemCount > 0 && (
+                              <span className="rounded-full border border-[var(--sem-danger)] bg-[rgba(var(--sem-danger-rgb),0.12)] px-1.5 py-0.5 text-[10px] font-black leading-none text-[var(--sem-danger)]">
+                                {itemCount.toLocaleString()}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                        {isCollapsed && itemCount > 0 && (
                           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--sem-danger)]" />
                         )}
                       </Link>

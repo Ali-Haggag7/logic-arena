@@ -126,7 +126,7 @@ function ResetPasswordContent() {
         <button
           type="button"
           onClick={() => router.push("/login")}
-          className="flex items-center justify-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mx-auto"
+          className="cursor-pointer flex items-center justify-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mx-auto"
         >
           <ArrowLeft size={14} />
           Back to Sign In

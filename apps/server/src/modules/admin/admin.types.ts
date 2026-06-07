@@ -231,6 +231,18 @@ export interface AdminInsightSummary {
   createdAt: Date;
 }
 
+// ── EngagementStats ────────────────────────────────────────────────────────────
+
+export interface EngagementStats {
+  dailyActiveUsers: number;
+  weeklyActiveUsers: number;
+  monthlyActiveUsers: number;
+  engagementRate: number;
+  activityTimeline: DailyCount[];
+  matchCompletionRate: number;
+  avgMatchesPerActiveUser: number;
+}
+
 // ── PATCH /admin/users/:id body ───────────────────────────────────────────────
 
 export interface UpdateUserBody {
