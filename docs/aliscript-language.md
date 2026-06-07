@@ -85,6 +85,23 @@ RETURN    // return from function (optionally with a value)
 | `FIRE` | 8/shot | ✅ | Single precision shot (25 HP damage) |
 | `BURST_FIRE` | 18/burst | ✅ | 3-shot burst at −8°, 0°, +8° (up to 24 HP) |
 | `SCAN` | 3/call | ✅ | Rotate FOV cone +15°, populates scan memory |
+
+> ⚠️ **Correct vs Wrong usage for no-argument commands:**
+> ```
+> // ✅ CORRECT — no arguments, alone on its own line:
+> PATHFIND
+> FIRE
+> BURST_FIRE
+> SCAN
+>
+> // ❌ WRONG — these commands take NO arguments:
+> // PATHFIND enemy_id    ← invalid
+> // PATHFIND x, y        ← invalid
+> // FIRE enemy            ← invalid
+> // FIRE at enemy         ← invalid
+> // BURST_FIRE enemy      ← invalid
+> // SCAN 90               ← invalid
+> ```
 | `WAIT N` | Free | ❌ | Suspend execution for N ticks (60 ticks ≈ 1s) |
 | `SET var = expr` | Free | ❌ | Assign a variable. Executes even in STASIS |
 
@@ -101,6 +118,20 @@ These high-energy abilities provide significant tactical advantages but must be 
 | `CLOAK` | 50 | ✅ | Turns the robot completely invisible to enemy FOV and sensors for 40 ticks (2s). |
 | `MINE` | 40 | ✅ | Drops a proximity mine. Arms after 250ms and deals 35 damage when triggered. |
 | `DASH distance` | 30 | ✅ | Instant, high-speed lateral thrust in the current facing direction. |
+
+> ⚠️ **Correct vs Wrong usage:**
+> ```
+> // ✅ CORRECT:
+> SHIELD
+> CLOAK
+> MINE
+> DASH 150
+>
+> // ❌ WRONG — SHIELD, CLOAK, MINE take NO arguments:
+> // SHIELD 30              ← invalid (SHIELD is always 30 ticks)
+> // CLOAK enemy            ← invalid
+> // SHIELD on              ← invalid
+> ```
 
 ---
 

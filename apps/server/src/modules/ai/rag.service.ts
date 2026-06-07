@@ -33,7 +33,8 @@ function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 /**
- * Split markdown content into chunks by ## headers.
+ * Split markdown content into chunks by ## or ### headers,
+ * ensuring code blocks and command table rows stay intact.
  */
 function chunkMarkdown(
   content: string,
@@ -43,21 +44,33 @@ function chunkMarkdown(
   const chunks: { title: string; content: string }[] = [];
   let currentTitle = sourceLabel;
   let currentLines: string[] = [];
+  let inCodeBlock = false;
 
   for (const line of lines) {
-    const headerMatch = line.match(/^##\s+(.+)/);
-    if (headerMatch) {
-      if (currentLines.length > 0) {
-        chunks.push({
-          title: currentTitle,
-          content: currentLines.join('\n').trim(),
-        });
-      }
-      currentTitle = `${sourceLabel} > ${headerMatch[1].trim()}`;
-      currentLines = [];
-    } else {
+    // Track code block boundaries to avoid splitting inside them
+    if (line.trimStart().startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
       currentLines.push(line);
+      continue;
     }
+
+    // Only split on headers when NOT inside a code block
+    if (!inCodeBlock) {
+      const headerMatch = line.match(/^#{2,3}\s+(.+)/);
+      if (headerMatch) {
+        if (currentLines.length > 0) {
+          chunks.push({
+            title: currentTitle,
+            content: currentLines.join('\n').trim(),
+          });
+        }
+        currentTitle = `${sourceLabel} > ${headerMatch[1].trim()}`;
+        currentLines = [];
+        continue;
+      }
+    }
+
+    currentLines.push(line);
   }
 
   if (currentLines.length > 0) {
@@ -72,6 +85,7 @@ function chunkMarkdown(
 
 /**
  * Split a long chunk into smaller pieces if it exceeds target word count.
+ * Uses 20-word overlap to avoid losing context at boundaries.
  */
 function splitChunk(
   title: string,
@@ -81,13 +95,28 @@ function splitChunk(
   const words = content.split(/\s+/);
   if (words.length <= targetWords) return [{ title, content }];
 
+  // Find code block fence positions (word indices of ``` lines)
+  const codeBlockMarkers: number[] = [];
+  const lines = content.split('\n');
+  let wordOffset = 0;
+  for (const line of lines) {
+    if (line.trimStart().startsWith('```')) {
+      codeBlockMarkers.push(wordOffset);
+    }
+    wordOffset += line.split(/\s+/).filter(Boolean).length || 1;
+  }
+
+  const overlap = 20;
   const result: { title: string; content: string }[] = [];
-  for (let i = 0; i < words.length; i += targetWords) {
+
+  for (let i = 0; i < words.length; i += targetWords - overlap) {
+    if (i > 0 && i + overlap > words.length) break; // skip tiny tail
     result.push({
-      title: `${title} (part ${Math.floor(i / targetWords) + 1})`,
+      title: `${title} (part ${Math.floor(i / (targetWords - overlap)) + 1})`,
       content: words.slice(i, i + targetWords).join(' '),
     });
   }
+
   return result;
 }
 
@@ -116,19 +145,38 @@ export class RagService {
     const projectRoot = resolve(process.cwd());
     const rootLabel = projectRoot.split(/[\\/]/).pop() || 'project';
 
+    this.logger.log('Scanning knowledge source files...');
+    let foundCount = 0;
+    let missingCount = 0;
+    const missingFiles: string[] = [];
+
     for (const source of FILE_SOURCES) {
       const fullPath = join(projectRoot, source.path);
       if (!existsSync(fullPath)) {
         // Try one level up from server directory
         const altPath = join(projectRoot, '..', source.path);
         if (!existsSync(altPath)) {
-          this.logger.warn(`File not found: ${source.path}`);
+          this.logger.warn(`  [MISSING] ${source.path}`);
+          missingCount++;
+          missingFiles.push(source.path);
           continue;
         }
+        this.logger.log(`  [FOUND] ${source.path} (from parent dir)`);
+        foundCount++;
         this.readFileIntoChunks(altPath, source.title, rootLabel);
         continue;
       }
+      this.logger.log(`  [FOUND] ${source.path}`);
+      foundCount++;
       this.readFileIntoChunks(fullPath, source.title, rootLabel);
+    }
+
+    if (missingCount > 0) {
+      this.logger.warn(
+        `Files loaded: ${foundCount}/${FILE_SOURCES.length}. Missing: ${missingFiles.join(', ')}`,
+      );
+    } else {
+      this.logger.log(`All ${FILE_SOURCES.length} knowledge source files loaded successfully`);
     }
 
     this.logger.log(`Total knowledge base: ${this.chunks.length} chunks`);
@@ -211,14 +259,24 @@ export class RagService {
 
     top.sort((a, b) => b.score - a.score);
 
-    const context = top
-      .filter((item) => item.score > 0.3)
+    // Always include high-priority chunks regardless of score (deduped)
+    const priorityIndices = new Set<number>();
+    const priorityChunks: string[] = [];
+    for (let i = 0; i < this.chunks.length; i++) {
+      if (this.chunks[i].title.includes('[HIGH-PRIORITY]')) {
+        priorityIndices.add(i);
+        priorityChunks.push(`[${this.chunks[i].title}]: ${this.chunks[i].content}`);
+      }
+    }
+
+    const retrieved = top
+      .filter((item) => item.score > 0.3 && !priorityIndices.has(item.index))
       .map((item) => {
         const ch = this.chunks[item.index];
         return `[${ch.title}]: ${ch.content}`;
-      })
-      .join('\n\n');
+      });
 
-    return context || '';
+    const contextParts = [...priorityChunks, ...retrieved];
+    return contextParts.join('\n\n') || '';
   }
 }

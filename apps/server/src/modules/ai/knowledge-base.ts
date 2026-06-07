@@ -7,6 +7,38 @@ export interface KnowledgeChunk {
 
 const SECTIONS: { title: string; content: string }[] = [
   {
+    title: '[HIGH-PRIORITY] AliScript Command Signatures — Quick Reference',
+    content: `This is the authoritative source. Never invent arguments not listed here.
+
+NO-ARGUMENT COMMANDS (write alone on their own line):
+PATHFIND, FIRE, BURST_FIRE, SCAN, MOVE, MOVE_FAST, BACKUP, STOP, SHIELD, CLOAK, MINE
+
+COMMANDS WITH ARGUMENTS:
+- WAIT N               — N is number of ticks (1 tick = 100ms)
+- TELEPORT x, y         — x and y are arena coordinates
+- DASH distance         — distance is a number (lateral thrust)
+- SET var = expr        — variable assignment (free, works in STASIS)
+- TAUNT "message"       — displays a message above the robot (free)
+
+FUNCTIONS THAT RETURN VALUES:
+- GET_ALL_VISIBLE_ENEMIES()   — no args, returns Array<[distance, x, y, health]>
+- RAYCAST(angle)              — one arg (relative radian offset), returns distance number
+- BROADCAST(data)             — one arg (any value), returns number of receivers
+- RECEIVE()                   — no args, returns Array of messages
+- LENGTH(arr)                 — one arg (array or string), returns number
+- PUSH(arr, value)            — two args, returns new length
+- POP(arr)                    — one arg, returns removed value
+
+STATUS FUNCTIONS (log only, return nothing):
+GET_HEALTH(), GET_ENERGY(), GET_POSITION(), GET_ROTATION(),
+GET_DISTANCE(), GET_VISIBLE_COUNT(), GET_OBSTACLE_TYPE(), GET_ENERGY_PCT(),
+GET_FOV_DIR(), GET_OBSTACLE_DISTANCE()
+
+MATH FUNCTIONS:
+ABS(x), SQRT(x), POW(b,e), SIN(x), COS(x), TAN(x), ATAN2(y,x),
+MIN(a,b), MAX(a,b), FLOOR(x), CEIL(x), ROUND(x), LOG(x), RANDOM()`,
+  },
+  {
     title: 'Platform Overview',
     content: `Logic Arena is a competitive real-time robot battle simulator where players write AliScript code to control robots in arena combat. The platform features a Dashboard for managing scripts and matchmaking, a Docs page with the full AliScript language reference, a Garage for robot customization, Campaign mode with 60+ levels, a Leaderboard for rankings, Tournaments, and the Arena where real-time battles happen at 60 FPS. Players start by writing an AliScript program, selecting a robot chassis, and entering matchmaking. Matches are AI-vs-AI — the code you write controls your robot automatically.`,
   },
@@ -93,7 +125,8 @@ const SECTIONS: { title: string; content: string }[] = [
 ];
 
 /**
- * Simple text chunker: splits each section into ~500-char chunks with overlap.
+ * Section-aware chunker: keeps each section as a single chunk.
+ * Long chunks are split at 200-word boundaries with 20-word overlap.
  */
 export function buildKnowledgeBase(): KnowledgeChunk[] {
   const chunks: KnowledgeChunk[] = [];
@@ -101,18 +134,24 @@ export function buildKnowledgeBase(): KnowledgeChunk[] {
 
   for (const section of SECTIONS) {
     const words = section.content.split(/\s+/);
-    const chunkSize = 120; // words per chunk ≈ 500-600 chars
+    const targetWords = 200;
     const overlap = 20;
 
-    for (let i = 0; i < words.length; i += chunkSize - overlap) {
-      const chunkWords = words.slice(i, i + chunkSize);
-      if (chunkWords.length === 0) break;
-
+    if (words.length <= targetWords) {
       chunks.push({
         id: `kb-${id++}`,
         title: section.title,
-        content: chunkWords.join(' '),
+        content: section.content,
       });
+    } else {
+      for (let i = 0; i < words.length; i += targetWords - overlap) {
+        if (i > 0 && i + overlap > words.length) break;
+        chunks.push({
+          id: `kb-${id++}`,
+          title: section.title,
+          content: words.slice(i, i + targetWords).join(' '),
+        });
+      }
     }
   }
 
