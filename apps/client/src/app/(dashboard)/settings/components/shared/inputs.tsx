@@ -29,7 +29,7 @@ export function SettingsInput({
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[9px] tracking-[0.22em] text-accent/50 font-bold uppercase">
-        {label} {isGuest && "(GUEST LOCKED)"}
+        {label}
       </label>
       <div className="relative">
         <input

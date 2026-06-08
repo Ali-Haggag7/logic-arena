@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { useSoundEffects } from "../../../../../../hooks/useSoundEffects";
+import { useAuthState } from "../../../../../../hooks/useAuthState";
 
 const STAR_COUNT = 3;
 const COUNT_STEPS = 24;
@@ -28,6 +29,7 @@ function getStarClass(stars: number, index: number): string {
 
 export function VictoryScreen({ reward, stars, levelTitle, isMobile, onNextLevel, onReplay, onBack }: VictoryScreenProps) {
   const { playVictory } = useSoundEffects();
+  const { isGuest } = useAuthState();
   const [displayReward, setDisplayReward] = useState(0);
 
   useEffect(() => {
@@ -100,14 +102,21 @@ export function VictoryScreen({ reward, stars, levelTitle, isMobile, onNextLevel
         <span className="mb-1 block text-[9px] font-black tracking-[0.22em] text-[rgba(var(--sem-success-rgb),0.6)] uppercase">POINTS EARNED</span>
         <span className="text-[24px] font-black tracking-[0.08em] text-[var(--sem-success)] drop-shadow-[0_0_10px_rgba(var(--sem-success-rgb),0.75)]">+{displayReward}</span>
       </div>
+
+      {isGuest && (
+        <div className="mx-auto mb-6 max-w-[90%] text-[10px] font-bold tracking-[0.15em] text-[var(--sem-success)]/80 leading-relaxed uppercase border border-[var(--sem-success)]/20 bg-[var(--sem-success)]/10 p-3 rounded-lg">
+          Excellent work! To save your progress and continue to the next mission, you must create a free account.
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
-        <button type="button" onClick={onNextLevel} className="h-[44px] rounded-lg border border-[rgba(var(--sem-success-rgb),0.5)] bg-[rgba(var(--sem-success-rgb),0.1)] text-[10px] font-black tracking-[0.24em] text-[var(--sem-success)] uppercase transition-colors hover:bg-[rgba(var(--sem-success-rgb),0.2)]">
+        <button type="button" onClick={onNextLevel} className="cursor-pointer h-[44px] rounded-lg border border-[rgba(var(--sem-success-rgb),0.5)] bg-[rgba(var(--sem-success-rgb),0.1)] text-[10px] font-black tracking-[0.24em] text-[var(--sem-success)] uppercase transition-colors hover:bg-[rgba(var(--sem-success-rgb),0.2)]">
           NEXT MISSION
         </button>
-        <button type="button" onClick={onReplay} className="h-[44px] rounded-lg border border-[rgba(var(--sem-success-rgb),0.25)] bg-[rgba(var(--sem-success-rgb),0.05)] text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-success-rgb),0.75)] uppercase transition-colors hover:bg-[rgba(var(--sem-success-rgb),0.1)]">
+        <button type="button" onClick={onReplay} className="cursor-pointer h-[44px] rounded-lg border border-[rgba(var(--sem-success-rgb),0.25)] bg-[rgba(var(--sem-success-rgb),0.05)] text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-success-rgb),0.75)] uppercase transition-colors hover:bg-[rgba(var(--sem-success-rgb),0.1)]">
           REPLAY
         </button>
-        <button type="button" onClick={onBack} className="h-[44px] rounded-lg border border-transparent bg-transparent text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-success-rgb),0.45)] uppercase transition-colors hover:text-[rgba(var(--sem-success-rgb),0.7)]">
+        <button type="button" onClick={onBack} className="cursor-pointer h-[44px] rounded-lg border border-transparent bg-transparent text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-success-rgb),0.45)] uppercase transition-colors hover:text-[rgba(var(--sem-success-rgb),0.7)]">
           BACK
         </button>
       </div>

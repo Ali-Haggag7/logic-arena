@@ -36,7 +36,7 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
   return (
     <div className={`${isMobile ? "w-full" : "w-[300px]"} shrink-0 animate-[fadeIn_0.5s_ease]`}>
       {myMatch && myOpponent && (
-        <div className="mb-6 p-5 rounded-2xl bg-yellow-500/[0.03] border border-yellow-500/20 backdrop-blur-md relative overflow-hidden group shadow-xl">
+        <div className="mb-6 p-5 rounded-2xl bg-yellow-500/[0.05] border border-yellow-500/20 relative overflow-hidden group shadow-xl">
           {/* Animated pulse background */}
           <div className="absolute inset-0 bg-yellow-500/[0.02] animate-pulse pointer-events-none" />
           
@@ -56,11 +56,8 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
                         />
                     </div>
                     <div className="text-[8px] text-yellow-500/30 tracking-[0.2em] mt-1 font-bold">
-                        PHASE: {roundLabels[myMatch.round] ?? `PHASE_${myMatch.round}`}
+                        ROUND: {roundLabels[myMatch.round] ?? `ROUND_${myMatch.round}`}
                     </div>
-                </div>
-                <div className="text-[10px] text-yellow-500/20 font-black tracking-tighter italic">
-                    //URGENT
                 </div>
             </div>
 
@@ -82,10 +79,10 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
                     {isGuest ? (
                         <>
                             <span className="flex items-center"><Lock size={12} /></span>
-                            <span>LOGIN TO SIMULATE</span>
+                            <span>LOGIN TO PLAY</span>
                         </>
                     ) : (
-                        simulating === myMatch.id ? "SIMULATING MATCH..." : "▶ SIMULATE VICTORY"
+                        simulating === myMatch.id ? "SIMULATING MATCH..." : "▶ SIMULATE MATCH"
                     )}
                 </span>
             </button>
@@ -94,7 +91,7 @@ export function MatchSidebar({ tournament, userId, myMatch, myOpponent, simulati
       )}
 
       {/* Participants list */}
-      <div className={`p-5 rounded-2xl bg-card/10 border border-accent/10 backdrop-blur-xl relative overflow-hidden shadow-2xl`}>
+      <div className={`p-5 rounded-2xl bg-bg-secondary/90 border border-accent/10 relative overflow-hidden shadow-2xl`}>
         {/* Scanlines inner */}
         <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.03] bg-[repeating-linear-gradient(0deg,rgba(var(--accent-rgb),0.5)_0px,rgba(var(--accent-rgb),0.5)_1px,transparent_1px,transparent_4px)]" />
 

@@ -31,20 +31,20 @@ export function TournamentHeader({ tournament, userId, onStart, isMobile, isGues
         <button
           type="button"
           onClick={() => router.push('/tournaments')}
-          className="w-max bg-transparent border border-accent/15 rounded px-2.5 py-1 md:px-3 hover:border-accent/40 hover:bg-accent/20 text-accent/70 cursor-pointer text-[9px] md:text-[10px] tracking-[0.25em] font-mono flex items-center gap-1.5 transition-all duration-200 uppercase"
+          className="w-max border rounded-full md:rounded px-5 py-2 min-h-[44px] md:min-h-0 md:px-3 md:py-1 bg-accent/[0.03] md:bg-transparent backdrop-blur-xl md:backdrop-blur-none border-accent/20 md:border-accent/15 text-accent/80 md:text-accent/70 hover:border-accent/50 hover:bg-accent/20 hover:text-accent hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.4)] cursor-pointer text-[11px] md:text-[10px] tracking-[0.25em] font-mono flex items-center justify-center gap-2 transition-all duration-300 uppercase active:scale-95"
         >
           ← <span className="md:hidden">TOURNAMENTS</span><span className="hidden md:inline">BACK TO TOURNAMENTS</span>
         </button>
         <div>
           <p className="text-[10px] tracking-[0.4em] text-accent/25 mb-2 uppercase font-bold">
-            // TOURNAMENT_BRACKET_VIEW
+            // TOURNAMENT DETAILS
           </p>
           <h1 className="m-0 text-[clamp(24px,4vw,40px)] font-black tracking-[0.18em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.8)] leading-tight uppercase">
             {tournament.name}
           </h1>
           <div className="flex gap-3 items-center mt-3">
           <span
-            className="px-3 py-1 rounded text-[10px] font-black tracking-[0.2em] border backdrop-blur-sm uppercase"
+            className="px-3 py-1 rounded text-[10px] font-black tracking-[0.2em] border uppercase"
             style={{
               backgroundColor: tournament.status === "WAITING" ? "rgba(var(--color-yellow-500),0.08)" : tournament.status === "IN_PROGRESS" ? "rgba(var(--accent-rgb),0.08)" : "rgba(var(--color-emerald-500),0.08)",
               borderColor: `${statusColor}44`,
@@ -54,7 +54,7 @@ export function TournamentHeader({ tournament, userId, onStart, isMobile, isGues
             {tournament.status === "IN_PROGRESS" ? "LIVE" : tournament.status === "WAITING" ? "QUEUE" : "DONE"}
           </span>
           <span className="text-[10px] text-accent/30 tracking-[0.15em] font-bold">
-            {tournament.participants.length}/8 COMBATANTS_DETECTED
+            {tournament.participants.length}/8 PLAYERS
           </span>
           </div>
         </div>
@@ -81,7 +81,7 @@ export function TournamentHeader({ tournament, userId, onStart, isMobile, isGues
                   <span>LOGIN TO START</span>
                 </>
               ) : (
-                "▶ START_TOURNAMENT_SEQUENCE"
+                "▶ START TOURNAMENT"
               )}
             </span>
           </button>

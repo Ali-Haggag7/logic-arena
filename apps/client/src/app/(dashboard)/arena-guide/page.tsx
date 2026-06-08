@@ -33,48 +33,48 @@ interface GuideItem {
 const GAME_MODES: GuideItem[] = [
   {
     id: "deathmatch",
-    title: "DEATHMATCH (COMBAT)",
+    title: "DEATHMATCH",
     category: "mode",
     image: "/thumbnails/mode-combat.png",
     icon: <Swords className="w-6 h-6" />,
     colorClass: "text-[var(--accent)]",
     bgGlow: "shadow-[0_0_25px_rgba(var(--accent-rgb),0.15)]",
     borderClass: "border-[var(--accent)]/20 hover:border-[var(--accent)]/50",
-    description: "Classic head-to-head combat. Your goal is simply to defeat the enemy robot using your weapons while managing your energy levels.",
+    description: "Classic 1v1 combat. Defeat the enemy robot.",
     simpleRules: [
-      "Find the enemy using SCAN or your radar.",
-      "Fire weapons (FIRE / BURST_FIRE) when they are in your sight.",
-      "Manage your energy to avoid entering stasis (losing power)."
+      "Find the enemy.",
+      "Shoot them.",
+      "Watch your energy."
     ],
-    ariaPrompt: "How do I program my robot for a basic Deathmatch combat?",
+    ariaPrompt: "How do I program my robot for Deathmatch?",
     specs: [
-      { label: "PROTOCOL TIMEOUT", value: "5:00 Minutes" },
-      { label: "PRIMARY OBJECTIVE", value: "Eliminate Enemy" },
-      { label: "ENERGY REGEN RATE", value: "Normal (+3/tick)" },
-      { label: "TACTICAL ADVICE", value: "Lock targets & fire bursts" }
+      { label: "TIME LIMIT", value: "5:00 Minutes" },
+      { label: "GOAL", value: "Destroy Enemy" },
+      { label: "ENERGY", value: "Normal" },
+      { label: "PRO TIP", value: "Lock and fire" }
     ]
   },
   {
     id: "survival",
-    title: "SURVIVAL MODE",
+    title: "SURVIVAL",
     category: "mode",
     image: "/thumbnails/mode-survival.png",
     icon: <Shield className="w-6 h-6" />,
     colorClass: "text-emerald-400",
     bgGlow: "shadow-[0_0_25px_rgba(52,211,153,0.15)]",
     borderClass: "border-emerald-500/20 hover:border-emerald-500/50",
-    description: "Test your endurance! Survive against endless waves of aggressive dummy bots that target you from all directions.",
+    description: "Survive endless waves of bots.",
     simpleRules: [
-      "Keep moving to avoid getting surrounded.",
-      "Conserve energy by firing only when targets are visible.",
-      "Utilize defensive patterns or moving loops to dodge bullets."
+      "Keep moving.",
+      "Save energy.",
+      "Dodge bullets."
     ],
-    ariaPrompt: "What is the best logic pattern for surviving in Survival Mode?",
+    ariaPrompt: "What is the best logic pattern for Survival Mode?",
     specs: [
-      { label: "PROTOCOL TIMEOUT", value: "Infinite (Outlast)" },
-      { label: "PRIMARY OBJECTIVE", value: "Outlast Enemy Waves" },
-      { label: "ENEMY COMPOSITION", value: "Multiple Aggressive Bots" },
-      { label: "TACTICAL ADVICE", value: "Circle strafe to avoid hits" }
+      { label: "TIME LIMIT", value: "Infinite" },
+      { label: "GOAL", value: "Survive Waves" },
+      { label: "ENEMIES", value: "Multiple Bots" },
+      { label: "PRO TIP", value: "Keep moving" }
     ]
   },
   {
@@ -86,18 +86,18 @@ const GAME_MODES: GuideItem[] = [
     colorClass: "text-purple-400",
     bgGlow: "shadow-[0_0_25px_rgba(168,85,247,0.15)]",
     borderClass: "border-purple-500/20 hover:border-purple-500/50",
-    description: "A strategic game of infiltration. Navigate the arena to find the enemy's flag, secure it, and carry it back to your home base.",
+    description: "Steal the enemy flag and bring it home.",
     simpleRules: [
-      "Search the map to locate the enemy flag position.",
-      "Grab the flag and plan a fast path back to your base.",
-      "Fend off defenders while carrying the flag."
+      "Find the flag.",
+      "Grab it.",
+      "Run back."
     ],
-    ariaPrompt: "How do I code navigation and pathfinding for Capture the Flag?",
+    ariaPrompt: "How do I code pathfinding for Capture the Flag?",
     specs: [
-      { label: "PROTOCOL TIMEOUT", value: "8:00 Minutes" },
-      { label: "PRIMARY OBJECTIVE", value: "Capture 3 Flags" },
-      { label: "BASE LAYOUT", value: "Opposite Corners" },
-      { label: "TACTICAL ADVICE", value: "Use A* pathfinding directly" }
+      { label: "TIME LIMIT", value: "8:00 Minutes" },
+      { label: "GOAL", value: "Capture 3 Flags" },
+      { label: "MAP", value: "2 Bases" },
+      { label: "PRO TIP", value: "Use pathfinding" }
     ]
   },
   {
@@ -109,64 +109,64 @@ const GAME_MODES: GuideItem[] = [
     colorClass: "text-amber-400",
     bgGlow: "shadow-[0_0_25px_rgba(251,191,36,0.15)]",
     borderClass: "border-amber-500/20 hover:border-amber-500/50",
-    description: "Control the center! Locate the designated control zone at the center of the arena and defend it from opponents to score points.",
+    description: "Control the center zone to score points.",
     simpleRules: [
-      "Move directly to the center zone as fast as possible.",
-      "Stand inside the zone boundaries to start scoring points.",
-      "Fend off attackers and push them out of the control area."
+      "Go to the center.",
+      "Stay inside.",
+      "Push enemies out."
     ],
-    ariaPrompt: "How do I code my robot to hold the center zone in King of the Hill?",
+    ariaPrompt: "How do I code my robot to hold the center zone?",
     specs: [
-      { label: "PROTOCOL TIMEOUT", value: "6:00 Minutes" },
-      { label: "PRIMARY OBJECTIVE", value: "Hold Center Zone" },
-      { label: "SCORE THRESHOLD", value: "1 pt / Tick inside Zone" },
-      { label: "TACTICAL ADVICE", value: "Switch to close-range logic" }
+      { label: "TIME LIMIT", value: "6:00 Minutes" },
+      { label: "GOAL", value: "Hold Center" },
+      { label: "POINTS", value: "1 pt/Tick" },
+      { label: "PRO TIP", value: "Stay close" }
     ]
   },
   {
     id: "racing",
-    title: "CHECKPOINT RACING",
+    title: "RACING",
     category: "mode",
     image: "/thumbnails/mode-racing.png",
     icon: <Zap className="w-6 h-6" />,
     colorClass: "text-blue-400",
     bgGlow: "shadow-[0_0_25px_rgba(96,165,250,0.15)]",
     borderClass: "border-blue-500/20 hover:border-blue-500/50",
-    description: "High speed maneuvering. Navigate the racing track, follow the path, and pass through all checkpoints in order as quickly as you can.",
+    description: "Pass through all checkpoints as fast as possible.",
     simpleRules: [
-      "Detect the position of the next checkpoint.",
-      "Maximize speed using MOVE_FAST while aligning your heading.",
-      "Navigate around walls and boundaries to stay on course."
+      "Find the next point.",
+      "Go fast.",
+      "Don't hit walls."
     ],
-    ariaPrompt: "How do I write a script for racing checkpoints quickly?",
+    ariaPrompt: "How do I write a script for racing?",
     specs: [
-      { label: "PROTOCOL TIMEOUT", value: "Fastest Run Wins" },
-      { label: "PRIMARY OBJECTIVE", value: "Pass All Checkpoints" },
-      { label: "COURSE COMPLEXITY", value: "Varying track paths" },
-      { label: "TACTICAL ADVICE", value: "Use full thrust & slide control" }
+      { label: "TIME LIMIT", value: "Fastest Wins" },
+      { label: "GOAL", value: "Finish Track" },
+      { label: "MAP", value: "Varying" },
+      { label: "PRO TIP", value: "Control turns" }
     ]
   },
   {
     id: "training",
-    title: "SANDBOX TRAINING",
+    title: "TRAINING",
     category: "mode",
     image: "/thumbnails/mode-training.png",
     icon: <Cpu className="w-6 h-6" />,
     colorClass: "text-cyan-400",
     bgGlow: "shadow-[0_0_25px_rgba(34,211,238,0.15)]",
     borderClass: "border-cyan-500/20 hover:border-cyan-500/50",
-    description: "A stress-free environment designed for experimenting. Write custom code, test strategies, and practice commands without scoring pressure.",
+    description: "Practice your code with no pressure.",
     simpleRules: [
-      "No health loss or scoring - pure sandbox mode.",
-      "Perfect for testing complex state loops or custom variables.",
-      "Safely evaluate energy consumption and cooldowns."
+      "No damage.",
+      "No scoring.",
+      "Just testing."
     ],
     ariaPrompt: "Can you give me a simple script template to start training?",
     specs: [
-      { label: "PROTOCOL TIMEOUT", value: "No Limit (Indefinite)" },
-      { label: "PRIMARY OBJECTIVE", value: "Test and Debug Scripts" },
-      { label: "COMBAT PROTOCOL", value: "Passive Target Available" },
-      { label: "TACTICAL ADVICE", value: "Great for step-by-step tests" }
+      { label: "TIME LIMIT", value: "None" },
+      { label: "GOAL", value: "Practice" },
+      { label: "TARGETS", value: "Passive" },
+      { label: "PRO TIP", value: "Test freely" }
     ]
   }
 ];
@@ -174,71 +174,71 @@ const GAME_MODES: GuideItem[] = [
 const ARENA_MAPS: GuideItem[] = [
   {
     id: "cyber",
-    title: "NEO-CYBER GRID",
+    title: "CYBER GRID",
     category: "map",
     image: "/thumbnails/env-cyber.png",
     icon: <Compass className="w-6 h-6" />,
     colorClass: "text-[var(--accent)]",
     bgGlow: "shadow-[0_0_25px_rgba(var(--accent-rgb),0.15)]",
     borderClass: "border-[var(--accent)]/20 hover:border-[var(--accent)]/50",
-    description: "A clean, neon-lit digital grid arena. Features standard geometric obstacles with simple lines of sight, making it ideal for testing basic logic.",
+    description: "A clean, safe arena. Good for testing.",
     simpleRules: [
-      "Standard layout with predictable block placements.",
-      "Ideal for direct targeting and testing radar sweeps.",
-      "No environmental damage or physics modifiers."
+      "Standard layout.",
+      "Normal physics.",
+      "No hazards."
     ],
-    ariaPrompt: "What are some coding tips for the Neo-Cyber grid map?",
+    ariaPrompt: "What are some coding tips for the Cyber Grid map?",
     specs: [
-      { label: "HAZARD INDEX", value: "None (Safe Environment)" },
-      { label: "SURFACE FRICTION", value: "Standard (1.0)" },
-      { label: "OBSTACLE LAYOUT", value: "Symmetric Obstacles" },
-      { label: "最佳 MATCH TYPE", value: "Direct Aim / Combat Testing" }
+      { label: "DANGER", value: "None" },
+      { label: "FRICTION", value: "Normal" },
+      { label: "LAYOUT", value: "Simple" },
+      { label: "BEST FOR", value: "Combat Tests" }
     ]
   },
   {
     id: "lava",
-    title: "MAGMA CORE",
+    title: "LAVA ZONE",
     category: "map",
     image: "/thumbnails/env-lava.png",
     icon: <Flame className="w-6 h-6" />,
     colorClass: "text-orange-500",
     bgGlow: "shadow-[0_0_25px_rgba(249,115,22,0.15)]",
     borderClass: "border-orange-500/20 hover:border-orange-500/50",
-    description: "A volcanic hazard zone. Hot molten streams run through the arena. Stepping into the red lava zones will drain your robot's health over time.",
+    description: "Hot magma deals damage. Avoid the red zones.",
     simpleRules: [
-      "Avoid lava channels to protect your health.",
-      "Force enemies into hot zones using tactical positioning.",
-      "Plan paths carefully around magma obstacles."
+      "Don't step in lava.",
+      "Push enemies in.",
+      "Watch your path."
     ],
-    ariaPrompt: "How can I program my robot to avoid hot zones in Magma Core?",
+    ariaPrompt: "How can I program my robot to avoid hot zones?",
     specs: [
-      { label: "HAZARD INDEX", value: "High (Volcanic Magma)" },
-      { label: "SURFACE FRICTION", value: "Standard (1.0)" },
-      { label: "ENVIRONMENT EFFECT", value: "-10 HP / sec inside Lava" },
-      { label: "TACTICAL ADVICE", value: "Compute coordinates before moving" }
+      { label: "DANGER", value: "High" },
+      { label: "FRICTION", value: "Normal" },
+      { label: "EFFECT", value: "Damage over time" },
+      { label: "BEST FOR", value: "Pathfinding" }
     ]
   },
   {
     id: "ice",
-    title: "GLACIAL TUNDRA",
+    title: "ICE RINK",
     category: "map",
     image: "/thumbnails/env-ice.png",
     icon: <Snowflake className="w-6 h-6" />,
     colorClass: "text-cyan-300",
     bgGlow: "shadow-[0_0_25px_rgba(103,232,249,0.15)]",
     borderClass: "border-cyan-300/20 hover:border-cyan-300/50",
-    description: "A frozen battleground. The floor is covered in thick ice sheets that drastically reduce friction, causing your robot to slide when turning or stopping.",
+    description: "Slippery floor. Your robot will drift and slide.",
     simpleRules: [
-      "Expect inertia - your robot will slide past stop points.",
-      "Begin turns earlier to compensate for sliding.",
-      "Leverage the slide to drift around corners during races."
+      "Expect sliding.",
+      "Turn early.",
+      "Hard to stop."
     ],
-    ariaPrompt: "How do I handle the low-friction sliding physics on the Glacial Tundra map?",
+    ariaPrompt: "How do I handle the low-friction physics?",
     specs: [
-      { label: "HAZARD INDEX", value: "Low (Slippery Ice Surface)" },
-      { label: "SURFACE FRICTION", value: "Extremely Low (0.25)" },
-      { label: "PHYSICS FACTOR", value: "Adds inertia to slide" },
-      { label: "TACTICAL ADVICE", value: "Initiate steering early" }
+      { label: "DANGER", value: "Low" },
+      { label: "FRICTION", value: "Very Low" },
+      { label: "EFFECT", value: "Sliding" },
+      { label: "BEST FOR", value: "Movement Tech" }
     ]
   }
 ];
@@ -246,71 +246,71 @@ const ARENA_MAPS: GuideItem[] = [
 const SCRIPT_MODES: GuideItem[] = [
   {
     id: "classic",
-    title: "CLASSIC MODE",
+    title: "CLASSIC",
     category: "mode",
     image: "/thumbnails/classic-arena-mode.png",
     icon: <FileCode2 className="w-6 h-6" />,
     colorClass: "text-[var(--accent)]",
     bgGlow: "shadow-[0_0_25px_rgba(var(--accent-rgb),0.15)]",
     borderClass: "border-[var(--accent)]/20 hover:border-[var(--accent)]/50",
-    description: "The original Logic Arena experience. Scripts are locked before the match. Write a single comprehensive script that handles all situations without human intervention.",
+    description: "Write one script before the match starts.",
     simpleRules: [
-      "Write one script before the match.",
-      "No manual overrides allowed.",
-      "Test thoroughly before joining a match."
+      "One script only.",
+      "No editing mid-match.",
+      "Fully auto."
     ],
     ariaPrompt: "What is Classic Mode and how do I prepare for it?",
     specs: [
-      { label: "INTERVENTION", value: "None (Fully Auto)" },
-      { label: "SCRIPT TYPE", value: "Comprehensive AI" },
+      { label: "INPUT", value: "None" },
+      { label: "SCRIPT", value: "Full AI" },
       { label: "DIFFICULTY", value: "Hard" },
-      { label: "TACTICAL ADVICE", value: "Plan for every edge case" }
+      { label: "PRO TIP", value: "Plan for everything" }
     ]
   },
   {
     id: "tactical",
-    title: "TACTICAL MODE",
+    title: "TACTICAL",
     category: "mode",
     image: "/thumbnails/tactical-arena-mode.png",
     icon: <TerminalSquare className="w-6 h-6" />,
     colorClass: "text-emerald-400",
     bgGlow: "shadow-[0_0_25px_rgba(52,211,153,0.15)]",
     borderClass: "border-emerald-500/20 hover:border-emerald-500/50",
-    description: "Take control of the battle. The match runs in rounds, allowing you to rewrite or tweak your robot's logic during the break between rounds.",
+    description: "Match pauses between rounds so you can edit code.",
     simpleRules: [
-      "Match pauses between rounds.",
-      "Update your script to counter the enemy.",
-      "Adaptability is key."
+      "Pauses between rounds.",
+      "Edit your code.",
+      "Adapt and win."
     ],
     ariaPrompt: "How do I take advantage of the breaks in Tactical Mode?",
     specs: [
-      { label: "INTERVENTION", value: "Between Rounds" },
-      { label: "SCRIPT TYPE", value: "Adaptive & Iterative" },
+      { label: "INPUT", value: "Between Rounds" },
+      { label: "SCRIPT", value: "Adaptive" },
       { label: "DIFFICULTY", value: "Medium" },
-      { label: "TACTICAL ADVICE", value: "Analyze opponent habits" }
+      { label: "PRO TIP", value: "Watch the enemy" }
     ]
   },
   {
     id: "hybrid",
-    title: "HYBRID MODE",
+    title: "HYBRID",
     category: "mode",
     image: "/thumbnails/hybrid-arena-mode.png",
     icon: <Activity className="w-6 h-6" />,
     colorClass: "text-purple-400",
     bgGlow: "shadow-[0_0_25px_rgba(168,85,247,0.15)]",
     borderClass: "border-purple-500/20 hover:border-purple-500/50",
-    description: "The ultimate test of speed and coding. Edit your robot's logic in real-time while the match is running. React instantly to changing battlefield conditions.",
+    description: "Edit your code live while the match is running.",
     simpleRules: [
-      "Live code editing.",
-      "Write small tactical overrides.",
-      "Requires high APM (Actions Per Minute)."
+      "Live coding.",
+      "Fast typing required.",
+      "Total control."
     ],
     ariaPrompt: "Give me some quick real-time scripts for Hybrid Mode.",
     specs: [
-      { label: "INTERVENTION", value: "Real-time Live" },
-      { label: "SCRIPT TYPE", value: "Quick Overrides" },
+      { label: "INPUT", value: "Real-time" },
+      { label: "SCRIPT", value: "Live Overrides" },
       { label: "DIFFICULTY", value: "Extreme" },
-      { label: "TACTICAL ADVICE", value: "Use short conditional blocks" }
+      { label: "PRO TIP", value: "Keep it short" }
     ]
   }
 ];
@@ -328,7 +328,7 @@ export default function ArenaGuidePage() {
   const renderCard = (item: GuideItem) => (
     <div 
       key={item.id}
-      className={`group relative flex flex-col bg-card/25 backdrop-blur-xl rounded-3xl border transition-all duration-500 ${item.borderClass} ${item.bgGlow} overflow-hidden`}
+      className={`group relative flex flex-col bg-bg-secondary/90 rounded-3xl border transition-all duration-300 ${item.borderClass} hover:shadow-lg overflow-hidden`}
     >
       {/* Corner Bracket Elements */}
       <span className="absolute top-[12px] left-[12px] w-2.5 h-2.5 border-t border-l border-accent/20 pointer-events-none group-hover:border-accent/50 transition-colors z-20" />
@@ -341,7 +341,7 @@ export default function ArenaGuidePage() {
         <img 
           src={item.image} 
           alt={item.title} 
-          className="absolute inset-0 w-full h-full object-cover filter brightness-[1.1] saturate-[1.1] transition-transform duration-700 group-hover:scale-105"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           style={{
             WebkitMaskImage: theme !== "light" ? "linear-gradient(to top, transparent, black 40%)" : "none",
             maskImage: theme !== "light" ? "linear-gradient(to top, transparent, black 40%)" : "none"
@@ -420,14 +420,11 @@ export default function ArenaGuidePage() {
         
         {/* Title Block */}
         <header className="border-b border-accent/10 pb-6 mb-8 flex flex-col gap-2">
-          <p className="text-[9px] tracking-[0.35em] text-accent/40 font-bold uppercase">
-            // TERMINAL_DATABASE_ACCESS
-          </p>
           <h1 className="text-3xl md:text-4xl font-black tracking-[0.2em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.6)] uppercase">
             ARENA GUIDE
           </h1>
           <p className="text-[10px] text-text-secondary tracking-widest uppercase leading-relaxed max-w-2xl font-bold font-sans">
-            Learn the rules of the different game modes and map features to write better, smarter robot scripts.
+            Learn the rules of the different game modes and map features.
           </p>
         </header>
 
@@ -442,7 +439,7 @@ export default function ArenaGuidePage() {
                 : "border-transparent text-text-secondary hover:bg-accent/5 hover:border-accent/20 hover:text-accent/80"
             }`}
           >
-            COMBAT PROTOCOLS
+            GAME MODES
           </button>
           <button
             type="button"
@@ -453,7 +450,7 @@ export default function ArenaGuidePage() {
                 : "border-transparent text-text-secondary hover:bg-accent/5 hover:border-accent/20 hover:text-accent/80"
             }`}
           >
-            ARENA MAPS
+            MAPS
           </button>
           <button
             type="button"
@@ -464,7 +461,7 @@ export default function ArenaGuidePage() {
                 : "border-transparent text-text-secondary hover:bg-accent/5 hover:border-accent/20 hover:text-accent/80"
             }`}
           >
-            SCRIPT MODES
+            SCRIPTING
           </button>
         </div>
 

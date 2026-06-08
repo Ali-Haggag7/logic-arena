@@ -103,21 +103,17 @@ export default function ReplayPage() {
             </div>
             
             {replayData && (
-              <p className="mt-3 md:mt-2 text-[9px] md:text-[10px] text-accent/70 tracking-[0.14em] flex flex-col md:flex-row md:items-center gap-1 md:gap-2 md:flex-wrap uppercase">
-                <span className="shrink-0">ID: {replayData.id.slice(0, 8)}…</span>
-                <span className="hidden md:inline">·</span>
-                <span className="shrink-0">
-                  DUR: {replayData.duration}s <span className="hidden md:inline">·</span>
-                  <span className="md:hidden"> | </span>
-                </span>
-                <span className="shrink-0">
+              <div className="mt-4 md:mt-3 flex flex-wrap gap-2 text-[9px] md:text-[10px] text-accent/70 tracking-[0.1em] uppercase">
+                <span className="bg-accent/10 border border-accent/20 px-2.5 py-1.5 rounded-md flex items-center shadow-[0_0_8px_rgba(var(--accent-rgb),0.1)]">ID: {replayData.id.slice(0, 8)}…</span>
+                <span className="bg-accent/10 border border-accent/20 px-2.5 py-1.5 rounded-md flex items-center shadow-[0_0_8px_rgba(var(--accent-rgb),0.1)]">DUR: {replayData.duration}s</span>
+                <span className="bg-accent/10 border border-accent/20 px-2.5 py-1.5 rounded-md flex items-center shadow-[0_0_8px_rgba(var(--accent-rgb),0.1)]">
                   {new Date(replayData.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "short",
                     day: "2-digit",
                   })}
                 </span>
-              </p>
+              </div>
             )}
           </div>
 

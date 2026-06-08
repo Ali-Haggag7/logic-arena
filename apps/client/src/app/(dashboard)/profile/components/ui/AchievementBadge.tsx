@@ -24,6 +24,19 @@ export const AchievementBadge = ({
   size = 40,
   showTooltip = true,
 }: AchievementBadgeProps) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
   const color = TIER_COLORS[level] || 'var(--accent)';
   const label = TIER_LABELS[level] || 'LOCKED';
 
@@ -37,7 +50,10 @@ export const AchievementBadge = ({
 
   return (
     <div
-      className="relative flex items-center justify-center group shrink-0"
+      ref={ref}
+      onClick={() => setIsOpen(!isOpen)}
+      onMouseLeave={() => setIsOpen(false)}
+      className="relative flex items-center justify-center group shrink-0 cursor-pointer"
       style={{ width: size, height: size }}
     >
       <div
@@ -61,7 +77,7 @@ export const AchievementBadge = ({
         }}
       />
       {showTooltip && (
-        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-200 bg-bg-primary border border-accent/25 px-2 py-1 rounded text-[8px] font-bold font-mono tracking-wider uppercase whitespace-nowrap z-50 text-text-primary pointer-events-none shadow-md">
+        <div className={`absolute bottom-full mb-2 left-1/2 -translate-x-1/2 transition-all duration-200 bg-bg-primary border border-accent/25 px-2 py-1 rounded text-[8px] font-bold font-mono tracking-wider uppercase whitespace-nowrap z-50 text-text-primary pointer-events-none shadow-md ${isOpen ? 'scale-100' : 'scale-0 md:group-hover:scale-100'}`}>
           {tooltipText}
         </div>
       )}

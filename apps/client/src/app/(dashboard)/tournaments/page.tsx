@@ -100,12 +100,12 @@ export default function TournamentsPage() {
           <div className={`border-b border-accent/10 ${isMobile ? "pb-6 mb-6" : "pb-9 mb-10"} flex justify-between items-end flex-wrap gap-5`}>
             <div>
               <p className="text-[10px] tracking-[0.4em] text-accent/30 mb-2.5 uppercase font-bold">
-                // TOURNAMENTS_v2.1
+                // TOURNAMENTS
               </p>
               <h1 className="m-0 text-[clamp(28px,5vw,48px)] font-black tracking-[0.22em] text-accent drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.9)] leading-none uppercase">
                 TOURNAMENT
                 <span className={`block ${isMobile ? "text-[0.45em]" : "text-[0.38em]"} text-accent/70 tracking-[0.35em] mt-1.5 drop-shadow-none`}>
-                  _OPERATIONS
+                  
                 </span>
               </h1>
             </div>
@@ -125,7 +125,7 @@ export default function TournamentsPage() {
                     : "bg-accent/10 border border-accent/30 text-accent/70 cursor-pointer"
                   }`}
               >
-                {isGuest ? "LOGIN TO DEPLOY" : "[+] CREATE TOURNAMENT"}
+                {isGuest ? "LOGIN TO CREATE" : "CREATE TOURNAMENT"}
               </button>
             )}
           </div>
@@ -160,7 +160,7 @@ export default function TournamentsPage() {
           ) : tournaments.length === 0 ? (
             <div className="text-center py-20 border border-dashed border-accent/20 rounded-2xl bg-accent/[0.02] backdrop-blur-sm">
               <div className="text-accent/30 mb-4 font-mono text-[10px] tracking-[0.3em]">NO TOURNAMENTS YET</div>
-              <h3 className="text-accent font-black tracking-widest text-lg mb-2 uppercase font-sans">AWAITING TOURNAMENTS</h3>
+              <h3 className="text-accent font-black tracking-widest text-lg mb-2 uppercase font-sans">NO TOURNAMENTS</h3>
               <p className="text-accent/40 text-[10px] tracking-[0.15em] max-w-[440px] mx-auto uppercase leading-relaxed px-6">
                 No tournaments running. Start a new tournament to challenge players.
               </p>

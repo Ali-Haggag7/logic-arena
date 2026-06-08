@@ -80,8 +80,7 @@ export function MarketHeader({ isGuest, loading, points }: MarketHeaderProps) {
             className="text-[clamp(30px,5vw,56px)] font-black tracking-[0.25em] text-accent leading-none uppercase"
             style={{ animation: "headerGlow 3s ease-in-out infinite" }}
           >
-            THE BLACK
-            <span className="block text-[0.55em] tracking-[0.4em] text-accent/60 mt-1">_MARKET</span>
+            THE STORE
           </h1>
           <p className="mt-3 text-[10px] text-accent/35 tracking-[0.18em] uppercase font-bold">
             SPEND YOUR SPOILS — UPGRADE YOUR ARSENAL

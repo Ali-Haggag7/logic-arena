@@ -1,5 +1,8 @@
 "use client";
+import { useState } from "react";
 
+import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { X } from "lucide-react";
 import { BlackMarketStyles } from "./components/BlackMarketStyles";
 import { MarketGrid } from "./components/MarketGrid";
 import { MarketHeader } from "./components/MarketHeader";
@@ -9,6 +12,15 @@ import { useBlackMarket } from "./hooks/useBlackMarket";
 
 export default function BlackMarketPage() {
   const market = useBlackMarket();
+  const isMobile = useMediaQuery("(max-width: 1279px)");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handlePreview = (item: any) => {
+    market.handlePreview(item);
+    if (isMobile) {
+      setIsModalOpen(true);
+    }
+  };
 
   return (
     <>
@@ -45,10 +57,44 @@ export default function BlackMarketPage() {
               previewItemId={market.previewItem.id}
               isOwned={market.isOwned}
               onCategoryChange={market.setActiveCategory}
-              onPreview={market.handlePreview}
+              onPreview={handlePreview}
               onPurchase={market.handlePurchase}
             />
 
+            {!isMobile && (
+              <ShowroomPanel
+                actionLoading={market.actionLoading}
+                equippedIds={market.equippedIds}
+                isGuest={market.isGuest}
+                isOwned={market.isOwned}
+                ownedCount={market.ownedItemIds.size}
+                points={market.points}
+                previewItem={market.previewItem}
+                previewLoadout={market.previewLoadout}
+                onPurchase={market.handlePurchase}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isMobile && isModalOpen && (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-bg-primary/95 backdrop-blur-xl animate-[fadeIn_0.2s_ease]">
+          <div className="flex justify-between items-center p-5 border-b border-accent/10">
+            <div className="text-[12px] tracking-[0.25em] font-black text-accent uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              PREVIEW
+            </div>
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => setIsModalOpen(false)}
+              className="p-2 bg-accent/10 rounded-full text-accent hover:bg-accent/20 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 p-5 overflow-y-auto">
             <ShowroomPanel
               actionLoading={market.actionLoading}
               equippedIds={market.equippedIds}
@@ -62,7 +108,7 @@ export default function BlackMarketPage() {
             />
           </div>
         </div>
-      </div>
+      )}
 
       {market.toast && <MarketToast message={market.toast.message} type={market.toast.type} />}
     </>

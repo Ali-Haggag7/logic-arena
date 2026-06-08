@@ -49,7 +49,7 @@ export function SettingsLayout({
               <Lock className="w-8 h-8 mb-3 text-accent/60 opacity-50" />
               <h3 className="text-accent font-black tracking-widest text-[14px] mb-1.5 uppercase">Account Required</h3>
               <p className="text-accent/40 text-[10px] tracking-[0.12em] max-w-[480px] uppercase leading-relaxed">
-                Sign in or create a free account to save your settings and preferences.
+                Save your settings and preferences.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <button
@@ -57,7 +57,7 @@ export function SettingsLayout({
                   onClick={() => router.push("/register")}
                   className="px-6 py-3 bg-accent/10 border border-accent/30 rounded-lg text-[10px] font-black tracking-widest text-accent hover:bg-accent/20 transition-all cursor-pointer shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]"
                 >
-                  [+] CREATE ACCOUNT
+                  CREATE ACCOUNT
                 </button>
                 <button
                   type="button"

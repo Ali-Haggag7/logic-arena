@@ -21,11 +21,11 @@ export function BracketSVG({ tournament, userId, isMobile }: Props) {
   if (tournament.status === "WAITING") {
     return (
       <div className="text-center p-[80px_24px] text-accent/20 text-[10px] tracking-[0.25em] animate-pulse uppercase font-bold">
-        AWAITING MATCH SETUP...
+        WAITING FOR PLAYERS...
         <br />
         <span className="text-[9px] text-accent/10 mt-2 block">
           {tournament.participants.length >= 4
-            ? "Waiting for creator to start match..."
+            ? "Waiting for host to start tournament..."
             : `NEED ${4 - tournament.participants.length} MORE PLAYERS TO START`}
         </span>
       </div>
@@ -37,7 +37,7 @@ export function BracketSVG({ tournament, userId, isMobile }: Props) {
       {isMobile && (
         <div className="absolute top-0 right-0 z-20 flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-bl-lg backdrop-blur-md pointer-events-none shadow-lg">
           <span className="text-[8px] font-black tracking-[0.2em] text-accent/70 animate-pulse">
-            SCROLL_TO_VIEW
+            SCROLL
           </span>
           <span className="text-[10px] text-accent/30">↔</span>
         </div>

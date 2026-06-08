@@ -33,7 +33,9 @@ export class CampaignFightRunner {
     client: AuthenticatedSocket,
     data: CampaignFightData,
   ): Promise<void> {
-    if (client.isGuest || !client.userId) {
+    const userId = client.isGuest ? 'guest' : client.userId;
+
+    if (!userId) {
       client.emit('campaignFightError', {
         message: 'Authentication required.',
       });
@@ -56,7 +58,7 @@ export class CampaignFightRunner {
     let enemyScript: string;
     try {
       enemyScript = await this.campaignService.getEnemyScriptSecure(
-        client.userId,
+        userId,
         levelId,
       );
     } catch {
@@ -66,7 +68,7 @@ export class CampaignFightRunner {
       return;
     }
 
-    const existing = this.campaignIntervals.get(client.userId);
+    const existing = this.campaignIntervals.get(userId);
     if (existing) clearInterval(existing);
 
     const CAMPAIGN_PLAYER_SPAWN = playerSpawn ?? { x: 275, y: 300, angle: 0 };
@@ -216,13 +218,13 @@ export class CampaignFightRunner {
 
       if (matchOver) {
         clearInterval(interval);
-        this.campaignIntervals.delete(client.userId!);
+        this.campaignIntervals.delete(userId);
 
         let completionToken: string | null = null;
-        if (winner === 'player') {
+        if (winner === 'player' && !client.isGuest) {
           completionToken = crypto.randomUUID();
           await this.redisService.set(
-            `campaign:token:${client.userId}:${levelId}`,
+            `campaign:token:${userId}:${levelId}`,
             completionToken,
             120,
           );
@@ -232,6 +234,6 @@ export class CampaignFightRunner {
       }
     }, 50);
 
-    this.campaignIntervals.set(client.userId, interval);
+    this.campaignIntervals.set(userId, interval);
   }
 }

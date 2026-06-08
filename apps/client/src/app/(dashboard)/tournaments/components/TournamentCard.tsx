@@ -44,7 +44,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
 
   return (
     <div
-      className={`relative bg-card/40 rounded-xl ${isMobile ? "p-5" : "p-6"} border border-accent/10 backdrop-blur-md flex flex-col gap-4 group transition-all duration-300 active:scale-[0.98] ${isMobile ? "shadow-[inset_3px_0_0_0_var(--accent)]" : "hover:-translate-y-[3px] hover:border-accent/40 hover:shadow-[0_8px_32px_rgba(var(--accent-rgb),0.12)]"}`}
+      className={`relative bg-bg-secondary/90 rounded-xl ${isMobile ? "p-5" : "p-6"} border border-accent/10 flex flex-col gap-4 group transition-all duration-300 active:scale-[0.98] ${isMobile ? "shadow-[inset_3px_0_0_0_var(--accent)]" : "hover:-translate-y-[3px] hover:border-accent/40 hover:shadow-[0_8px_32px_rgba(var(--accent-rgb),0.12)]"}`}
       style={{ animation: `fadeIn 0.3s ease both`, animationDelay: `${index * 0.05}s` }}
     >
       {/* Header */}
@@ -54,7 +54,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
             {t.name}
           </div>
           <div className="text-[8px] text-accent/25 tracking-[0.2em] font-bold uppercase flex items-center gap-1 flex-wrap">
-            <span>ID: {t.id.slice(0, 8)} // OP:</span>
+            <span>ID: {t.id.slice(0, 8)} // HOST:</span>
             <UserLink
               username={t.creator.username}
               className="hover:text-accent transition-colors"
@@ -63,7 +63,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
         </div>
         {/* Status badge */}
         <span
-          className={`${isMobile ? "px-2 py-0.5 text-[8px]" : "px-2.5 py-1 text-[9px]"} rounded font-black tracking-[0.2em] whitespace-nowrap border uppercase backdrop-blur-md transition-all duration-300`}
+          className={`${isMobile ? "px-2 py-0.5 text-[8px]" : "px-2.5 py-1 text-[9px]"} rounded font-black tracking-[0.2em] whitespace-nowrap border uppercase transition-all duration-300`}
           style={{
             backgroundColor: s.bg,
             borderColor: s.border,
@@ -78,7 +78,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
       {/* Players bar */}
       <div className="bg-accent/5 p-3 rounded-lg border border-accent/5">
         <div className="flex justify-between mb-2">
-          <span className="text-[8px] text-accent/30 tracking-[0.2em] font-bold uppercase">COMBATANTS_SYNC</span>
+          <span className="text-[8px] text-accent/30 tracking-[0.2em] font-bold uppercase">PLAYERS</span>
           <span className="text-[10px] text-accent/60 font-black tracking-widest">{t.participants.length}/8</span>
         </div>
         <div className={`h-[4px] rounded-full bg-accent/10 overflow-hidden relative`}>
@@ -125,7 +125,7 @@ export function TournamentCard({ tournament: t, index, userId, joining, onJoin, 
               }`}
           >
             <span className="relative z-10">
-              {joining === t.id ? "SYNCING..." : "JOIN"}
+              {joining === t.id ? "JOINING..." : "JOIN"}
             </span>
           </button>
         )}

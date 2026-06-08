@@ -26,10 +26,10 @@ export function DrawScreen({ levelTitle, isMobile, onRetry, onBack, message = "N
       </h2>
       <p className="mb-8 text-[10px] font-bold tracking-[0.16em] text-[rgba(var(--sem-warning-rgb),0.5)] uppercase">{message}</p>
       <div className="flex flex-col gap-3">
-        <button type="button" onClick={onRetry} className="h-[44px] rounded-lg border border-[rgba(var(--sem-warning-rgb),0.45)] bg-[rgba(var(--sem-warning-rgb),0.1)] text-[10px] font-black tracking-[0.24em] text-[var(--sem-warning)] uppercase transition-colors hover:bg-[rgba(var(--sem-warning-rgb),0.2)]">
+        <button type="button" onClick={onRetry} className="cursor-pointer h-[44px] rounded-lg border border-[rgba(var(--sem-warning-rgb),0.45)] bg-[rgba(var(--sem-warning-rgb),0.1)] text-[10px] font-black tracking-[0.24em] text-[var(--sem-warning)] uppercase transition-colors hover:bg-[rgba(var(--sem-warning-rgb),0.2)]">
           RETRY
         </button>
-        <button type="button" onClick={onBack} className="h-[44px] rounded-lg border border-transparent bg-transparent text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-warning-rgb),0.45)] uppercase transition-colors hover:text-[rgba(var(--sem-warning-rgb),0.7)]">
+        <button type="button" onClick={onBack} className="cursor-pointer h-[44px] rounded-lg border border-transparent bg-transparent text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-warning-rgb),0.45)] uppercase transition-colors hover:text-[rgba(var(--sem-warning-rgb),0.7)]">
           RETREAT
         </button>
       </div>

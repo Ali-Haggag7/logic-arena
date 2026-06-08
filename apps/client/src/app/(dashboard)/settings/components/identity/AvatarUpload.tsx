@@ -64,7 +64,7 @@ export function AvatarUpload({ avatarUrl, initials, isGuest, avatarLoading, file
           Profile Picture
         </div>
         <div className="text-[11px] text-text-secondary tracking-[0.1em]">
-          {isGuest ? "Sign in to upload an avatar" : "Click to upload — JPG, PNG, or WebP (2MB max)"}
+          {isGuest ? "Account required to upload" : "Click to upload — JPG, PNG, or WebP (2MB max)"}
         </div>
         {avatarFb.status === "success" && (
           <span className="text-[9px] text-green-400 tracking-[0.15em] font-bold animate-pulse mt-1 block" aria-live="polite" role="status">

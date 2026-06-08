@@ -33,7 +33,7 @@ export const MARKET_ITEMS: MarketItem[] = [
     id: "chassis-unit-02",
     name: "UNIT-02",
     category: "chassis",
-    price: 0,
+    price: 400,
     color: "#ffffff",
     glowColor: "#ffffff",
     rarity: "COMMON",

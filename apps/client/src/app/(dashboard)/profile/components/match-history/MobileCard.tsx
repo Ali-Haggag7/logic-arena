@@ -31,15 +31,17 @@ export function MobileCard({ m, isGuest }: Props) {
       </div>
 
       <div className="flex items-center justify-between text-[10px] text-accent/50 tracking-[0.1em]">
-        <span>{m.type}</span>
+        <div className="flex flex-col gap-1">
+          <span>{m.type}</span>
+          <span className="font-mono text-accent/40 text-[9px] tracking-[0.15em]">
+            DUR: {fmtDuration(m.duration)}
+          </span>
+        </div>
         <span>{fmtDate(m.date)}</span>
       </div>
 
-      <div className="flex items-center justify-between mt-2 pt-3 border-t border-accent/10">
-        <span className="text-[10px] text-accent/40 font-mono tracking-[0.2em]">
-          DUR: {fmtDuration(m.duration)}
-        </span>
-        <ReplayButton matchId={m.id} isGuest={isGuest} />
+      <div className="mt-1 pt-3 border-t border-accent/10">
+        <ReplayButton matchId={m.id} isGuest={isGuest} fullWidth />
       </div>
     </div>
   );

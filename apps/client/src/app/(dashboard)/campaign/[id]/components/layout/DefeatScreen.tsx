@@ -46,13 +46,13 @@ export function DefeatScreen({ levelTitle, isMobile, onRetry, onHint, onBack }: 
       </h2>
       <p className="mb-8 text-[10px] font-bold tracking-[0.16em] text-[rgba(var(--sem-danger-rgb),0.5)] uppercase">{message}</p>
       <div className="flex flex-col gap-3">
-        <button type="button" onClick={onRetry} className="h-[44px] rounded-lg border border-[rgba(var(--sem-danger-rgb),0.45)] bg-[rgba(var(--sem-danger-rgb),0.1)] text-[10px] font-black tracking-[0.24em] text-[var(--sem-danger)] uppercase transition-colors hover:bg-[rgba(var(--sem-danger-rgb),0.2)]">
+        <button type="button" onClick={onRetry} className="cursor-pointer h-[44px] rounded-lg border border-[rgba(var(--sem-danger-rgb),0.45)] bg-[rgba(var(--sem-danger-rgb),0.1)] text-[10px] font-black tracking-[0.24em] text-[var(--sem-danger)] uppercase transition-colors hover:bg-[rgba(var(--sem-danger-rgb),0.2)]">
           RETRY
         </button>
-        <button type="button" onClick={onHint} className="h-[44px] rounded-lg border border-[rgba(var(--sem-danger-rgb),0.25)] bg-[rgba(var(--sem-danger-rgb),0.05)] text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-danger-rgb),0.75)] uppercase transition-colors hover:bg-[rgba(var(--sem-danger-rgb),0.1)]">
+        <button type="button" onClick={onHint} className="cursor-pointer h-[44px] rounded-lg border border-[rgba(var(--sem-danger-rgb),0.25)] bg-[rgba(var(--sem-danger-rgb),0.05)] text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-danger-rgb),0.75)] uppercase transition-colors hover:bg-[rgba(var(--sem-danger-rgb),0.1)]">
           SHOW HINT
         </button>
-        <button type="button" onClick={onBack} className="h-[44px] rounded-lg border border-transparent bg-transparent text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-danger-rgb),0.45)] uppercase transition-colors hover:text-[rgba(var(--sem-danger-rgb),0.7)]">
+        <button type="button" onClick={onBack} className="cursor-pointer h-[44px] rounded-lg border border-transparent bg-transparent text-[10px] font-black tracking-[0.22em] text-[rgba(var(--sem-danger-rgb),0.45)] uppercase transition-colors hover:text-[rgba(var(--sem-danger-rgb),0.7)]">
           RETREAT
         </button>
       </div>

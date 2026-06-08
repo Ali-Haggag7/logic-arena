@@ -94,7 +94,7 @@ export function SecuritySection({ isGuest = false }: { isGuest?: boolean }) {
           onClick={() => !isGuest && setShowDeleteModal(true)}
           className={`ml-2 px-5 py-2 bg-red-500/10 border border-red-500/40 text-red-400 rounded-lg text-[10px] font-bold tracking-[0.2em] font-mono transition-all duration-150 ${isGuest ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-red-500/20 hover:border-red-500/70"}`}
         >
-          {isGuest ? "SIGN IN TO DELETE" : "DELETE ACCOUNT"}
+          {isGuest ? "ACCOUNT REQUIRED" : "DELETE ACCOUNT"}
         </button>
       </div>
 
