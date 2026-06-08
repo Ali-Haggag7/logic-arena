@@ -29,11 +29,16 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ username, avatarUrl, onLogout }: DashboardSidebarProps) {
-  const { profile } = useAuth();
+  const { profile, isGuest } = useAuth();
   const isAdmin = profile?.role === 'ADMIN';
   const { incomingRequests, onlineFriends } = useFriendsSystem();
   const pendingCount = incomingRequests.length;
   const onlineCount = onlineFriends.length;
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (isGuest && item.href === "/friends") return false;
+    return true;
+  });
 
   return (
     <aside
@@ -113,7 +118,7 @@ export function DashboardSidebar({ username, avatarUrl, onLogout }: DashboardSid
         <div className="text-[9px] tracking-[0.22em] text-accent/25 font-bold px-1 pb-2 uppercase">
           navigation
         </div>
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           if (item.href === "/friends") {
             return (
               <NavLink

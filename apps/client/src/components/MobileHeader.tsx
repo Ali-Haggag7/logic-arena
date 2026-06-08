@@ -87,9 +87,10 @@ export function MobileHeader() {
         />
       </button>
       <div className="flex items-center gap-3">
-        {insightsButton}
+        {isLoggedIn && insightsButton}
         {isLoggedIn && <NotificationBell notifications={notifications} isMobile />}
         {authButtonContent}
+        {!isLoggedIn && <ThemeSwitcher variant="minimal" size="touch" />}
       </div>
     </header>
   );

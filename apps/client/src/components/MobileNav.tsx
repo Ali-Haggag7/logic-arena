@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { User, Settings, Wrench, Hexagon, X, Trophy, FileCode, Shield, ShoppingCart, Compass } from "lucide-react";
+import { User, Settings, Wrench, Hexagon, X, Trophy, FileCode, Shield, ShoppingCart, Compass, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const mainNavItems = [
@@ -44,13 +44,21 @@ const subNavItems = [
   { href: "/settings", label: "SETTINGS", icon: <Settings size={18} /> },
 ];
 
-const arcOffsets = ["mr-2", "mr-6", "mr-12", "mr-20", "mr-28"];
+const arcOffsets = ["mr-2", "mr-6", "mr-12", "mr-20", "mr-28", "mr-36"];
 
 export function MobileNav() {
   const pathname = usePathname() || "";
   const [isHubOpen, setIsHubOpen] = useState(false);
-  const { profile } = useAuth();
+  const { profile, isGuest } = useAuth();
   const isAdmin = profile?.role === "ADMIN";
+
+  const activeSubNavItems = isGuest
+    ? subNavItems
+    : [
+        subNavItems[0],
+        { href: "/friends", label: "FRIENDS", icon: <Users size={18} /> },
+        ...subNavItems.slice(1)
+      ];
 
   useEffect(() => {
     setIsHubOpen(false);
@@ -83,7 +91,7 @@ export function MobileNav() {
           icon: <Trophy size={22} strokeWidth={1.8} />,
         },
       ];
-  const isHubActive = subNavItems.some(item => pathname === item.href) || pathname === "/arena-guide";
+  const isHubActive = activeSubNavItems.some(item => pathname === item.href);
 
   return (
     <div className="md:hidden block">
@@ -97,55 +105,8 @@ export function MobileNav() {
 
       {/* Floating Radial Hub Menu */}
       <div className={`fixed bottom-[76px] right-2 z-40 flex flex-col-reverse items-end gap-4 pointer-events-none pb-[env(safe-area-inset-bottom)]`}>
-        {subNavItems.map((item, index) => {
+        {activeSubNavItems.map((item, index) => {
           const isActive = pathname === item.href;
-
-          if (item.href === "/docs") {
-            return (
-              <div
-                key={item.href}
-                className={`
-                  flex items-center gap-3 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                  ${isHubOpen ? 'pointer-events-auto opacity-100 translate-y-0 scale-100 mr-4' : 'pointer-events-none opacity-0 translate-y-12 scale-50 mr-2'}
-                `}
-                style={{ transitionDelay: `${index * 40}ms` }}
-              >
-                {/* ARENA GUIDE */}
-                <Link
-                  href="/arena-guide"
-                  className="flex items-center gap-3"
-                  onClick={() => setIsHubOpen(false)}
-                >
-                  <span className={`text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border backdrop-blur-xl transition-all duration-300 ${pathname === "/arena-guide" ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]' : 'bg-bg-secondary/80 border-accent/20 text-text-primary'}`}>
-                    ARENA GUIDE
-                  </span>
-                  <div className={`
-                    flex items-center justify-center w-[46px] h-[46px] rounded-full border backdrop-blur-xl transition-all duration-300
-                    ${pathname === "/arena-guide" ? 'bg-accent/10 border-accent text-accent shadow-[0_0_20px_rgba(var(--accent-rgb),0.5)]' : 'bg-bg-secondary/80 border-accent/20 text-text-secondary/70'}
-                  `}>
-                    <Compass size={18} />
-                  </div>
-                </Link>
-
-                {/* ALISCRIPT */}
-                <Link
-                  href="/docs"
-                  className="flex items-center gap-3"
-                  onClick={() => setIsHubOpen(false)}
-                >
-                  <span className={`text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border backdrop-blur-xl transition-all duration-300 ${isActive ? 'bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]' : 'bg-bg-secondary/80 border-accent/20 text-text-primary'}`}>
-                    ALISCRIPT
-                  </span>
-                  <div className={`
-                    flex items-center justify-center w-[46px] h-[46px] rounded-full border backdrop-blur-xl transition-all duration-300
-                    ${isActive ? 'bg-accent/10 border-accent text-accent shadow-[0_0_20px_rgba(var(--accent-rgb),0.5)]' : 'bg-bg-secondary/80 border-accent/20 text-text-secondary/70'}
-                  `}>
-                    {item.icon}
-                  </div>
-                </Link>
-              </div>
-            );
-          }
 
           return (
             <Link

@@ -107,7 +107,7 @@ export function ThemeSwitcher({ variant = "default", size = "compact" }: ThemeSw
 
   const currentIcon = theme === "cyberpunk" ? <Moon size={14} /> : theme === "light" ? <Sun size={14} /> : <Sunrise size={14} />;
   const minimalButtonClassName = size === "touch"
-    ? "flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-accent/20 bg-accent/5 text-accent hover:border-accent/40 hover:bg-accent/10 transition-colors duration-150 cursor-pointer"
+    ? "flex w-10 h-10 items-center justify-center rounded-xl border border-accent/15 bg-accent/5 text-accent hover:border-accent/40 hover:bg-accent/10 transition-colors duration-150 cursor-pointer"
     : "flex items-center justify-center w-[28px] h-[28px] rounded-md border border-accent/20 bg-accent/5 text-accent hover:border-accent/40 hover:bg-accent/10 transition-colors duration-150 cursor-pointer";
 
   const THEMES = [

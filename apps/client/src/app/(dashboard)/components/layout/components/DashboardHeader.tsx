@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, LogIn } from "lucide-react";
 import { ThemeSwitcher } from "../../../../../components/ui/ThemeSwitcher";
 import { apiClient } from "../../../../../lib/api-client";
 import { useNotifications } from "../../../../../hooks/useNotifications";
@@ -92,24 +92,37 @@ export function DashboardHeader({ username, avatarUrl }: DashboardHeaderProps) {
         )}
 
         {/* ── Insights icon button ── */}
-        <Link
-          href="/insights"
-          className="relative flex items-center justify-center w-[28px] h-[28px] rounded-md border border-accent/20 bg-accent/5 text-accent hover:border-accent/40 hover:bg-accent/10 transition-colors duration-150"
-          aria-label="ARIA Insights"
-          title="ARIA Insights"
-        >
-          <Lightbulb size={14} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-accent border border-bg-primary text-[7px] font-black text-bg-primary shadow-[0_0_6px_rgba(var(--accent-rgb),0.6)]">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
-        </Link>
+        {username && (
+          <Link
+            href="/insights"
+            className="relative flex items-center justify-center w-[28px] h-[28px] rounded-md border border-accent/20 bg-accent/5 text-accent hover:border-accent/40 hover:bg-accent/10 transition-colors duration-150"
+            aria-label="ARIA Insights"
+            title="ARIA Insights"
+          >
+            <Lightbulb size={14} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-accent border border-bg-primary text-[7px] font-black text-bg-primary shadow-[0_0_6px_rgba(var(--accent-rgb),0.6)]">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </Link>
+        )}
 
         {/* ── Notifications bell ── */}
         {username && <NotificationBell notifications={notifications} />}
 
         <ThemeSwitcher variant="minimal" />
+
+        {!username && (
+          <Link
+            href="/login"
+            className="flex items-center justify-center w-[28px] h-[28px] rounded-md border border-accent/20 bg-accent/5 text-accent hover:border-accent/40 hover:bg-accent/10 transition-colors duration-150"
+            aria-label="Log In"
+            title="Log In"
+          >
+            <LogIn size={14} />
+          </Link>
+        )}
       </div>
     </header>
   );
