@@ -51,7 +51,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn('🔄 Redis reconnecting…');
     });
     this.client.on('error', (err) => {
-      this.isReady = false;
       this.logger.error(`❌ Redis: ${err.message}`);
     });
     this.client.on('end', () => {
@@ -75,27 +74,39 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   // ── Core helpers (all ops are no-ops when Redis is unavailable) ───────────
 
   async get<T>(key: string): Promise<T | null> {
-    if (!this.isReady) return null;
+    if (!this.isReady) {
+      this.logger.warn(`[RedisService.get] SKIPPING — isReady=false, key=${key}`);
+      return null;
+    }
     try {
       const raw = await this.client.get(key);
+      this.logger.debug(`[RedisService.get] key=${key}, raw=${raw}, isReady=${this.isReady}`);
       if (!raw) return null;
-      return JSON.parse(raw) as T;
-    } catch {
+      const parsed = JSON.parse(raw) as T;
+      this.logger.debug(`[RedisService.get] parsed=${JSON.stringify(parsed)}`);
+      return parsed;
+    } catch (err) {
+      this.logger.error(`[RedisService.get] ERROR key=${key}: ${err instanceof Error ? err.message : String(err)}`);
       return null;
     }
   }
 
   async set(key: string, value: unknown, ttlSeconds: number): Promise<void> {
-    if (!this.isReady) return;
+    if (!this.isReady) {
+      this.logger.warn(`[RedisService.set] SKIPPING — isReady=false, key=${key}, value=${JSON.stringify(value)}`);
+      return;
+    }
     try {
       const payload = JSON.stringify(value);
+      this.logger.debug(`[RedisService.set] key=${key}, payload=${payload}, ttl=${ttlSeconds}`);
       if (ttlSeconds > 0) {
         await this.client.setex(key, ttlSeconds, payload);
       } else {
         await this.client.set(key, payload);
       }
-    } catch {
-      /* silent */
+      this.logger.debug(`[RedisService.set] SUCCESS key=${key}`);
+    } catch (err) {
+      this.logger.error(`[RedisService.set] ERROR key=${key}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
