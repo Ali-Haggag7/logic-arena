@@ -147,13 +147,15 @@ export function NotificationDropdown({
     [onDelete],
   );
 
-  const handleMarkAll = useCallback(async () => {
+  const handleMarkAll = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (unreadCount === 0) return;
     // Await completion — must NOT close the dropdown as a side effect
     await onMarkAllRead();
   }, [onMarkAllRead, unreadCount]);
 
-  const handleClearAll = useCallback(() => {
+  const handleClearAll = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (notifications.length === 0) return;
     if (!confirmingClear) {
       setConfirmingClear(true);
@@ -215,14 +217,14 @@ export function NotificationDropdown({
           <button
             ref={firstFocusableRef}
             type="button"
-            onClick={() => void handleMarkAll()}
+            onClick={handleMarkAll}
             disabled={unreadCount === 0}
             title="Mark all as read"
             className="flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               color: 'rgba(var(--accent-rgb),0.6)',
               background: 'transparent',
             }}
@@ -238,9 +240,9 @@ export function NotificationDropdown({
             title={confirmingClear ? 'Click again to confirm' : 'Clear all notifications'}
             className="flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2"
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               color: confirmingClear ? 'var(--sem-danger)' : 'rgba(var(--accent-rgb),0.6)',
               background: confirmingClear ? 'rgba(var(--sem-danger-rgb),0.15)' : 'transparent',
             }}
