@@ -82,7 +82,7 @@ export const MobileTopRightHUD: React.FC<MobileHUDProps> = ({
         </div>
 
         <div className="flex flex-col gap-2 pt-1">
-          {displayMode !== 'TRAINING_SOLO' ? (
+          {!isPvP && displayMode !== 'TRAINING_SOLO' ? (
             <button
               type="button"
               onClick={handleResetGame}

@@ -171,54 +171,88 @@ export function NotificationDropdown({
       ref={containerRef}
       role="dialog"
       aria-label="Notifications"
-      className="max-sm:fixed max-sm:inset-x-4 max-sm:top-[64px] max-sm:w-auto max-sm:max-w-full max-sm:shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-[420px] max-sm:max-h-[80vh] sm:max-h-[560px] z-[70] bg-bg-primary border border-accent/30 rounded-lg overflow-hidden font-mono flex flex-col"
+      className="max-sm:fixed max-sm:inset-x-4 max-sm:top-[64px] max-sm:w-auto max-sm:max-w-full sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-[420px] max-sm:max-h-[80vh] sm:max-h-[560px] z-[70] font-mono flex flex-col overflow-hidden"
       style={{
-        boxShadow: '0 12px 32px rgba(var(--accent-rgb),0.18), 0 0 0 1px rgba(var(--accent-rgb),0.05)',
-        animation: 'dropdownIn 0.15s ease',
+        borderRadius: 20,
+        background: 'rgba(var(--bg-card), 0.92)',
+        backdropFilter: 'blur(32px)',
+        WebkitBackdropFilter: 'blur(32px)',
+        border: '1px solid rgba(var(--accent-rgb), 0.15)',
+        boxShadow: '0 20px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(var(--accent-rgb),0.06)',
+        animation: 'dropdownIn 0.2s cubic-bezier(0.16,1,0.3,1)',
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-accent/15 bg-card">
-        <div className="flex items-center gap-2">
-          <Bell size={14} className="text-accent" />
-          <span className="text-[10px] tracking-[0.22em] text-accent/80 uppercase">
-            {'// Comms_Log'}
+      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(var(--accent-rgb),0.08)' }}>
+        <div className="flex items-center gap-2.5">
+          <div style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            background: 'rgba(var(--accent-rgb),0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Bell size={14} className="text-accent" />
+          </div>
+          <span className="text-[11px] tracking-[0.18em] text-accent/90 font-semibold">
+            Notifications
           </span>
           {unreadCount > 0 && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/15 text-accent border border-accent/30">
-              {unreadCount} new
+            <span
+              className="text-[10px] font-semibold px-2 py-0.5"
+              style={{
+                borderRadius: 10,
+                background: 'rgba(var(--accent-rgb),0.15)',
+                color: 'var(--accent)',
+              }}
+            >
+              {unreadCount}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <button
             ref={firstFocusableRef}
             type="button"
             onClick={() => void handleMarkAll()}
             disabled={unreadCount === 0}
             title="Mark all as read"
-            className="text-[9px] tracking-[0.18em] text-text-secondary/70 hover:text-accent hover:bg-accent/10 disabled:opacity-30 disabled:hover:text-text-secondary/70 disabled:hover:bg-transparent transition-all duration-150 flex items-center gap-1 px-2 py-1 rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              color: 'rgba(var(--accent-rgb),0.6)',
+              background: 'transparent',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--accent-rgb),0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
-            <CheckCheck size={11} />
-            MARK ALL
+            <CheckCheck size={14} />
           </button>
           <button
             type="button"
             onClick={handleClearAll}
             disabled={notifications.length === 0}
             title={confirmingClear ? 'Click again to confirm' : 'Clear all notifications'}
-            className={`text-[9px] tracking-[0.18em] flex items-center gap-1 px-2 py-1 rounded cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2 disabled:opacity-30 disabled:cursor-not-allowed ${
-              confirmingClear
-                ? 'text-[color:var(--sem-danger)] bg-[color:var(--sem-danger)]/15 border border-[color:var(--sem-danger)]/40'
-                : 'text-text-secondary/70 hover:text-[color:var(--sem-danger)] hover:bg-[color:var(--sem-danger)]/10 border border-transparent'
-            }`}
+            className="flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              color: confirmingClear ? 'var(--sem-danger)' : 'rgba(var(--accent-rgb),0.6)',
+              background: confirmingClear ? 'rgba(var(--sem-danger-rgb),0.15)' : 'transparent',
+            }}
+            onMouseEnter={(e) => { if (!confirmingClear) e.currentTarget.style.background = 'rgba(var(--sem-danger-rgb),0.1)'; }}
+            onMouseLeave={(e) => { if (!confirmingClear) e.currentTarget.style.background = 'transparent'; }}
           >
-            <Trash2 size={11} />
-            {confirmingClear ? 'CONFIRM?' : 'CLEAR ALL'}
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
 
-      <div ref={listRef} className="overflow-y-auto flex-1 max-h-[440px] divide-y divide-accent/10">
+      <div ref={listRef} className="overflow-y-auto flex-1 max-h-[440px]">
         {isLoading && notifications.length === 0 && unreadCount > SHOW_SKELETON_THRESHOLD ? (
           <div className="py-2" aria-busy="true">
             {Array.from({ length: 5 }).map((_, i) => (

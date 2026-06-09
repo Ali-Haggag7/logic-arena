@@ -112,11 +112,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {incomingRequest && (
           <FriendRequestModal
             request={incomingRequest}
-            onAccept={(id) => {
-              void acceptRequest(id).then(() => setIncomingRequest(null));
+            onAccept={async (id) => {
+              try {
+                await acceptRequest(id);
+                setIncomingRequest(null);
+              } catch {
+                // Error toast is already shown by useFriendsSystem
+              }
             }}
-            onDecline={(id) => {
-              void declineRequest(id).then(() => setIncomingRequest(null));
+            onDecline={async (id) => {
+              try {
+                await declineRequest(id);
+                setIncomingRequest(null);
+              } catch {
+                // Error toast is already shown by useFriendsSystem
+              }
             }}
           />
         )}

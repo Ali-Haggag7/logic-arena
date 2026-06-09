@@ -88,12 +88,15 @@ function ToastCard({
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className={`pointer-events-auto w-[320px] max-w-[calc(100vw-32px)] border rounded-lg p-3 flex gap-3 items-start bg-bg-primary backdrop-blur-md ${
+      className={`pointer-events-auto w-[340px] max-w-[calc(100vw-32px)] p-3 flex gap-3 items-start backdrop-blur-xl ${
         toneClass[tone]
       }`}
       style={{
-        boxShadow: '0 8px 24px rgba(var(--bg-primary-rgb),0.4), 0 0 24px rgba(var(--accent-rgb),0.12)',
-        animation: 'toastIn 0.2s ease',
+        borderRadius: 16,
+        background: 'rgba(var(--bg-card),0.92)',
+        border: '1px solid rgba(var(--accent-rgb),0.12)',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(var(--accent-rgb),0.05)',
+        animation: 'toastIn 0.25s cubic-bezier(0.16,1,0.3,1)',
       }}
     >
       <button
@@ -102,11 +105,11 @@ function ToastCard({
         aria-label={`Open ${toast.notification.title}`}
         className="flex gap-3 items-start flex-1 min-w-0 text-left p-0 bg-transparent border-0 cursor-pointer transition-opacity duration-150 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded"
       >
-        <div className="shrink-0 w-8 h-8 rounded border border-current/40 bg-current/10 flex items-center justify-center">
-          <Icon size={14} />
+        <div className="shrink-0 flex items-center justify-center" style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(var(--accent-rgb),0.1)', color: 'var(--accent)' }}>
+          <Icon size={15} />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[9px] font-mono tracking-[0.18em] uppercase opacity-70 block mb-0.5">
+          <span className="text-[9px] font-semibold tracking-wider uppercase block mb-0.5" style={{ color: 'rgba(var(--accent-rgb),0.6)' }}>
             {label}
           </span>
           <p className="text-sm font-medium text-text-primary leading-snug line-clamp-2">
@@ -122,7 +125,16 @@ function ToastCard({
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
         title="Dismiss"
-        className="shrink-0 w-7 h-7 rounded text-text-secondary/60 hover:text-text-primary hover:bg-bg-secondary cursor-pointer transition-colors duration-150 flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+        className="shrink-0 flex items-center justify-center cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          color: 'rgba(var(--accent-rgb),0.4)',
+          background: 'transparent',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--accent-rgb),0.08)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
       >
         <X size={13} />
       </button>

@@ -25,16 +25,17 @@ interface NotificationItemProps {
 
 interface IconConfig {
   Icon: React.ComponentType<{ size?: number; className?: string }>;
-  tone: 'accent' | 'success' | 'warning' | 'info';
+  bg: string;
+  color: string;
   label: string;
 }
 
 const ICON_MAP: Record<string, IconConfig> = {
-  FRIEND_REQUEST: { Icon: UserPlus, tone: 'accent', label: 'FRIEND_REQUEST' },
-  FRIEND_ACCEPTED: { Icon: UserCheck, tone: 'success', label: 'FRIEND_ACCEPTED' },
-  CHALLENGE_RECEIVED: { Icon: Swords, tone: 'warning', label: 'CHALLENGE' },
-  MATCH_RESULT: { Icon: Trophy, tone: 'accent', label: 'MATCH' },
-  SYSTEM: { Icon: Info, tone: 'info', label: 'SYSTEM' },
+  FRIEND_REQUEST: { Icon: UserPlus, bg: 'rgba(var(--accent-rgb),0.12)', color: 'var(--accent)', label: 'FRIEND_REQUEST' },
+  FRIEND_ACCEPTED: { Icon: UserCheck, bg: 'rgba(var(--sem-success-rgb),0.12)', color: 'var(--sem-success)', label: 'FRIEND_ACCEPTED' },
+  CHALLENGE_RECEIVED: { Icon: Swords, bg: 'rgba(var(--sem-warning-rgb),0.12)', color: 'var(--sem-warning)', label: 'CHALLENGE' },
+  MATCH_RESULT: { Icon: Trophy, bg: 'rgba(var(--accent-rgb),0.12)', color: 'var(--accent)', label: 'MATCH' },
+  SYSTEM: { Icon: Info, bg: 'rgba(var(--accent-rgb),0.06)', color: 'var(--text-secondary)', label: 'SYSTEM' },
 };
 
 function getPayloadSummary(payload: NotificationPayload | null): string {
@@ -62,17 +63,8 @@ export function NotificationItem({
 }: NotificationItemProps) {
   const [hovered, setHovered] = useState(false);
   const config = ICON_MAP[notification.type] ?? ICON_MAP.SYSTEM;
-  const { Icon, tone, label } = config;
+  const { Icon, bg, color, label } = config;
   const summary = getPayloadSummary(notification.data);
-
-  const toneClass: Record<IconConfig['tone'], string> = {
-    accent: 'text-accent border-accent/40 bg-accent/5',
-    success:
-      'text-[color:var(--sem-success)] border-[color:var(--sem-success)]/40 bg-[color:var(--sem-success)]/5',
-    warning:
-      'text-[color:var(--sem-warning)] border-[color:var(--sem-warning)]/40 bg-[color:var(--sem-warning)]/5',
-    info: 'text-text-secondary border-accent/20 bg-bg-secondary/50',
-  };
 
   return (
     <div
@@ -88,46 +80,64 @@ export function NotificationItem({
           onClick(notification);
         }
       }}
-      className={`group relative w-full text-left px-4 py-3 flex gap-3 items-start cursor-pointer transition-colors duration-150 ${
-        !notification.read ? 'bg-accent/[0.04]' : ''
-      } hover:bg-accent/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] focus-visible:bg-accent/[0.08]`}
+      className="group relative w-full text-left cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]"
+      style={{
+        padding: '14px 16px',
+        background: !notification.read ? 'rgba(var(--accent-rgb),0.04)' : 'transparent',
+      }}
     >
-      <div
-        className={`shrink-0 w-9 h-9 rounded border flex items-center justify-center transition-transform duration-150 ${
-          toneClass[tone]
-        } ${hovered ? 'scale-105' : ''}`}
-      >
-        <Icon size={16} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-baseline justify-between gap-2 mb-0.5">
-          <span className="text-[10px] font-mono tracking-[0.18em] text-text-secondary/70 uppercase">
-            {label}
-          </span>
-          {!notification.read && (
-            <span
-              className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 animate-pulse"
-              aria-label="Unread"
-            />
+      <div className="flex gap-3 items-start">
+        <div
+          className="shrink-0 flex items-center justify-center"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 14,
+            background: bg,
+            color: color,
+            transition: 'transform 0.15s ease',
+            transform: hovered ? 'scale(1.05)' : 'scale(1)',
+          }}
+        >
+          <Icon size={17} />
+        </div>
+        <div className="flex-1 min-w-0" style={{ paddingTop: 2 }}>
+          <div className="flex items-center justify-between gap-2 mb-0.5">
+            <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: color }}>
+              {label}
+            </span>
+            {!notification.read && (
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: 'var(--accent)' }}
+                aria-label="Unread"
+              />
+            )}
+          </div>
+          <p
+            className="text-sm leading-snug line-clamp-2"
+            style={{
+              color: notification.read ? 'var(--text-secondary)' : 'var(--text-primary)',
+              fontWeight: notification.read ? 400 : 500,
+            }}
+          >
+            {notification.title}
+          </p>
+          {summary && (
+            <p className="text-[11px] mt-0.5" style={{ color: 'rgba(var(--accent-rgb),0.55)' }}>
+              {summary}
+            </p>
           )}
         </div>
-        <p
-          className={`text-sm leading-snug line-clamp-2 ${
-            notification.read ? 'text-text-secondary' : 'text-text-primary font-medium'
-          }`}
-        >
-          {notification.title}
-        </p>
-        {summary && (
-          <p className="text-[11px] text-text-secondary/70 mt-0.5 font-mono">
-            {summary}
-          </p>
-        )}
       </div>
       <div
-        className={`flex items-center gap-1 shrink-0 transition-opacity duration-150 ${
-          hovered || !notification.read ? 'opacity-100' : 'opacity-0'
-        }`}
+        className="flex items-center gap-2 absolute"
+        style={{
+          right: 12,
+          bottom: 12,
+          opacity: hovered || !notification.read ? 1 : 0,
+          transition: 'opacity 0.15s ease',
+        }}
         onMouseDown={(e) => e.stopPropagation()}
       >
         {!notification.read && (
@@ -141,7 +151,16 @@ export function NotificationItem({
             }}
             aria-label="Mark as read"
             title="Mark as read"
-            className="w-7 h-7 rounded text-text-secondary/60 hover:text-[color:var(--sem-success)] hover:bg-[color:var(--sem-success)]/10 active:scale-90 flex items-center justify-center cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2"
+            className="flex items-center justify-center transition-all duration-150 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-success)] focus-visible:outline-offset-2"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              color: 'rgba(var(--accent-rgb),0.5)',
+              background: 'transparent',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--sem-success-rgb),0.1)'; e.currentTarget.style.color = 'var(--sem-success)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(var(--accent-rgb),0.5)'; }}
           >
             <Check size={14} />
           </button>
@@ -156,7 +175,16 @@ export function NotificationItem({
           }}
           aria-label="Delete notification"
           title="Delete"
-          className="w-7 h-7 rounded text-text-secondary/60 hover:text-[color:var(--sem-danger)] hover:bg-[color:var(--sem-danger)]/10 active:scale-90 flex items-center justify-center cursor-pointer transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2"
+          className="flex items-center justify-center transition-all duration-150 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--sem-danger)] focus-visible:outline-offset-2"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            color: 'rgba(var(--accent-rgb),0.5)',
+            background: 'transparent',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--sem-danger-rgb),0.1)'; e.currentTarget.style.color = 'var(--sem-danger)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(var(--accent-rgb),0.5)'; }}
         >
           <Trash2 size={13} />
         </button>
