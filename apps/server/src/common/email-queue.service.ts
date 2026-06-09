@@ -61,10 +61,10 @@ export class EmailQueueService {
 
     try {
       while (true) {
-        const raw = await this.redis.getClient().brpop(EMAIL_QUEUE_KEY, 1);
+        const raw = await this.redis.getClient().rpop(EMAIL_QUEUE_KEY);
         if (!raw) break;
 
-        const job: EmailJob = JSON.parse(raw[1]);
+        const job: EmailJob = JSON.parse(raw);
         try {
           await this.transporter.sendMail({
             from: `"Logic Arena" <${process.env.SMTP_USER}>`,
