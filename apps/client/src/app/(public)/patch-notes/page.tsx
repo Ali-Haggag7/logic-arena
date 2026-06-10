@@ -42,6 +42,23 @@ const TAG_ICONS: Record<Tag, React.ReactNode> = {
 
 const RELEASES: Release[] = [
   {
+    version: "v3.4.0",
+    date: "2026-06-10",
+    headline: "The Fair Fight Update — Tactical Mode, Admin Hardening & Production Stability",
+    summary: "A focused production stability and competitive fairness release. The headline feature is Tactical Mode — a round-based combat system that transforms every match into a chess match by letting players rewrite their scripts between rounds based on live battle state. Alongside it: a complete overhaul of the admin rate-limiting architecture, a precision fix to the ARIA chatbot's hallucination problem, and a full sweep of production bugs including Redis state poisoning, SMTP blocking, and a Sentry-induced development freeze.",
+    changes: [
+      { tag: "COMBAT", text: "Tactical Mode — Round-Based Combat with Live Script Editing: Matches are divided into three rounds (30s, 15s, 25s) with break phases where players can rewrite scripts based on live battle state. New query commands (MY_HEALTH, ENEMY_HEALTH, PREDICT_POSITION) available during breaks." },
+      { tag: "COMBAT", text: "Classic Mode — Pre-Written Script, Pure Execution: Formalizes the original philosophy where scripts are locked at match start. No mid-match edits allowed, rewarding players who anticipate all scenarios." },
+      { tag: "BALANCE", text: "Word-Level Editor & Token Budget: Both modes now use a block-based editor with a token budget. Exhausting the budget locks the editor, preventing infinite-loop stalemates." },
+      { tag: "QOL", text: "Match Mode Selector & Per-Script Mode Persistence: Choose between Classic and Tactical modes. Selection is saved per-script and surfaced via a dropdown for instant optimistic UI switching." },
+      { tag: "BUG FIX", text: "Redis Flag Fix: Fixed a bug where transient network errors poisoned the Redis isReady flag, causing silent failures for password resets and session versioning." },
+      { tag: "BUG FIX", text: "SMTP Block Fix: Replaced nodemailer with Resend HTTP SDK to bypass DigitalOcean's port 465 block. Transactional emails (like password resets) now deliver reliably." },
+      { tag: "BUG FIX", text: "ARIA Chatbot Precision Fix: Rebuilt RAG chunking pipeline to respect markdown structure and injected accuracy rules to stop the chatbot from hallucinating nonexistent AliScript arguments." },
+      { tag: "BUG FIX", text: "Admin Dashboard Hardening: Consolidated API calls and bypassed global rate limit on admin pages to prevent cascading 429 errors during monitoring." },
+      { tag: "BUG FIX", text: "Development Freeze Resolved: Removed Sentry and its webpack plugins, which were previously saturating CPU threads and causing full system freezes during local development." },
+    ],
+  },
+  {
     version: "v3.3.0",
     date: "2026-06-05",
     headline: "The Intelligent Editor — AI Script Generation & Inline Diagnostics",
@@ -207,7 +224,7 @@ export default function PatchNotesPage() {
       badge="Updates Feed"
       title="Changelog"
       subtitle="The full, unabridged record of every change shipped to Logic Arena — combat balance, engine upgrades, AliScript improvements, and bug fixes. Newest first."
-      lastUpdated="May 2026"
+      lastUpdated="June 2026"
       sections={SECTIONS}
     >
 
