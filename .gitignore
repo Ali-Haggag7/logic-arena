@@ -38,3 +38,8 @@ Thumbs.db
 # NestJS specific
 /coverage
 .eslintcache
+
+# Temp / Dev files
+scratch/
+tree-maker/
+test-script.ts
