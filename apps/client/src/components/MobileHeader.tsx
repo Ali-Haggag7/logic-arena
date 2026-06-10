@@ -76,7 +76,7 @@ export function MobileHeader() {
         aria-label="Logic Arena — Go to dashboard"
       >
         <Image
-          src="/dashboard-logo.png"
+          src="/dashboard-logo.webp"
           alt="Logic Arena"
           width={140}
           height={40}
