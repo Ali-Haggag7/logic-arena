@@ -1,24 +1,17 @@
 <div align="center">
 
-```
-██╗      ██████╗  ██████╗ ██╗ ██████╗     █████╗ ██████╗ ███████╗███╗   ██╗ █████╗
-██║     ██╔═══██╗██╔════╝ ██║██╔════╝    ██╔══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗
-██║     ██║   ██║██║  ███╗██║██║         ███████║██████╔╝█████╗  ██╔██╗ ██║███████║
-██║     ██║   ██║██║   ██║██║██║         ██╔══██║██╔══██╗██╔══╝  ██║╚██╗██║██╔══██║
-███████╗╚██████╔╝╚██████╔╝██║╚██████╗    ██║  ██║██║  ██║███████╗██║ ╚████║██║  ██║
-╚══════╝ ╚═════╝  ╚═════╝ ╚═╝ ╚═════╝    ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝
-```
+<img src="./apps/client/public/og-image.jpg" alt="Logic Arena Hero Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px;" />
 
+# ⚔️ LOGIC ARENA ⚔️
 **v3.4.0 | Program your robot. Outsmart your opponent. Dominate the arena.**
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-97.5%25-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-99.6%25-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
 [![Three.js](https://img.shields.io/badge/Three.js-r3f-black?style=flat-square&logo=three.js)](https://threejs.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?style=flat-square&logo=socket.io)](https://socket.io/)
-[![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat-square&logo=pwa)](https://logicarena.dev)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker)](https://github.com/Ali-Haggag7/logic-arena/packages)
 [![Live](https://img.shields.io/badge/Live-logicarena.dev-22d3ee?style=flat-square&logo=vercel)](https://logicarena.dev)
 
 [**Live Demo (v3.4.0)**](https://logicarena.dev) · [**Documentation**](#project-documentation) · [**Report Bug**](https://github.com/Ali-Haggag7/logic-arena/issues)
@@ -27,7 +20,7 @@
 
 ---
 
-## What is Logic Arena?
+## 🧠 What is Logic Arena?
 
 Logic Arena is a **competitive coding platform** where developers write scripts in **AliScript** — a custom domain-specific language — to control autonomous robots that battle in a physics-driven 3D arena. Think LeetCode meets StarCraft.
 
@@ -37,42 +30,70 @@ Unlike traditional games, **you don't play Logic Arena with a keyboard or a game
 
 ---
 
+## 🌟 The Fair Fight Update (v3.4.0)
+
+The latest major release brings unparalleled stability and strategic depth to the arena:
+* **Tactical vs Classic Modes:** Choose between carefully balanced Token Budget matches or pure chaotic deathmatch.
+* **Token Budget System:** Resource management is now fully integrated. Every action has a cost.
+* **Admin Dashboard Hardening:** Elite production stability, memory leak protections, and enhanced live analytics.
+* **Revamped Spectator Physics:** Zero-payload overhead architecture for buttery smooth live streaming of top-tier matches.
+
+---
+
+## ⚔️ Gameplay Types
+
+| <img src="./apps/client/public/thumbnails/tactical-arena-mode.png" width="250" /> | <img src="./apps/client/public/thumbnails/hybrid-arena-mode.png" width="250" /> | <img src="./apps/client/public/thumbnails/classic-arena-mode.png" width="250" /> |
+| :---: | :---: | :---: |
+| **Tactical Mode**<br>The ultimate test of rapid adaptation. | **Classic Mode**<br>Strategic Token Budget resource management. | **Hybrid Mode**<br>Pure chaotic algorithmic deathmatch. |
+
+## 🗺️ Battle Environments
+
+| <img src="./apps/client/public/thumbnails/env-cyber.png" width="250" /> | <img src="./apps/client/public/thumbnails/env-ice.png" width="250" /> | <img src="./apps/client/public/thumbnails/env-lava.png" width="250" /> |
+| :---: | :---: | :---: |
+| **Cyber City** | **Glacial Tundra** | **Volcanic Core** |
+
+## 🎯 Game Modes
+
+| <img src="./apps/client/public/thumbnails/mode-combat.png" width="250" /> | <img src="./apps/client/public/thumbnails/mode-ctf.png" width="250" /> | <img src="./apps/client/public/thumbnails/mode-koth.png" width="250" /> |
+| :---: | :---: | :---: |
+| **Combat**<br>Head-to-head duel. | **Capture The Flag**<br>Team coordination. | **King of the Hill**<br>Area control mechanics. |
+
+| <img src="./apps/client/public/thumbnails/mode-survival.png" width="250" /> | <img src="./apps/client/public/thumbnails/mode-racing.png" width="250" /> | <img src="./apps/client/public/thumbnails/mode-training.png" width="250" /> |
+| :---: | :---: | :---: |
+| **Survival**<br>Endless NPC waves. | **Racing**<br>Waypoint navigation. | **Training**<br>Sandbox testing. |
+
+---
+
+## 🤖 The Garage: Custom AAA Chassis
+
+Unlock and equip unique custom robot chassis models in the **Black Market (Vault)** using earned progression currency.
+
+| <img src="./apps/client/public/thumbnails/chassis-titan.png" width="200" /> | <img src="./apps/client/public/thumbnails/chassis-sandman.png" width="200" /> | <img src="./apps/client/public/thumbnails/chassis-unit-01.png" width="200" /> | <img src="./apps/client/public/thumbnails/chassis-unit-02.png" width="200" /> |
+| :---: | :---: | :---: | :---: |
+| **TITAN Heavy Armor** | **SANDMAN Specialist** | **UNIT-01 Vanguard** | **UNIT-02 Phantom** |
+
+---
+
 ## ✨ Core Features
 
-### 🤖 AliScript v3 — Custom Combat Language
+### 💻 AliScript v3 — Custom Combat Language
 Write robot behavior scripts using Logic Arena's custom language. Supports **Dictionaries, State Machines, Dot Notation**, advanced sensory arrays, and **Swarm Intelligence** via a secure broadcast protocol. Strict server-side execution sandboxing limits script size, logic timeouts (TLE quotas), whitelisted commands, and applies execution rate limiting. Mobile players can use the intuitive **Block Editor** to drag and drop logic instead of typing code.
 
 ### ⚡ Real-Time Physics, FOV, and Super Powers
-Features vector-based physics, collision detection, and projectile simulations running at 20 ticks/second. Robots possess an FOV (Field of View) and SCAN system tracking 15-degree rotation behavior. Equip **Tactical Super Powers** like SHIELD, CLOAK, DASH, TELEPORT, MINE, or TAUNT to turn the tide. All tactical choices consume points through a robust Energy & STASIS system.
-
-### 🎮 3D Arena Renderer & Garage
-The battle arena is rendered in **Three.js / React Three Fiber** — a full 3D environment with dynamic lighting, obstacle geometry, AAA robot meshes, and particle effects synchronized via **Socket.io**. Unlock and equip unique custom robot chassis models in the **Garage**.
+Features vector-based physics, collision detection, and projectile simulations running at 60 FPS (20 server ticks/second). Equip **Tactical Super Powers** like SHIELD, CLOAK, DASH, TELEPORT, MINE, or TAUNT to turn the tide. All tactical choices consume points through a robust Energy & STASIS system.
 
 ### 💼 Economy & Black Market
 Earn progression through battles and campaigns, and spend your currency in the **Black Market (Vault)** to unlock custom paints, premium tracer rounds, and elite chassis models. Equip items using a high-fidelity 3D interactive viewer.
 
-### 🏆 Global Leaderboard & Spectator Mode
-Watch top-tier players clash in real time. The **Spectator Mode** features a zero-payload overhead architecture allowing users to securely "watch" live matches directly from the Global Leaderboard, complete with live viewer counts.
-
-### 🌍 Diverse Game Modes
-- **COMBAT**: The classic deathmatch (1v1, FFA).
-- **CAPTURE**: Area control mechanics for tactical positioning.
-- **SURVIVAL**: Endless waves of obstacles and NPC enemies.
-- **RACING**: Waypoint checkpoint navigation.
-- **CAMPAIGN**: Algorithmic Warfare challenges against pre-programmed boss bots.
-
-### 🛡️ Enterprise-Grade Security
-Built with a 4-Layer security architecture:
-1. **Perimeter:** HttpOnly Cookies, Redis global & route-specific rate limiting (300 req/min for Admin, 60 req/min for Public).
-2. **Database:** Prisma ORM payload protection and sanitization.
-3. **Execution:** AliScript AST Sandbox hardening & memory TLE quotas.
-4. **Frontend:** React XSS DOM protection.
-
 ### 📱 PWA Support & Multi-Theme System
 Toggle between Cyberpunk, Light, and Obsidian Ember themes. Fully Progressive Web App support ensures it's installable locally with offline pages, safe-area mapping, and a frictionless mobile-first dashboard experience featuring an exclusive Drag-and-Drop Block IDE.
 
-### 📊 Admin Command Center
-A comprehensive dashboard featuring live KPI cards, data tables, memory gauges, and charts for User and Match analytics, alongside a full Community Feedback workflow hub.
+### 🛡️ Enterprise-Grade Security
+Built with a 4-Layer security architecture:
+1. **Perimeter:** HttpOnly Cookies, Redis global & route-specific rate limiting.
+2. **Database:** Prisma ORM payload protection and sanitization.
+3. **Execution:** AliScript AST Sandbox hardening & memory TLE quotas.
+4. **Frontend:** React XSS DOM protection.
 
 ---
 
@@ -83,10 +104,10 @@ Logic Arena is a **pnpm monorepo** with distinct decoupled packages:
 ```text
 logic-arena/
 ├── apps/
-│   ├── client/          # Next.js 16 — Frontend (App Router, PWA)
+│   ├── client/          # Next.js 16 — Frontend (App Router, PWA, R3F)
 │   └── server/          # NestJS 11 — Backend API + WebSocket
 └── packages/
-    ├── engine/          # Shared Game Engine (TypeScript, 20 TPS Physics)
+    ├── engine/          # Shared Game Engine (TypeScript, 60 FPS Physics)
     └── logic-parser/    # AST Parser & AliScript Evaluator + Block Compiler
 ```
 
@@ -99,7 +120,7 @@ logic-arena/
         ↓
 [Server parses & evaluates AST securely in Sandbox]
         ↓
-[Game Engine: physics tick every 50ms (20 ticks/sec)]
+[Game Engine: physics tick every 50ms]
         ↓
 [State delta broadcast to Match Room + Spectators]
         ↓
@@ -125,14 +146,12 @@ logic-arena/
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 18+
 - pnpm 8+
 - PostgreSQL database
 - Redis instance
 
 ### Installation
-
 ```bash
 # Clone the repo
 git clone https://github.com/Ali-Haggag7/logic-arena.git
@@ -144,25 +163,18 @@ pnpm install
 # Set up environment variables
 cp apps/server/.env.example apps/server/.env
 # Fill in DATABASE_URL, DIRECT_URL, JWT_SECRET, REDIS_URL, CLOUDINARY keys
-```
 
-### Database & Redis Setup
-
-```bash
+# Database setup
 cd apps/server
 npx prisma db push
 npx prisma generate
-
-# Ensure your Redis instance is ready and accessible based on your REDIS_URL
 ```
 
 ### Running the Project
-
 ```bash
 # Start the full stack development environment synchronously
 pnpm run dev:all
 ```
-
 Open [http://localhost:3000](http://localhost:3000) — register an account and enter the arena.
 
 ---
@@ -175,10 +187,14 @@ Open [http://localhost:3000](http://localhost:3000) — register an account and 
 4. Write your AliScript strategy:
 
 ```text
-IF GET_DISTANCE(ENEMY) < 400
+IF GET_DISTANCE("enemy") < 400
   FIRE
 END
-MOVE_FAST
+IF ENEMY_HEALTH > MY_HEALTH
+  USE_SHIELD
+ELSE
+  MOVE_FAST
+END
 ```
 
 5. Hit **EXECUTE** — your robot follows your logic in real-time.
@@ -216,32 +232,6 @@ MOVE_FAST
 
 ---
 
-## 🗺️ Roadmap Progress
-
-- [x] Custom AliScript language engine (v3)
-- [x] Real-time multiplayer with Socket.io
-- [x] 3D arena renderer (Three.js / R3F)
-- [x] OAuth + JWT authentication system
-- [x] Match history, Radar charts & Combat Analytics
-- [x] Match replay system (2D Canvas)
-- [x] Tournament bracket system
-- [x] Dictionaries, Arrays, State Machines & Functions
-- [x] Swarm Intelligence (Broadcast protocol)
-- [x] Black Market & Economy System
-- [x] Robot Garage (Custom AAA 3D Models)
-- [x] Docker + Redis for production scale
-- [x] Live Spectator Mode & Viewer counts
-- [x] PWA support & Mobile-first Block Editor dashboard
-- [x] LeetCode-style Campaign Mode
-- [x] Dynamic Game Modes (RACING, CAPTURE, SURVIVAL)
-- [x] Tactical Super Powers
-- [x] Admin Command Center & Throttling
-- [x] 4-Layer Architecture Security Hardening
-- [ ] Fog of War
-- [ ] University competition launch
-- [ ] Multi-team bracket stress testing
-
----
 <div align="center">
 
 ## 👨‍💻 Author
