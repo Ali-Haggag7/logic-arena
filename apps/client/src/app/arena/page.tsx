@@ -21,7 +21,7 @@ import { ArenaStyles } from './components/ArenaStyles';
 import { TrainingHUD } from './components/TrainingMode/TrainingHUD';
 import { RacingHUD } from './components/TrainingMode/RacingHUD';
 import { SpectatorHUD } from './components/SpectatorHUD';
-import { BreakScreen } from './components/BreakScreen';
+
 import { RoundTransitionOverlay } from './components/Tactical/RoundTransitionOverlay';
 import { PhaseBanner } from './components/Tactical/PhaseBanner';
 
@@ -178,15 +178,7 @@ const ArenaPageContent = () => {
         />
       )}
 
-      {!isSpectator && !isMobile && displayMode === 'TACTICAL' && (
-        <BreakScreen
-          socket={socket}
-          phase={matchPhase}
-          robots={robots}
-          currentUserId={activeUserId}
-          fallbackScript={script?.content ?? ''}
-        />
-      )}
+
 
       {displayMode === 'TACTICAL' && matchPhase && (
         <RoundTransitionOverlay phase={matchPhase.phase as unknown as string} />

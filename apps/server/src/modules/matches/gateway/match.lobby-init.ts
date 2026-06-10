@@ -147,7 +147,7 @@ export async function createAndStartMatch(
   state.roundNumbers.set(matchId, 1);
   if (matchMode !== 'CLASSIC') {
     const config = {
-      durations: [90, 60, 90],
+      durations: [20, 30, 45],
       breakDuration: 60,
       healthTrigger: 50,
     };

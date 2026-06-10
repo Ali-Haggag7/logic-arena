@@ -39,11 +39,34 @@ export class MatchLoopManager {
 
         // 2. Win condition checks
         const mode = this.state.matchModes.get(matchId) || 'COMBAT';
-        const { matchIsOver, winner } = checkWinCondition(
+        let { matchIsOver, winner } = checkWinCondition(
           state,
           mode,
           state.modeData,
         );
+
+        // Check time expiration for the final Tactical round
+        if (!matchIsOver && this.state.arenaMatchModes.get(matchId) === 'TACTICAL') {
+          const config = this.state.roundConfigs.get(matchId);
+          const roundNumber = this.state.roundNumbers.get(matchId) ?? 1;
+          if (config && roundNumber === config.durations.length) {
+            const endsAt = this.state.phaseEndsAt.get(matchId) ?? Infinity;
+            if (Date.now() >= endsAt) {
+              matchIsOver = true;
+              const aliveBots = state.robots.filter(r => r.health > 0 && !r.id.startsWith('dummy-'));
+              if (aliveBots.length >= 2) {
+                const sorted = [...aliveBots].sort((a, b) => b.health - a.health);
+                if (sorted[0].health > sorted[1].health) {
+                  winner = sorted[0];
+                } else {
+                  winner = null; // Draw
+                }
+              } else if (aliveBots.length === 1) {
+                winner = aliveBots[0];
+              }
+            }
+          }
+        }
 
         if (matchIsOver) {
           if (this.state.savingMatches.has(matchId)) continue;

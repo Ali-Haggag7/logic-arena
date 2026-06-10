@@ -44,7 +44,13 @@ const CommandConsoleComponent: React.FC<CommandConsoleProps> = ({
         return <MobileScriptSheet socket={socket} scriptInput={consoleState.scriptInput} setScriptInput={consoleState.setScriptInput} handleDeployBrain={consoleState.handleDeployBrain} onDeployDone={onDeployDone} isClassicMode={isClassicMode} classicTokensLeft={classicTokensLeft} classicMaxTokens={classicMaxTokens} onClassicEdit={onClassicEdit} displayMode={displayMode} matchPhase={matchPhase} matchPhaseState={matchPhaseState} currentUserId={currentUserId} />;
     }
 
-    return <DesktopConsole isMobile={isMobile} isZenMode={isZenMode} setIsZenMode={setIsZenMode} commandInput={consoleState.commandInput} setCommandInput={consoleState.setCommandInput} handleCommandSubmit={consoleState.handleCommandSubmit} output={consoleState.output} isLogsOpen={isLogsOpen} setIsLogsOpen={setIsLogsOpen} availableRobots={availableRobots} robotId={robotId} onRobotChange={onRobotChange} scriptInput={consoleState.scriptInput} setScriptInput={consoleState.setScriptInput} handleDeployBrain={consoleState.handleDeployBrain} isLibraryOpen={consoleState.isLibraryOpen} setIsLibraryOpen={consoleState.setIsLibraryOpen} setActivePrebuilt={consoleState.setActivePrebuilt} appendScriptLine={consoleState.appendScriptLine} isClassicMode={isClassicMode} classicTokensLeft={classicTokensLeft} classicMaxTokens={classicMaxTokens} onClassicEdit={onClassicEdit} displayMode={displayMode} matchPhase={matchPhase} />;
+    const handleSubmitReady = () => {
+        if (socket) {
+            socket.emit('match:submit-ready', { script: consoleState.scriptInput });
+        }
+    };
+
+    return <DesktopConsole isMobile={isMobile} isZenMode={isZenMode} setIsZenMode={setIsZenMode} commandInput={consoleState.commandInput} setCommandInput={consoleState.setCommandInput} handleCommandSubmit={consoleState.handleCommandSubmit} output={consoleState.output} isLogsOpen={isLogsOpen} setIsLogsOpen={setIsLogsOpen} availableRobots={availableRobots} robotId={robotId} onRobotChange={onRobotChange} scriptInput={consoleState.scriptInput} setScriptInput={consoleState.setScriptInput} handleDeployBrain={consoleState.handleDeployBrain} isLibraryOpen={consoleState.isLibraryOpen} setIsLibraryOpen={consoleState.setIsLibraryOpen} setActivePrebuilt={consoleState.setActivePrebuilt} appendScriptLine={consoleState.appendScriptLine} isClassicMode={isClassicMode} classicTokensLeft={classicTokensLeft} classicMaxTokens={classicMaxTokens} onClassicEdit={onClassicEdit} displayMode={displayMode} matchPhase={matchPhase} handleSubmitReady={handleSubmitReady} matchPhaseState={matchPhaseState} currentUserId={currentUserId} />;
 };
 
 export const CommandConsole = memo(CommandConsoleComponent);

@@ -51,7 +51,11 @@ export const EditScriptModal = ({
         setFooterStatus("idle");
 
         try {
-            await apiClient.put(`/scripts/${script.id}`, { content });
+            await apiClient.put(`/scripts/${script.id}`, { 
+                title: script.title,
+                content,
+                matchMode: script.matchMode
+            });
             setFooterStatus("success");
             setSafeTimeout(() => onClose(), 1500);
         } catch (error: unknown) {

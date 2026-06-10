@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, PenLine } from 'lucide-react';
 
 interface BreakControlsProps {
   isActive: boolean;
@@ -17,8 +18,11 @@ export function BreakControls({ isActive, isReady, opponentReady, onToggleReady,
         <span className="text-[8px] font-mono font-bold tracking-[0.15em] uppercase text-cyan-500/70 truncate">
           Tactical Link Established
         </span>
-        <span className={`text-[9px] font-black tracking-widest uppercase truncate ${opponentReady ? 'text-green-400' : 'text-amber-400 animate-pulse'}`}>
-          {opponentReady ? `[✅ ${opponentName} READY]` : `[✍️ ${opponentName} WRITING...]`}
+        <span className={`flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase truncate ${opponentReady ? 'text-green-400' : 'text-amber-400 animate-pulse'}`}>
+          [
+          {opponentReady ? <Check size={10} className="inline-block" /> : <PenLine size={10} className="inline-block" />}
+          {opponentReady ? `${opponentName} READY` : `${opponentName} WRITING...`}
+          ]
         </span>
       </div>
       

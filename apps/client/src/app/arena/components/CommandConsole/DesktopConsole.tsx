@@ -33,6 +33,9 @@ interface DesktopConsoleProps {
     onClassicEdit?: (script: string, tokensLeft: number) => void;
     displayMode?: string;
     matchPhase?: string;
+    handleSubmitReady?: () => void;
+    matchPhaseState?: any;
+    currentUserId?: string | null;
 }
 
 export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
@@ -40,10 +43,24 @@ export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
     output, isLogsOpen, setIsLogsOpen, availableRobots, robotId, onRobotChange,
     scriptInput, setScriptInput, handleDeployBrain, isLibraryOpen, setIsLibraryOpen,
     setActivePrebuilt, appendScriptLine, isClassicMode = false, classicTokensLeft = 0,
-    classicMaxTokens, onClassicEdit, displayMode, matchPhase
+    classicMaxTokens, onClassicEdit, displayMode, matchPhase, handleSubmitReady, matchPhaseState, currentUserId
 }) => {
     const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
     const [isReady, setIsReady] = useState(false);
+    
+    // Determine opponent ready status if possible
+    let opponentReady = false;
+    if (matchPhaseState?.readyUserIds && currentUserId) {
+        const opponentId = availableRobots.find(id => id !== currentUserId && !id.startsWith('dummy-'));
+        if (opponentId && matchPhaseState.readyUserIds.includes(opponentId)) {
+            opponentReady = true;
+        }
+        
+        // Ensure local isReady matches server state if possible
+        if (matchPhaseState.readyUserIds.includes(currentUserId) && !isReady) {
+            setIsReady(true);
+        }
+    }
 
     return (
         <div
@@ -117,8 +134,11 @@ export const DesktopConsole: React.FC<DesktopConsoleProps> = ({
                                 <BreakControls 
                                     isActive={matchPhase === 'BREAK'}
                                     isReady={isReady}
-                                    opponentReady={false} // Placeholder until backend is wired
-                                    onToggleReady={() => setIsReady(!isReady)}
+                                    opponentReady={opponentReady}
+                                    onToggleReady={() => {
+                                        setIsReady(true);
+                                        if (handleSubmitReady) handleSubmitReady();
+                                    }}
                                 />
                             )}
                         </div>

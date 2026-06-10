@@ -21,7 +21,7 @@ const MOCK_RANK = 'BRONZE II';
 
 /* Mock stats — will be replaced by real server data later */
 const MOCK_STATS: readonly StatEntry[] = [
-  { label: 'EXEC TIME', value: '1.24s' },
+  { label: 'TIME TAKEN', value: '1.24s' },
   { label: 'ACCURACY', value: '87%' },
   { label: 'ENERGY LEFT', value: '450 / 1000' },
   { label: 'MAX COMBO', value: 'x4' },
@@ -249,9 +249,9 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
                     />
                   </div>
                   <div className="ws-eff__verdict">
-                    {myScore >= THREE_STAR_THRESHOLD ? 'OPTIMAL ALGORITHM' :
-                      myScore >= TWO_STAR_THRESHOLD ? 'MODERATE EFFICIENCY' :
-                        'REFACTOR RECOMMENDED'}
+                    {myScore >= THREE_STAR_THRESHOLD ? 'EXCELLENT' :
+                      myScore >= TWO_STAR_THRESHOLD ? 'GOOD EFFORT' :
+                        'NEEDS IMPROVEMENT'}
                   </div>
                 </>
               ) : (
@@ -263,7 +263,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
           {/* Stats grid */}
           <div className="ws-stats">
             {(myPlayerStats?.newStats ? [
-              { label: 'EXEC TIME', value: `${myPlayerStats.durationSecs}s` },
+              { label: 'TIME TAKEN', value: `${myPlayerStats.durationSecs}s` },
               { label: 'PRECISION', value: `${myPlayerStats.newStats.precision}%` },
               { label: 'DEFENSE', value: `${myPlayerStats.newStats.defense}%` },
               { label: 'AGGRESSION', value: `${myPlayerStats.newStats.aggression}%` },
@@ -282,7 +282,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
                 {myPlayerStats?.rank ? `RANK: ${myPlayerStats.rank}` : MOCK_RANK}
               </div>
               <div className={`ws-elo__delta ws-elo__delta--${resultTheme}`}>
-                ELO {animatedElo >= 0 ? '+' : ''}{animatedElo}
+                POINTS {animatedElo >= 0 ? '+' : ''}{animatedElo}
               </div>
             </div>
           )}
@@ -291,10 +291,10 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
         {/* ── Bottom: buttons ──────────────────────────────────── */}
         <div className="ws-actions">
           <button type="button" aria-label="Rematch" onClick={handleRematch} className="ws-btn ws-btn--primary">
-            <span className="ws-btn__text">REINIT_SESSION</span>
+            <span className="ws-btn__text">PLAY AGAIN</span>
           </button>
           <button type="button" aria-label="Return to lobby" onClick={handleReturnToLobby} className="ws-btn ws-btn--secondary">
-            <span className="ws-btn__text">ABORT_TO_LOBBY</span>
+            <span className="ws-btn__text">BACK TO LOBBY</span>
           </button>
         </div>
       </div>
