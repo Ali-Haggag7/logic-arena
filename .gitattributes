@@ -1,0 +1,5 @@
+# Enforce GitHub to ignore these files in language statistics
+scripts/* linguist-vendored
+*.css linguist-vendored
+*.mjs linguist-vendored
+*.js linguist-vendored
