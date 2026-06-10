@@ -12,7 +12,7 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const SIZES = [72, 96, 128, 144, 152, 192, 384, 512];
-const OUT_DIR = join(__dirname, 'apps', 'client', 'public', 'icons');
+const OUT_DIR = join(__dirname, '..', 'apps', 'client', 'public', 'icons');
 
 const BG = '#030712';
 const ACCENT = '#22d3ee';
