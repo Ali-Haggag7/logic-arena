@@ -50,11 +50,10 @@ export function DashboardHeader({ username, avatarUrl }: DashboardHeaderProps) {
         <Image
           src="/dashboard-logo.png"
           alt="Logic Arena"
-          width={180}
-          height={48}
+          width={50}
+          height={50}
           className="app-logo-img block"
-          style={{ width: '180px', height: '48px', objectFit: 'contain' }}
-          unoptimized
+          style={{ objectFit: 'contain' }}
           priority
         />
         <div className="flex flex-col leading-none gap-[3px]">

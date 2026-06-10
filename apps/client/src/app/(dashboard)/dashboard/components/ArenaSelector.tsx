@@ -94,6 +94,7 @@ export const ArenaSelector: React.FC<ArenaSelectorProps> = ({
                     src={currentMode.image} 
                     alt={currentMode.label}
                     fill
+                    sizes="(max-width: 768px) 205px, 266px"
                     className="absolute inset-0 w-full h-full object-cover filter brightness-[1.15] saturate-[1.2] animate-in fade-in zoom-in-[0.98] duration-700"
                 />
                 
@@ -174,7 +175,7 @@ export const ArenaSelector: React.FC<ArenaSelectorProps> = ({
                                         : 'border-white/10 hover:border-accent/40 opacity-60 hover:opacity-100 hover:bg-white/5'
                                     }`}
                                 >
-                                    <Image fill src={mode.image} alt={mode.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter brightness-[1.1] saturate-[1.2]" />
+                                    <Image fill sizes="(max-width: 768px) 205px, 266px" src={mode.image} alt={mode.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter brightness-[1.1] saturate-[1.2]" />
                                     <div className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-300 ${isSelected ? 'from-[#030712] via-[#030712]/50 to-transparent' : 'from-black/95 via-black/60 to-black/30 group-hover:from-black/90 group-hover:via-black/50'}`} />
                                     
                                     <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-0.5">
@@ -210,7 +211,7 @@ export const ArenaSelector: React.FC<ArenaSelectorProps> = ({
                                         : 'border-white/10 hover:border-white/40 opacity-60 hover:opacity-100 hover:bg-white/5'
                                     }`}
                                 >
-                                    <Image fill src={theme.image} alt={theme.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter brightness-[1.1] saturate-[1.2]" />
+                                    <Image fill sizes="(max-width: 768px) 205px, 266px" src={theme.image} alt={theme.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter brightness-[1.1] saturate-[1.2]" />
                                     <div className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-300 ${isSelected ? 'from-[#030712] via-[#030712]/40 to-transparent' : 'from-black/95 via-black/50 to-black/20 group-hover:from-black/90 group-hover:via-black/40'}`} />
                                     
                                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
