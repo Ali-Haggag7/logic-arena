@@ -468,5 +468,24 @@ export const RobotModelInner = memo(({
       </group>
     </group>
   );
+}, (prev, next) => {
+  return prev.robotId === next.robotId &&
+    prev.color === next.color &&
+    prev.health === next.health &&
+    prev.energy === next.energy &&
+    prev.maxEnergy === next.maxEnergy &&
+    prev.inStasis === next.inStasis &&
+    prev.hitTimestamp === next.hitTimestamp &&
+    prev.spotted === next.spotted &&
+    prev.isShielded === next.isShielded &&
+    prev.isCloaked === next.isCloaked &&
+    prev.shieldHitTimestamp === next.shieldHitTimestamp &&
+    prev.inFog === next.inFog &&
+    prev.fov === next.fov &&
+    prev.fovDirection === next.fovDirection &&
+    prev.hideHealthBar === next.hideHealthBar &&
+    prev.modelFile === next.modelFile &&
+    prev.speechBubble === next.speechBubble &&
+    prev.displayMode === next.displayMode;
 });
 RobotModelInner.displayName = 'RobotModelInner';

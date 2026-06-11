@@ -60,5 +60,5 @@ export const LaserModel = memo(({ position, projectileId }: LaserModelProps) => 
       material={SHARED_PROJECTILE_MAT}
     />
   );
-});
+}, (prev, next) => prev.projectileId === next.projectileId);
 LaserModel.displayName = "LaserModel";
