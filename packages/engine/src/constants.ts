@@ -33,19 +33,19 @@ export const DEFAULT_OBSTACLES: Obstacle[] = [
  * No TRAP/LAVA static zones — replaced by dynamic LAVA_POOL hazards.
  */
 export const LAVA_OBSTACLES: Obstacle[] = [
-  // Top-left volcanic rock cluster
-  { id: 'lava-solid-1', type: 'SOLID', position: { x: 180, y: 160 }, width: 100, height: 30, rotation: 0.5 },
-  { id: 'lava-solid-2', type: 'SOLID', position: { x: 230, y: 210 }, width: 30, height: 90, rotation: 0.3 },
-  // Top-right rock wall
-  { id: 'lava-solid-3', type: 'SOLID', position: { x: 600, y: 140 }, width: 110, height: 28, rotation: -0.4 },
+  // Top-left volcanic rock cluster (clearing 150,150)
+  { id: 'lava-solid-1', type: 'SOLID', position: { x: 220, y: 180 }, width: 100, height: 30, rotation: 0.5 },
+  { id: 'lava-solid-2', type: 'SOLID', position: { x: 260, y: 230 }, width: 30, height: 90, rotation: 0.3 },
+  // Top-right rock wall (clearing 650,150)
+  { id: 'lava-solid-3', type: 'SOLID', position: { x: 550, y: 160 }, width: 110, height: 28, rotation: -0.4 },
   // Center diagonal chokepoint
   { id: 'lava-solid-4', type: 'SOLID', position: { x: 350, y: 280 }, width: 120, height: 28, rotation: 0.6 },
   { id: 'lava-solid-5', type: 'SOLID', position: { x: 460, y: 330 }, width: 120, height: 28, rotation: 0.6 },
-  // Bottom-left rock
-  { id: 'lava-solid-6', type: 'SOLID', position: { x: 170, y: 450 }, width: 28, height: 100, rotation: -0.3 },
-  // Bottom-right volcanic rock cluster
-  { id: 'lava-solid-7', type: 'SOLID', position: { x: 610, y: 430 }, width: 105, height: 28, rotation: 0.4 },
-  { id: 'lava-solid-8', type: 'SOLID', position: { x: 570, y: 470 }, width: 28, height: 80, rotation: -0.2 },
+  // Bottom-left rock (clearing 150,450)
+  { id: 'lava-solid-6', type: 'SOLID', position: { x: 220, y: 420 }, width: 28, height: 100, rotation: -0.3 },
+  // Bottom-right volcanic rock cluster (clearing 650,450)
+  { id: 'lava-solid-7', type: 'SOLID', position: { x: 560, y: 410 }, width: 105, height: 28, rotation: 0.4 },
+  { id: 'lava-solid-8', type: 'SOLID', position: { x: 530, y: 450 }, width: 28, height: 80, rotation: -0.2 },
 ];
 
 /**
