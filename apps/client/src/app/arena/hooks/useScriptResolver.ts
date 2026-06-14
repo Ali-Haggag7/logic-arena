@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { apiClient } from '../../../lib/api-client';
 import { getAuthUserId, getSelectedScriptId, setSelectedScriptId } from '../../../lib/client-security';
 
@@ -12,32 +11,36 @@ interface RobotScript {
 }
 
 export const useScriptResolver = (urlScriptId: string | null, isSpectator: boolean) => {
-  const router = useRouter();
   const [resolvedScriptId, setResolvedScriptId] = useState<string | null>(urlScriptId);
   const [script, setScript] = useState<RobotScript | null>(null);
   const [loading, setLoading] = useState(!isSpectator);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isSpectator) return;
+    if (isSpectator) {
+      setLoading(false);
+      return;
+    }
 
     let isMounted = true;
 
     const resolveAndFetch = async () => {
-      let targetScriptId = resolvedScriptId;
+      setLoading(true);
+      setError(null);
 
+      let targetScriptId = urlScriptId;
+
+      // 1. Resolve targetScriptId if not provided in URL
       if (!targetScriptId) {
         const stored = getSelectedScriptId();
         if (stored) {
           targetScriptId = stored;
-          setResolvedScriptId(stored);
         } else {
           try {
             const res = await apiClient.get('/scripts');
             if (res.data && res.data.length > 0) {
               targetScriptId = res.data[0].id as string;
-              setSelectedScriptId(targetScriptId as string);
-              setResolvedScriptId(targetScriptId);
+              setSelectedScriptId(targetScriptId);
             } else {
               if (isMounted) {
                 setError('No scripts found. Please create a script in the Dashboard first.');
@@ -49,12 +52,13 @@ export const useScriptResolver = (urlScriptId: string | null, isSpectator: boole
             const axiosError = err as { response?: { status?: number } };
             if (axiosError.response?.status === 401 || !getAuthUserId()) {
               if (isMounted) {
-                setResolvedScriptId('guest-script');
-                setScript({
+                const guestScript: RobotScript = {
                   id: 'guest-script',
                   title: 'Guest Script',
-                  content: '// Guest Mode active\n// You can write temporary logic here'
-                } as RobotScript);
+                  content: '// Guest Mode active\n// You can write temporary logic here',
+                };
+                setResolvedScriptId('guest-script');
+                setScript(guestScript);
                 setLoading(false);
               }
               return;
@@ -69,23 +73,77 @@ export const useScriptResolver = (urlScriptId: string | null, isSpectator: boole
         }
       }
 
+      // At this point, we have a targetScriptId.
+      const cacheKey = `arena:script:${targetScriptId}`;
+
+      const getCachedScript = (): RobotScript | null => {
+        try {
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            return JSON.parse(cached) as RobotScript;
+          }
+        } catch (e) {
+          // Ignore storage errors
+        }
+        return null;
+      };
+
+      const setCachedScript = (scriptData: RobotScript) => {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(scriptData));
+        } catch (e) {
+          // Ignore storage errors
+        }
+      };
+
+      // 2. Fetch the script content
       try {
+        const cached = getCachedScript();
+        if (cached) {
+          if (isMounted) {
+            setResolvedScriptId(targetScriptId);
+            setScript(cached);
+            setLoading(false);
+          }
+          return;
+        }
+
         const response = await apiClient.get(`/scripts/${targetScriptId}`);
+        const scriptData = response.data as RobotScript;
+
+        setCachedScript(scriptData);
+
         if (isMounted) {
-          setScript(response.data);
+          setResolvedScriptId(targetScriptId);
+          setScript(scriptData);
           setLoading(false);
         }
       } catch (err: unknown) {
-        const axiosError = err as { response?: { status?: number, data?: { message?: string } }, message?: string };
+        const axiosError = err as {
+          response?: { status?: number; data?: { message?: string } };
+          message?: string;
+        };
+
+        // Fall back to cached value if available
+        const cached = getCachedScript();
+        if (cached) {
+          if (isMounted) {
+            setResolvedScriptId(targetScriptId);
+            setScript(cached);
+            setLoading(false);
+          }
+          return;
+        }
 
         if (axiosError.response?.status === 401 || !getAuthUserId()) {
           if (isMounted) {
-            setResolvedScriptId('guest-script');
-            setScript({
+            const guestScript: RobotScript = {
               id: 'guest-script',
               title: 'Guest Script',
-              content: '// Guest Mode active\n// You can write temporary logic here'
-            });
+              content: '// Guest Mode active\n// You can write temporary logic here',
+            };
+            setResolvedScriptId('guest-script');
+            setScript(guestScript);
             setLoading(false);
           }
           return;
@@ -93,13 +151,38 @@ export const useScriptResolver = (urlScriptId: string | null, isSpectator: boole
 
         setSelectedScriptId(null);
 
+        // Fallback to user's first script
         try {
           const res = await apiClient.get('/scripts');
           if (res.data && res.data.length > 0) {
             const fallbackId = res.data[0].id as string;
             setSelectedScriptId(fallbackId);
+
+            const fallbackCacheKey = `arena:script:${fallbackId}`;
+            const fallbackCached = sessionStorage.getItem(fallbackCacheKey);
+            if (fallbackCached) {
+              const parsedFallback = JSON.parse(fallbackCached) as RobotScript;
+              if (isMounted) {
+                setResolvedScriptId(fallbackId);
+                setScript(parsedFallback);
+                setLoading(false);
+              }
+              return;
+            }
+
+            const fallbackResponse = await apiClient.get(`/scripts/${fallbackId}`);
+            const fallbackScriptData = fallbackResponse.data as RobotScript;
+
+            try {
+              sessionStorage.setItem(fallbackCacheKey, JSON.stringify(fallbackScriptData));
+            } catch (e) {
+              // Ignore
+            }
+
             if (isMounted) {
               setResolvedScriptId(fallbackId);
+              setScript(fallbackScriptData);
+              setLoading(false);
             }
           } else {
             if (isMounted) {
@@ -119,8 +202,10 @@ export const useScriptResolver = (urlScriptId: string | null, isSpectator: boole
 
     resolveAndFetch();
 
-    return () => { isMounted = false; };
-  }, [router, resolvedScriptId, isSpectator]);
+    return () => {
+      isMounted = false;
+    };
+  }, [urlScriptId, isSpectator]);
 
   return { script, loading, error, resolvedScriptId };
 };
