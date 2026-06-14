@@ -6,11 +6,17 @@ import { useAuthState } from "../../../hooks/useAuthState";
 
 import { SectionId } from "./components/shared";
 import { SettingsLayout } from "./components/SettingsLayout";
+import dynamic from "next/dynamic";
 import { IdentitySection } from "./components/identity/IdentitySection";
-import { SecuritySection } from "./components/SecuritySection";
-import { AppearanceSection } from "./components/AppearanceSection";
-import { PreferencesSection } from "./components/PreferencesSection";
-import { NotificationsSection } from "./components/NotificationsSection";
+
+const SecuritySection = dynamic(() =>
+  import("./components/SecuritySection").then(m => m.SecuritySection), { ssr: false });
+const AppearanceSection = dynamic(() =>
+  import("./components/AppearanceSection").then(m => m.AppearanceSection), { ssr: false });
+const PreferencesSection = dynamic(() =>
+  import("./components/PreferencesSection").then(m => m.PreferencesSection), { ssr: false });
+const NotificationsSection = dynamic(() =>
+  import("./components/NotificationsSection").then(m => m.NotificationsSection), { ssr: false });
 
 function renderSection(id: SectionId | null, isGuest: boolean) {
   switch (id) {

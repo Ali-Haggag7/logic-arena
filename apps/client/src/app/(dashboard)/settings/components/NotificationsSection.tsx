@@ -70,8 +70,22 @@ export function NotificationsSection({ isGuest = false }: { isGuest?: boolean })
   const update = useCallback((key: keyof NotificationSettings, value: boolean) => {
     if (isGuest) return;
     setSettings((prev) => ({ ...prev, [key]: value }));
-    persist({ [key]: value });
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      persist({ [key]: value });
+    }, DEBOUNCE_MS);
   }, [isGuest, persist]);
+
+  // ── Cleanup debounce timer on unmount ──────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   if (loading) return (
     <div className="flex flex-col gap-6 opacity-50 animate-pulse">
