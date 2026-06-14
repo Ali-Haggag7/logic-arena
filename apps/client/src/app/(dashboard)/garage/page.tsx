@@ -164,15 +164,6 @@ export default function GaragePage() {
 
   return (
     <>
-      <style>{`
-        @keyframes toastIn {
-          0%   { opacity: 0; transform: translate(-50%, 20px) scale(0.95); }
-          100% { opacity: 1; transform: translate(-50%, 0)    scale(1);    }
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-
       {isMobile
         ? <VaultMobileLayout  {...layoutProps} />
         : <VaultDesktopLayout {...layoutProps} />

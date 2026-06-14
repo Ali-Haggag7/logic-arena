@@ -14,8 +14,7 @@ const CHASSIS_MODEL_PATHS: Record<string, string> = {
   "chassis-sandman": "/robots/sandman.glb",
 };
 
-// Aggressively preload all chassis models to eliminate Canvas suspend stutters when switching robots
-Object.values(CHASSIS_MODEL_PATHS).forEach((path) => useGLTF.preload(path));
+// Preload is handled inside RobotShowroom per active chassisId — see below.
 
 function usePrefersReducedMotion(): boolean {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -252,6 +251,12 @@ export function RobotShowroom({ chassisId, paintColor, tracerColor, quality }: R
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  // Preload only the active chassis GLB so we don't download models the user hasn't unlocked
+  useEffect(() => {
+    const path = CHASSIS_MODEL_PATHS[chassisId];
+    if (path) useGLTF.preload(path);
+  }, [chassisId]);
 
   const shouldAnimate = !prefersReducedMotion && isVisible;
 

@@ -31,8 +31,6 @@ export default function RobotDetailPage() {
   const [color, setColor] = useState("DEFAULT");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
-  const [isGuest, setIsGuest] = useState<boolean>(false);
-
   // Track the dismiss timer so we can clear it on unmount
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,7 +53,7 @@ export default function RobotDetailPage() {
     };
   }, []);
 
-  const { profile } = useAuth();
+  const { profile, isGuest } = useAuth();
 
   // Hydrate saved color from cached profile
   useEffect(() => {

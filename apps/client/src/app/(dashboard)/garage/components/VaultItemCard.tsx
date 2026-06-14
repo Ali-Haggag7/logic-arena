@@ -73,7 +73,7 @@ export function VaultItemCard({
 
       {/* Thumbnail + rarity */}
       <div className="flex items-center gap-3 mb-3">
-        {!imgError ? (
+        {item.category === "chassis" && !imgError ? (
           <Image
             src={thumbnailUrl}
             alt={item.name}

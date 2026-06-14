@@ -41,3 +41,13 @@
 .garage-scrollbar::-webkit-scrollbar        { width: 4px; }
 .garage-scrollbar::-webkit-scrollbar-track  { background: transparent; }
 .garage-scrollbar::-webkit-scrollbar-thumb  { background: rgba(var(--accent-rgb), 0.2); border-radius: 2px; }
+
+/* Toast entry animation */
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translate(-50%, 20px) scale(0.95); }
+  100% { opacity: 1; transform: translate(-50%, 0)    scale(1);    }
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
