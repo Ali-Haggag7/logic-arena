@@ -45,6 +45,15 @@ export class TournamentsQueryService {
         participants: { select: { id: true, username: true } },
         creator: { select: { id: true, username: true } },
         matches: {
+          select: {
+            id: true,
+            round: true,
+            matchIndex: true,
+            player1Id: true,
+            player2Id: true,
+            winnerId: true,
+            status: true,
+          },
           orderBy: [{ round: 'asc' }, { matchIndex: 'asc' }],
           take: MAX_TOURNAMENT_MATCHES_PER_PAGE,
         },

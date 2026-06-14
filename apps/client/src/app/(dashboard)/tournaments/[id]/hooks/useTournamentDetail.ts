@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../../lib/api-client";
 import { clearAuthSession, clearSensitiveBrowserStorage, getAuthUserId } from "../../../../../lib/client-security";
 import { Tournament } from "../../types";
+import { useVisibilityPause } from "../../../../../hooks/useVisibilityPause";
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -32,11 +33,7 @@ export function useTournamentDetail(id: string) {
     }
   }, [id]);
 
-  useEffect(() => {
-    fetchTournament();
-    const interval = setInterval(fetchTournament, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [fetchTournament]);
+  useVisibilityPause(fetchTournament, POLL_INTERVAL_MS);
 
   const handleStart = async () => {
     if (isGuest) {

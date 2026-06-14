@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Req,
+  Header,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { AuthGuard } from '../../common/auth.guard';
@@ -64,12 +65,14 @@ export class TournamentsController {
 
   /* ────────────────────── LIST ALL ──────────────────── */
   @Get()
+  @Header('Cache-Control', 'public, max-age=10, stale-while-revalidate=5')
   async findAll() {
     return this.queryService.findAll();
   }
 
   /* ────────────────────── GET ONE ───────────────────── */
   @Get(':id')
+  @Header('Cache-Control', 'public, max-age=10, stale-while-revalidate=5')
   async findOne(@Param('id') id: string) {
     return this.queryService.findOne(id);
   }

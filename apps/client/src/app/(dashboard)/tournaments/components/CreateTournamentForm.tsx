@@ -52,6 +52,7 @@ export function CreateTournamentForm({ onClose, onCreate, creating, isMobile }: 
 
       <div className={`flex ${isMobile ? "mt-4 gap-2" : "items-end"} relative z-10`}>
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={creating || !name.trim()}
           onMouseEnter={() => setHoveredBtn("deploy")}
