@@ -582,37 +582,37 @@ export const ArenaLoadingScreen = ({
 
         <div className="stages-list">
           <div className="stage-row">
-            <span className="stage-name">1. Loading Robot Models (35%)</span>
+            <span className="stage-name">1. Loading Robot Models</span>
             <span className={`stage-status ${glbProgress === 1 ? 'status-ok' : 'status-loading'}`}>
               {glbProgress === 1 ? '[ OK ]' : `[ ${glbPct}% ]`}
             </span>
           </div>
           <div className="stage-row">
-            <span className="stage-name">2. Building Arena Environment (15%)</span>
+            <span className="stage-name">2. Building Arena Environment</span>
             <span className={`stage-status ${texturesProgress === 1 ? 'status-ok' : 'status-loading'}`}>
               {texturesProgress === 1 ? '[ OK ]' : `[ ${texturesPct}% ]`}
             </span>
           </div>
           <div className="stage-row">
-            <span className="stage-name">3. Connecting to Server (15%)</span>
+            <span className="stage-name">3. Connecting to Server</span>
             <span className={`stage-status ${isWebsocketConnected ? 'status-ok' : 'status-pending'}`}>
               {isWebsocketConnected ? '[ OK ]' : '[ PENDING ]'}
             </span>
           </div>
           <div className="stage-row">
-            <span className="stage-name">4. Syncing Match Data (20%)</span>
+            <span className="stage-name">4. Syncing Match Data</span>
             <span className={`stage-status ${isInitStateReceived ? 'status-ok' : 'status-pending'}`}>
               {isInitStateReceived ? '[ OK ]' : '[ PENDING ]'}
             </span>
           </div>
           <div className="stage-row">
-            <span className="stage-name">5. Loading Your Script (10%)</span>
+            <span className="stage-name">5. Loading Your Script</span>
             <span className={`stage-status ${scriptReady ? 'status-ok' : 'status-pending'}`}>
               {scriptReady ? '[ OK ]' : '[ PENDING ]'}
             </span>
           </div>
           <div className="stage-row">
-            <span className="stage-name">6. Initializing Audio (5%)</span>
+            <span className="stage-name">6. Initializing Audio</span>
             <span className={`stage-status ${audioReady ? 'status-ok' : 'status-pending'}`}>
               {audioReady ? '[ OK ]' : '[ MUTED ]'}
             </span>
