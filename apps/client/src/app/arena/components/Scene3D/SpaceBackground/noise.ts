@@ -35,15 +35,20 @@ export const noise3D = (x: number, y: number, z: number): number => {
   const iyf = (iy + 1) & 255;
   const izf = (iz + 1) & 255;
 
-  const a = rTable[pTable[(pTable[(pTable[ix] + iy) & 255] + iz) & 255]];
-  const b = rTable[pTable[(pTable[(pTable[ixf] + iy) & 255] + iz) & 255]];
-  const c = rTable[pTable[(pTable[(pTable[ix] + iyf) & 255] + iz) & 255]];
-  const d = rTable[pTable[(pTable[(pTable[ixf] + iyf) & 255] + iz) & 255]];
+  const ixiy = pTable[(pTable[ix] + iy) & 255];
+  const ixfiy = pTable[(pTable[ixf] + iy) & 255];
+  const ixiyf = pTable[(pTable[ix] + iyf) & 255];
+  const ixfiyf = pTable[(pTable[ixf] + iyf) & 255];
 
-  const a2 = rTable[pTable[(pTable[(pTable[ix] + iy) & 255] + izf) & 255]];
-  const b2 = rTable[pTable[(pTable[(pTable[ixf] + iy) & 255] + izf) & 255]];
-  const c2 = rTable[pTable[(pTable[(pTable[ix] + iyf) & 255] + izf) & 255]];
-  const d2 = rTable[pTable[(pTable[(pTable[ixf] + iyf) & 255] + izf) & 255]];
+  const a = rTable[pTable[(ixiy + iz) & 255]];
+  const b = rTable[pTable[(ixfiy + iz) & 255]];
+  const c = rTable[pTable[(ixiyf + iz) & 255]];
+  const d = rTable[pTable[(ixfiyf + iz) & 255]];
+
+  const a2 = rTable[pTable[(ixiy + izf) & 255]];
+  const b2 = rTable[pTable[(ixfiy + izf) & 255]];
+  const c2 = rTable[pTable[(ixiyf + izf) & 255]];
+  const d2 = rTable[pTable[(ixfiyf + izf) & 255]];
 
   const x00 = a + (b - a) * ux;
   const x10 = c + (d - c) * ux;

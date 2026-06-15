@@ -8,7 +8,9 @@ interface ProceduralPlanetTextures {
 }
 
 export const createProceduralPlanetTexture = (type: string, colorIn: Color, colorOut: Color): ProceduralPlanetTextures => {
-  const size = (type === "terrestrial" || type === "desert") ? 1024 : 512;
+  const size = IS_MOBILE
+    ? ((type === "terrestrial" || type === "desert") ? 512 : 256)
+    : ((type === "terrestrial" || type === "desert") ? 1024 : 512);
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -83,6 +85,9 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
       b: c1.b + (c2.b - c1.b) * t,
     });
 
+    const warpOctaves = IS_MOBILE ? 2 : 3;
+    const heightOctaves = IS_MOBILE ? 3 : 5;
+
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         // Cylindrical mapping for 100% seamless wrap
@@ -93,16 +98,16 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
         const ny = offsetY + (y / size) * 2.2;
 
         // Fluid domain warping to simulate flowing lava channels
-        const warpX = fbm3D(nx * 1.5, ny * 1.5, nz * 1.5, 3) * 0.35;
-        const warpY = fbm3D(nx * 1.5 + 4.1, ny * 1.5 + 2.7, nz * 1.5 + 1.8, 3) * 0.35;
-        const warpZ = fbm3D(nx * 1.5 + 8.2, ny * 1.5 + 0.5, nz * 1.5 + 6.3, 3) * 0.35;
+        const warpX = fbm3D(nx * 1.5, ny * 1.5, nz * 1.5, warpOctaves) * 0.35;
+        const warpY = fbm3D(nx * 1.5 + 4.1, ny * 1.5 + 2.7, nz * 1.5 + 1.8, warpOctaves) * 0.35;
+        const warpZ = fbm3D(nx * 1.5 + 8.2, ny * 1.5 + 0.5, nz * 1.5 + 6.3, warpOctaves) * 0.35;
 
         const wx = nx + warpX;
         const wy = ny + warpY;
         const wz = nz + warpZ;
 
         // Base tectonic rock heightmap
-        const h = fbm3D(wx * 2.4, wy * 2.4, wz * 2.4, 5);
+        const h = fbm3D(wx * 2.4, wy * 2.4, wz * 2.4, heightOctaves);
 
         // Volcanic cracks (high frequency ridge noise)
         const crackNoise = 1.0 - Math.abs(noise3D(wx * 7.5, wy * 7.5, wz * 7.5) - 0.5) * 2.0;
@@ -112,6 +117,7 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
 
         let r = 0, g = 0, b = 0;
         let bumpVal = 128;
+        let grainNoise: number | null = null;
 
         if (temp < 0.48) {
           // Dark basalt rock plates
@@ -119,8 +125,8 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
           const c = lerpColor(basaltDark, basaltMedium, t);
           r = c.r; g = c.g; b = c.b;
 
-          const grain = noise3D(wx * 35.0, wy * 35.0, wz * 35.0) * 15;
-          bumpVal = Math.round(200 + grain);
+          grainNoise = noise3D(wx * 35.0, wy * 35.0, wz * 35.0);
+          bumpVal = Math.round(200 + grainNoise * 15);
         } else if (temp < 0.56) {
           // Cooling rock crust margins
           const t = (temp - 0.48) / 0.08;
@@ -157,10 +163,13 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
 
         // Add subtle rock grain details to the basalt plates
         if (temp < 0.52) {
-          const grain = noise3D(wx * 35.0, wy * 35.0, wz * 35.0) * 12;
-          r = Math.max(0, Math.min(255, r + grain - 6));
-          g = Math.max(0, Math.min(255, g + grain - 6));
-          b = Math.max(0, Math.min(255, b + grain - 6));
+          if (grainNoise === null) {
+            grainNoise = noise3D(wx * 35.0, wy * 35.0, wz * 35.0);
+          }
+          const grainOffset = grainNoise * 12 - 6;
+          r = Math.max(0, Math.min(255, r + grainOffset));
+          g = Math.max(0, Math.min(255, g + grainOffset));
+          b = Math.max(0, Math.min(255, b + grainOffset));
         }
 
         // Set pixel data
@@ -248,6 +257,8 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
       b: c1.b + (c2.b - c1.b) * t,
     });
 
+    const octaves = IS_MOBILE ? 4 : 6;
+
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         // Map horizontal x to circle coordinates in 3D space to guarantee 100% seamless wrapping
@@ -257,8 +268,8 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
         const nz = offsetZ + Math.sin(angle) * R;
         const ny = offsetY + (y / size) * 2.2; // Vertical coordinate remains linear
 
-        // 6 octaves of noise for extremely crisp continental details
-        const h = fbm3D(nx * 2.8, ny * 2.8, nz * 2.8, 6);
+        // 6 octaves of noise for extremely crisp continental details (reduced to 4 on mobile)
+        const h = fbm3D(nx * 2.8, ny * 2.8, nz * 2.8, octaves);
 
         // Add a high-frequency micro-noise perturbation to create jagged, realistic coastlines and biomes
         const hPerturbed = h + noise3D(nx * 16.0, ny * 16.0, nz * 16.0) * 0.012;
@@ -363,6 +374,9 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
       b: c1.b + (c2.b - c1.b) * t,
     });
 
+    const warpOctaves = IS_MOBILE ? 2 : 4;
+    const heightOctaves = IS_MOBILE ? 4 : 6;
+
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         // Cylindrical mapping for 100% seamless wrap
@@ -373,16 +387,16 @@ export const createProceduralPlanetTexture = (type: string, colorIn: Color, colo
         const ny = offsetY + (y / size) * 2.2;
 
         // Domain warping: warp coords using low-frequency FBM to create giant swirling wind streams / cyclones
-        const warpX = fbm3D(nx * 2.2, ny * 2.2, nz * 2.2, 4) * 0.40;
-        const warpY = fbm3D(nx * 2.2 + 5.2, ny * 2.2 + 1.3, nz * 2.2 + 2.7, 4) * 0.40;
-        const warpZ = fbm3D(nx * 2.2 + 1.1, ny * 2.2 + 4.8, nz * 2.2 + 9.1, 4) * 0.40;
+        const warpX = fbm3D(nx * 2.2, ny * 2.2, nz * 2.2, warpOctaves) * 0.40;
+        const warpY = fbm3D(nx * 2.2 + 5.2, ny * 2.2 + 1.3, nz * 2.2 + 2.7, warpOctaves) * 0.40;
+        const warpZ = fbm3D(nx * 2.2 + 1.1, ny * 2.2 + 4.8, nz * 2.2 + 9.1, warpOctaves) * 0.40;
 
         const wx = nx + warpX;
         const wy = ny + warpY;
         const wz = nz + warpZ;
 
-        // Primary landscape height map using warped coordinates (6 octaves for 2K-like resolution detail)
-        const h = fbm3D(wx * 3.5, wy * 3.5, wz * 3.5, 6);
+        // Primary landscape height map using warped coordinates (reduced on mobile)
+        const h = fbm3D(wx * 3.5, wy * 3.5, wz * 3.5, heightOctaves);
 
         // Add fine-grained high-frequency wind ripples (sharp ridges using 1.0 - abs(sin) pattern)
         const ripples = (1.0 - Math.abs(Math.sin(wx * 60 + wy * 24 + wz * 16))) * 0.12;
