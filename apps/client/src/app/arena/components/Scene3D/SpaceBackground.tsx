@@ -7,6 +7,9 @@ import { Billboard, Stars } from "@react-three/drei";
 import { MapTheme } from "../../types";
 import { getGlobalAudioContext } from "../../../../context/SoundContext";
 
+const IS_MOBILE = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+
+
 // ---------------------------------------------------------------------------
 // AUDIO WEB AUDIO API PROCEDURAL GENERATORS (ASTEROID & SATELLITE PING)
 // ---------------------------------------------------------------------------
@@ -2306,7 +2309,9 @@ const SpaceNebula = ({ position, mapTheme, graphicsQuality = "medium" }: SpaceNe
 
   const nebulaData = useMemo(() => {
     // Increased particle density slightly for the larger spread
-    const count = graphicsQuality === "high" ? 4500 : graphicsQuality === "low" ? 1200 : 2800;
+    const count = IS_MOBILE
+      ? (graphicsQuality === "high" ? 1500 : graphicsQuality === "low" ? 1200 : 1000)
+      : (graphicsQuality === "high" ? 4500 : graphicsQuality === "low" ? 1200 : 2800);
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
@@ -2806,7 +2811,9 @@ export const SpaceBackground = ({ mapTheme, graphicsQuality = "medium" }: SpaceB
   // Procedural Spiral Galaxy Generation
   const galaxyData = useMemo(() => {
     // Quality-based star density - increased for a lush, premium celestial cloud
-    const count = graphicsQuality === "high" ? 6000 : graphicsQuality === "low" ? 1200 : 3000;
+    const count = IS_MOBILE
+      ? (graphicsQuality === "high" ? 1800 : graphicsQuality === "low" ? 1200 : 1000)
+      : (graphicsQuality === "high" ? 6000 : graphicsQuality === "low" ? 1200 : 3000);
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
@@ -2937,6 +2944,9 @@ export const SpaceBackground = ({ mapTheme, graphicsQuality = "medium" }: SpaceB
   }, [mapTheme]);
 
   const starCount = useMemo(() => {
+    if (IS_MOBILE) {
+      return graphicsQuality === "high" ? 2000 : graphicsQuality === "low" ? 200 : 600;
+    }
     return graphicsQuality === "high" ? 5000 : graphicsQuality === "low" ? 400 : 1500;
   }, [graphicsQuality]);
 

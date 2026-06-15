@@ -6,6 +6,9 @@ import { Group, Mesh, MeshBasicMaterial, Vector3, Quaternion, AdditiveBlending, 
 import { MapTheme } from "../../types";
 import { getGlobalAudioContext, getGlobalMasterGain } from "../../../../context/SoundContext";
 
+const IS_MOBILE = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+
+
 interface DynamicEnvironmentProps {
   mapTheme: MapTheme;
   graphicsQuality?: string;
@@ -614,7 +617,7 @@ const CyberEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
 
   return (
     <>
-      <Sparkles count={isHighQuality ? 600 : 150} scale={[150, 50, 150]} position={[0, 20, 0]} size={2} speed={0.4} opacity={0.5} color="#00ffff" />
+      <Sparkles count={IS_MOBILE ? 80 : (isHighQuality ? 600 : 150)} scale={[150, 50, 150]} position={[0, 20, 0]} size={2} speed={0.4} opacity={0.5} color="#00ffff" />
 
       {isHighQuality && (
         <group>
@@ -778,7 +781,7 @@ const LavaEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
 
   return (
     <>
-      <Sparkles count={isHighQuality ? 500 : 150} scale={[80, 20, 80]} position={[0, 10, 0]} size={6} speed={1.5} opacity={1} color="#ff5500" />
+      <Sparkles count={IS_MOBILE ? 80 : (isHighQuality ? 500 : 150)} scale={[80, 20, 80]} position={[0, 10, 0]} size={6} speed={1.5} opacity={1} color="#ff5500" />
       
       {isHighQuality && (
         <group>
@@ -883,7 +886,7 @@ const IceEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
 
   return (
     <>
-      <Sparkles count={isHighQuality ? 800 : 200} scale={[120, 30, 120]} position={[0, 15, 0]} size={4} speed={0.5} opacity={0.8} color="#ffffff" />
+      <Sparkles count={IS_MOBILE ? 80 : (isHighQuality ? 800 : 200)} scale={[120, 30, 120]} position={[0, 15, 0]} size={4} speed={0.5} opacity={0.8} color="#ffffff" />
       
       {isHighQuality && (
         <group>
