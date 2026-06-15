@@ -1161,6 +1161,9 @@ const ProceduralPlanetItem = ({
   const instancedMeshRef = useRef<InstancedMesh>(null);
   const _dummy = useMemo(() => new Object3D(), []);
   const sphereSegs = IS_MOBILE ? 32 : 64;
+  const planetWorldPosRef = useRef(new Vector3());
+  const camDirRef = useRef(new Vector3());
+  const toPlanetRef = useRef(new Vector3());
   const audioNodesRef = useRef<{
     gainNode: GainNode;
     nodes: any[];
@@ -1683,7 +1686,7 @@ const ProceduralPlanetItem = ({
       const ctx = getGlobalAudioContext();
       if (!ctx) return;
 
-      const planetWorldPos = new Vector3(...pos);
+      const planetWorldPos = planetWorldPosRef.current.set(...pos);
       const camPos = camera.position;
       const dist = camPos.distanceTo(planetWorldPos);
 
@@ -1695,9 +1698,9 @@ const ProceduralPlanetItem = ({
       }
 
       // Look-at direction check
-      const camDir = new Vector3();
+      const camDir = camDirRef.current;
       camera.getWorldDirection(camDir);
-      const toPlanet = planetWorldPos.clone().sub(camPos).normalize();
+      const toPlanet = toPlanetRef.current.copy(planetWorldPos).sub(camPos).normalize();
       const dot = camDir.dot(toPlanet);
 
       let targetVol = 0;

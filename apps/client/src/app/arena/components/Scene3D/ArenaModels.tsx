@@ -3,7 +3,7 @@ import React, { useMemo, MutableRefObject, useRef, useEffect, useState } from 'r
 import { useFrame } from '@react-three/fiber';
 import {
   GameState, RobotState, ObstacleState,
-  FiredTracer, SpeechBubbleState,
+  FiredTracer, SpeechBubbleState, HitBurst,
 } from '../../types';
 import { Group, Material, Mesh, Object3D } from 'three';
 import { useThree } from '@react-three/fiber';
@@ -62,7 +62,7 @@ export const ArenaModels = ({
 }) => {
   const { scene } = useThree();
   const robotMeshesRef = useRef<Group[]>([]);
-  const [, setRenderTick] = useState(0);
+  const renderTickRef = useRef(0);
   const lastUpdateRef = useRef(0);
 
   // BUG FIX: Clear existing static meshes on unmount to prevent 3+ robot duplication on reconnect
@@ -87,12 +87,12 @@ export const ArenaModels = ({
     };
   }, [scene]);
 
-  // Throttled re-render at ~20fps (50ms) — needed so JSX picks up new gameStateRef data
+  // Throttled update of local tick counter (no React re-render)
   useFrame(() => {
     const now = performance.now();
     if (now - lastUpdateRef.current < 50) return;
     lastUpdateRef.current = now;
-    setRenderTick(t => t + 1);
+    renderTickRef.current += 1;
   });
 
   // Read interpolated state from the buffer for smooth rendering.
@@ -144,7 +144,7 @@ export const ArenaModels = ({
     <>
       <PreloadArenaModels userChassisId={preloadUser} opponentChassisId={preloadOpponent} />
       <BoundaryLine points={boundaryPoints} />
-      <HitParticles burstsRef={hitBurstsRef} />
+      <RefBasedHitParticles burstsRef={hitBurstsRef} />
 
       <ObstaclesInstanced obstacles={obstacles} mapTheme={mapTheme as any} />
 
@@ -259,21 +259,7 @@ export const ArenaModels = ({
         );
       })}
 
-      {/* Laser tracers */}
-      {(() => {
-        const tracer = firedTracer?.current;
-        if (!tracer) return null;
-        return robots.map(robot => {
-          if (robot.id !== tracer.robotId) return null;
-          const start: [number, number, number] = [toSceneX(robot.position.x), 0.375, toSceneZ(robot.position.y)];
-          const tracerTarget =
-            tracer.isPredicted && tracer.predictedPosition
-              ? tracer.predictedPosition
-              : tracer.targetPosition;
-          const end: [number, number, number] = [toSceneX(tracerTarget.x), 0.375, toSceneZ(tracerTarget.y)];
-          return <LaserBeam key={`tracer-${robot.id}`} start={start} end={end} color={robot.color} />;
-        });
-      })()}
+      <RefBasedLaserBeam firedTracer={firedTracer} robots={robots} />
 
       {/* Projectiles */}
       {projectiles.map(p => (
@@ -285,4 +271,59 @@ export const ArenaModels = ({
       ))}
     </>
   );
+};
+
+const RefBasedLaserBeam = ({
+  firedTracer,
+  robots,
+}: {
+  firedTracer: MutableRefObject<FiredTracer | null>;
+  robots: RobotState[];
+}) => {
+  const [, setTick] = useState(0);
+  const lastTracerRef = useRef<FiredTracer | null>(null);
+
+  useFrame(() => {
+    const currentTracer = firedTracer?.current;
+    if (currentTracer !== lastTracerRef.current) {
+      lastTracerRef.current = currentTracer;
+      setTick(t => t + 1);
+    }
+  });
+
+  const tracer = firedTracer?.current;
+  if (!tracer) return null;
+
+  return (
+    <>
+      {robots.map(robot => {
+        if (robot.id !== tracer.robotId) return null;
+        const start: [number, number, number] = [toSceneX(robot.position.x), 0.375, toSceneZ(robot.position.y)];
+        const tracerTarget =
+          tracer.isPredicted && tracer.predictedPosition
+            ? tracer.predictedPosition
+            : tracer.targetPosition;
+        const end: [number, number, number] = [toSceneX(tracerTarget.x), 0.375, toSceneZ(tracerTarget.y)];
+        return <LaserBeam key={`tracer-${robot.id}`} start={start} end={end} color={robot.color} />;
+      })}
+    </>
+  );
+};
+
+const RefBasedHitParticles = ({
+  burstsRef,
+}: {
+  burstsRef: MutableRefObject<HitBurst[]>;
+}) => {
+  const [, setTick] = useState(0);
+  const lastCountRef = useRef(0);
+
+  useFrame(() => {
+    if (burstsRef.current.length !== lastCountRef.current) {
+      lastCountRef.current = burstsRef.current.length;
+      setTick(t => t + 1);
+    }
+  });
+
+  return <HitParticles burstsRef={burstsRef} />;
 };

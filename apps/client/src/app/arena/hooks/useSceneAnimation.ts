@@ -45,7 +45,7 @@ export const useSceneAnimation = (
           color: robot.color,
           createdAt: now
         };
-        hitBurstsRef.current = [...hitBurstsRef.current, burst];
+        hitBurstsRef.current.push(burst);
 
         const next = new Map(hitFlashMapRef.current);
         next.set(robot.id, now);

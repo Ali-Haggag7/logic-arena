@@ -495,6 +495,8 @@ const CyberEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
   const planet3Ref = useRef<Object3D>(null);
   const cubesRef = useRef<Group>(null);
   const shipsRef = useRef<(Group | null)[]>([]);
+  const localCamRef = useRef(new Vector3());
+  const tempPosRef = useRef(new Vector3());
   
   useFrame((_, delta) => {
     if (planet1Ref.current) planet1Ref.current.rotation.y += delta * 0.05;
@@ -600,10 +602,13 @@ const CyberEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
 
   const getCubeDist = React.useCallback((camPos: Vector3) => {
     if (!cubesRef.current) return Infinity;
-    const localCam = cubesRef.current.worldToLocal(camPos.clone());
+    const localCam = localCamRef.current.copy(camPos);
+    cubesRef.current.worldToLocal(localCam);
     let minD = Infinity;
     for (let i = 0; i < cubeData.length; i++) {
-      const d = localCam.distanceTo(new Vector3(cubeData[i].pos[0], cubeData[i].pos[1], cubeData[i].pos[2]));
+      const p = cubeData[i].pos;
+      const target = tempPosRef.current.set(p[0], p[1], p[2]);
+      const d = localCam.distanceTo(target);
       if (d < minD) minD = d;
     }
     return minD;
@@ -727,6 +732,7 @@ const LavaEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
   const rocksRef = useRef<Group>(null);
   const coreRef = useRef<Mesh>(null);
   const deadStarRef = useRef<Mesh>(null);
+  const localCamRef = useRef(new Vector3());
 
   useFrame((_, delta) => {
     if (rocksRef.current) {
@@ -770,7 +776,8 @@ const LavaEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
 
   const getRockDist = React.useCallback((camPos: Vector3) => {
     if (!rocksRef.current) return Infinity;
-    const localCam = rocksRef.current.worldToLocal(camPos.clone());
+    const localCam = localCamRef.current.copy(camPos);
+    rocksRef.current.worldToLocal(localCam);
     let minD = Infinity;
     for (let i = 0; i < rockData.length; i++) {
       const d = localCam.distanceTo(rockData[i].pos);
@@ -846,6 +853,8 @@ const CRYSTAL_MAT_PROPS = {
 const IceEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
   const crystalsRef = useRef<Group>(null);
   const auroraRef = useRef<Group>(null);
+  const localCamRef = useRef(new Vector3());
+  const tempPosRef = useRef(new Vector3());
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
@@ -875,10 +884,13 @@ const IceEnvironment = ({ isHighQuality }: { isHighQuality: boolean }) => {
 
   const getCrystalDist = React.useCallback((camPos: Vector3) => {
     if (!crystalsRef.current) return Infinity;
-    const localCam = crystalsRef.current.worldToLocal(camPos.clone());
+    const localCam = localCamRef.current.copy(camPos);
+    crystalsRef.current.worldToLocal(localCam);
     let minD = Infinity;
     for (let i = 0; i < crystalData.length; i++) {
-      const d = localCam.distanceTo(new Vector3(...crystalData[i].pos));
+      const p = crystalData[i].pos;
+      const target = tempPosRef.current.set(p[0], p[1], p[2]);
+      const d = localCam.distanceTo(target);
       if (d < minD) minD = d;
     }
     return minD;
