@@ -9,6 +9,8 @@ const FrameSignaler = (): null => {
     if (!signaledRef.current) {
       signaledRef.current = true;
       if (typeof window !== 'undefined') {
+        const win = window as unknown as Record<string, unknown>;
+        win.__SCENE_FIRST_FRAME__ = true;
         window.dispatchEvent(new CustomEvent('scene-first-frame'));
       }
     }

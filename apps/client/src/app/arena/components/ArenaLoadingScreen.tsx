@@ -113,6 +113,14 @@ export const ArenaLoadingScreen = ({
   useEffect((): (() => void) => {
     let current = 0;
     const interval = setInterval((): void => {
+      if (typeof window !== 'undefined') {
+        const win = window as unknown as Record<string, unknown>;
+        if (win.__SCENE_FIRST_FRAME__) {
+          setTexturesProgress(1.0);
+          clearInterval(interval);
+          return;
+        }
+      }
       if (current < 0.95) {
         current += 0.08 + Math.random() * 0.12;
         if (current >= 0.95) {
@@ -131,6 +139,10 @@ export const ArenaLoadingScreen = ({
       setTexturesProgress(1.0);
     };
     if (typeof window !== 'undefined') {
+      const win = window as unknown as Record<string, unknown>;
+      if (win.__SCENE_FIRST_FRAME__) {
+        setTexturesProgress(1.0);
+      }
       window.addEventListener('scene-first-frame', handleFirstFrame);
     }
     return (): void => {
@@ -333,6 +345,8 @@ export const ArenaLoadingScreen = ({
 
         .scanline {
           position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 4px;
           background: linear-gradient(to bottom, rgba(0, 255, 247, 0), var(--cyber-cyan), rgba(0, 255, 247, 0));
