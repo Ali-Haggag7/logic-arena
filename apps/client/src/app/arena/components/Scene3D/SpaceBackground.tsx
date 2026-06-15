@@ -8,6 +8,7 @@ import { MapTheme } from "../../types";
 import { getGlobalAudioContext } from "../../../../context/SoundContext";
 
 const IS_MOBILE = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+const activePlanetDistances: Record<string, number> = {};
 
 
 // ---------------------------------------------------------------------------
@@ -1250,9 +1251,8 @@ const ProceduralPlanetItem = ({
     return arr;
   }, [hasRockRings]);
 
-  // Dynamic sound loops
-  useEffect(() => {
-    if (!audioName) return;
+  const startAudio = () => {
+    if (audioNodesRef.current || !audioName) return;
 
     const ctx = getGlobalAudioContext();
     if (!ctx) return;
@@ -1603,26 +1603,35 @@ const ProceduralPlanetItem = ({
     }
 
     audioNodesRef.current = { gainNode, nodes };
+  };
 
-    return () => {
-      if (audioNodesRef.current) {
+  const stopAudio = () => {
+    if (!audioNodesRef.current) return;
+    try {
+      audioNodesRef.current.nodes.forEach((node) => {
         try {
-          audioNodesRef.current.nodes.forEach((node) => {
-            try {
-              if ("stop" in node) {
-                node.stop();
-              }
-            } catch (e) {}
-            try {
-              node.disconnect();
-            } catch (e) {}
-          });
-          audioNodesRef.current.gainNode.disconnect();
-        } catch (e) {
-          console.error("Error cleaning up planet sound:", e);
-        }
-        audioNodesRef.current = null;
-      }
+          if ("stop" in node) {
+            node.stop();
+          }
+        } catch (e) {}
+        try {
+          node.disconnect();
+        } catch (e) {}
+      });
+      audioNodesRef.current.gainNode.disconnect();
+    } catch (e) {
+      console.error("Error cleaning up planet sound:", e);
+    }
+    audioNodesRef.current = null;
+  };
+
+  // Dynamic sound loops
+  useEffect(() => {
+    if (!IS_MOBILE && audioName) {
+      startAudio();
+    }
+    return () => {
+      stopAudio();
     };
   }, [audioName]);
 
@@ -1682,34 +1691,51 @@ const ProceduralPlanetItem = ({
     }
 
     // Modulate spatial audio based on distance + direction
-    if (audioNodesRef.current && audioName) {
-      const ctx = getGlobalAudioContext();
-      if (!ctx) return;
-
+    if (audioName) {
       const planetWorldPos = planetWorldPosRef.current.set(...pos);
       const camPos = camera.position;
       const dist = camPos.distanceTo(planetWorldPos);
 
-      // Proximity check (audible range scales dynamically based on planet size)
-      const maxAudibleDist = scale * 22.0;
-      let distVol = 0;
-      if (dist < maxAudibleDist) {
-        distVol = 1.0 - dist / maxAudibleDist; // 1.0 at center, 0.0 at max distance
+      let isAllowed = true;
+      if (IS_MOBILE) {
+        const key = `${pos[0]},${pos[1]},${pos[2]}`;
+        activePlanetDistances[key] = dist;
+
+        const sortedKeys = Object.keys(activePlanetDistances).sort((a, b) => activePlanetDistances[a] - activePlanetDistances[b]);
+        isAllowed = sortedKeys.indexOf(key) < 2;
       }
 
-      // Look-at direction check
-      const camDir = camDirRef.current;
-      camera.getWorldDirection(camDir);
-      const toPlanet = toPlanetRef.current.copy(planetWorldPos).sub(camPos).normalize();
-      const dot = camDir.dot(toPlanet);
-
-      let targetVol = 0;
-      if (dot > 0.82 && distVol > 0) {
-        const facingFactor = (dot - 0.82) / 0.18;
-        targetVol = Math.pow(facingFactor, 2.0) * distVol * 0.14; // max volume 0.14
+      if (isAllowed) {
+        startAudio();
+      } else {
+        stopAudio();
       }
 
-      audioNodesRef.current.gainNode.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.15);
+      if (audioNodesRef.current) {
+        const ctx = getGlobalAudioContext();
+        if (ctx) {
+          // Proximity check (audible range scales dynamically based on planet size)
+          const maxAudibleDist = scale * 22.0;
+          let distVol = 0;
+          if (dist < maxAudibleDist) {
+            distVol = 1.0 - dist / maxAudibleDist; // 1.0 at center, 0.0 at max distance
+          }
+
+          // Look-at direction check
+          const camDir = camDirRef.current;
+          camera.getWorldDirection(camDir);
+          const toPlanet = toPlanetRef.current.copy(planetWorldPos).sub(camPos).normalize();
+          const dot = camDir.dot(toPlanet);
+
+          let targetVol = 0;
+          if (dot > 0.82 && distVol > 0) {
+            const facingFactor = (dot - 0.82) / 0.18;
+            targetVol = Math.pow(facingFactor, 2.0) * distVol * 0.14; // max volume 0.14
+          }
+
+          audioNodesRef.current.gainNode.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.15);
+        }
+      }
     }
   });
 

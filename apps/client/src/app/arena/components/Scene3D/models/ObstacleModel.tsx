@@ -4,6 +4,8 @@ import { BoxGeometry, CircleGeometry, CylinderGeometry, DoubleSide, InstancedMes
 import { useFrame } from "@react-three/fiber";
 import { ObstacleState, MapTheme } from "../../../types";
 
+const IS_MOBILE = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+
 const toSceneX = (x: number) => (x / 40) - 10;
 const toSceneZ = (y: number) => (y / 40) - 7.5;
 
@@ -98,6 +100,17 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
             });
         }
         if (mapTheme === 'ICE') {
+            if (IS_MOBILE) {
+                return new MeshStandardMaterial({
+                    color: "#e0f7fa",
+                    emissive: "#0088ff",
+                    emissiveIntensity: 0.2,
+                    metalness: 0.1,
+                    roughness: 0.1,
+                    transparent: true,
+                    opacity: 0.8,
+                });
+            }
             return new MeshPhysicalMaterial({
                 color: "#e0f7fa",
                 emissive: "#0088ff",
@@ -221,16 +234,26 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
     }, [uniforms]);
 
     const lavaPoolMat = useMemo(() => {
-        const mat = new MeshPhysicalMaterial({
-            color: "#ff6a00",
-            emissive: "#ff5500",
-            emissiveIntensity: 1.7,
-            roughness: 0.18,
-            metalness: 0.1,
-            transmission: 0.5,
-            transparent: true,
-            opacity: 0.92,
-        });
+        const mat = IS_MOBILE
+            ? new MeshStandardMaterial({
+                color: "#ff6a00",
+                emissive: "#ff5500",
+                emissiveIntensity: 1.7,
+                roughness: 0.18,
+                metalness: 0.1,
+                transparent: true,
+                opacity: 0.92,
+            })
+            : new MeshPhysicalMaterial({
+                color: "#ff6a00",
+                emissive: "#ff5500",
+                emissiveIntensity: 1.7,
+                roughness: 0.18,
+                metalness: 0.1,
+                transmission: 0.5,
+                transparent: true,
+                opacity: 0.92,
+            });
         mat.onBeforeCompile = (shader) => {
             shader.uniforms.uTime = uniforms.uTime;
             shader.fragmentShader = shader.fragmentShader.replace(
@@ -248,18 +271,31 @@ export const ObstaclesInstanced = memo(function ObstaclesInstanced({ obstacles, 
         return mat;
     }, [uniforms]);
 
-    const icePatchMat = useMemo(() => new MeshPhysicalMaterial({
-        color: "#bfefff",
-        emissive: "#38bdf8",
-        emissiveIntensity: 0.35,
-        metalness: 0.05,
-        roughness: 0.03,
-        clearcoat: 1,
-        clearcoatRoughness: 0.02,
-        transmission: 0.35,
-        transparent: true,
-        opacity: 0.62,
-    }), []);
+    const icePatchMat = useMemo(() => {
+        if (IS_MOBILE) {
+            return new MeshStandardMaterial({
+                color: "#bfefff",
+                emissive: "#38bdf8",
+                emissiveIntensity: 0.35,
+                metalness: 0.05,
+                roughness: 0.03,
+                transparent: true,
+                opacity: 0.62,
+            });
+        }
+        return new MeshPhysicalMaterial({
+            color: "#bfefff",
+            emissive: "#38bdf8",
+            emissiveIntensity: 0.35,
+            metalness: 0.05,
+            roughness: 0.03,
+            clearcoat: 1,
+            clearcoatRoughness: 0.02,
+            transmission: 0.35,
+            transparent: true,
+            opacity: 0.62,
+        });
+    }, []);
 
     useEffect(() => {
         return () => {
