@@ -157,7 +157,7 @@ export function MobileNav() {
                   </div>
 
                   <span
-                    className={`max-[380px]:sr-only max-w-[58px] text-center text-[7.5px] font-bold tracking-wider uppercase transition-colors duration-150 ease-out leading-[0.95] ${isActive ? "text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.4)]" : "text-text-secondary/50"}`}
+                    className={`max-[380px]:sr-only max-w-[58px] text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-150 ease-out leading-[0.95] ${isActive ? "text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.4)]" : "text-text-secondary"}`}
                   >
                     {item.label}
                   </span>
@@ -184,7 +184,7 @@ export function MobileNav() {
               </div>
 
               <span
-                className={`text-[8.5px] font-bold tracking-wider uppercase transition-colors duration-150 ease-out leading-none ${isHubActive || isHubOpen ? "text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.4)]" : "text-text-secondary/50"}`}
+                className={`text-[10px] font-bold tracking-wider uppercase transition-colors duration-150 ease-out leading-none ${isHubActive || isHubOpen ? "text-accent drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.4)]" : "text-text-secondary"}`}
               >
                 SYSTEM
               </span>

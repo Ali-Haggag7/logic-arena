@@ -53,7 +53,7 @@ export const AchievementBadge = ({
       ref={ref}
       onClick={() => setIsOpen(!isOpen)}
       onMouseLeave={() => setIsOpen(false)}
-      className="relative flex items-center justify-center group shrink-0 cursor-pointer"
+      className="relative flex items-center justify-center group shrink-0"
       style={{ width: size, height: size }}
     >
       <div

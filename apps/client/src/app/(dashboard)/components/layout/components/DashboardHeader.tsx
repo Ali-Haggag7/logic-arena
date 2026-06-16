@@ -52,6 +52,7 @@ export function DashboardHeader({ username, avatarUrl }: DashboardHeaderProps) {
           alt="Logic Arena"
           width={50}
           height={50}
+          sizes="50px"
           className="app-logo-img block"
           style={{ objectFit: 'contain' }}
           priority

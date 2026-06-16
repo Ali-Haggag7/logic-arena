@@ -132,6 +132,7 @@ export function ThemeSwitcher({ variant = "default", size = "compact" }: ThemeSw
         <button
           ref={buttonRef}
           type="button"
+          aria-label="Toggle theme"
           onClick={() => setIsOpen(!isOpen)}
           className={variant === "minimal"
             ? minimalButtonClassName

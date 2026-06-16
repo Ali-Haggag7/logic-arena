@@ -13,6 +13,7 @@ export const LandingNavbar = () => {
             alt="Logic Arena logo"
             width={36}
             height={36}
+            sizes="36px"
             priority
             className="shrink-0 transition-transform duration-300 group-hover:scale-110"
           />

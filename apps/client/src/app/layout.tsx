@@ -116,8 +116,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
   viewportFit: "cover",
 };
 
@@ -158,7 +157,7 @@ export default function RootLayout({
         {/* Viewport with safe-area support — required for notch/home-indicator */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover, interactive-widget=overlays-content"
+          content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover, interactive-widget=overlays-content"
         />
 
         <Script

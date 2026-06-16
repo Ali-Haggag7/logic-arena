@@ -80,6 +80,7 @@ export function MobileHeader() {
           alt="Logic Arena"
           width={140}
           height={40}
+          sizes="140px"
           className="app-logo-img block"
           style={{ height: "40px", width: "auto" }}
           unoptimized
