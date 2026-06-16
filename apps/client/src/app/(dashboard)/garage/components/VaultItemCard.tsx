@@ -118,10 +118,10 @@ export function VaultItemCard({
       </div>
 
       {/* Name + description */}
-      <h3 className="text-[11px] font-black tracking-[0.18em] text-accent/90 mb-1 leading-tight">
+      <p className="text-[11px] font-black tracking-[0.18em] text-accent/90 mb-1 leading-tight">
         {item.name}
-      </h3>
-      <p className="text-[9px] text-accent/40 tracking-[0.06em] leading-relaxed flex-1 mb-4">
+      </p>
+      <p className="text-[9px] text-accent/60 tracking-[0.06em] leading-relaxed flex-1 mb-4">
         {item.description}
       </p>
 

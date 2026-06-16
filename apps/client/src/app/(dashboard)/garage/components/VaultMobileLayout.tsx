@@ -157,11 +157,11 @@ export function VaultMobileLayout({
             <div className="w-10 h-1 rounded-full bg-accent/25" />
             <div className="flex items-center gap-1.5 mt-1">
               <ChevronUp
-                className={`w-3.5 h-3.5 text-accent/50 transition-transform duration-200 ${
+                className={`w-3.5 h-3.5 text-accent/70 transition-transform duration-200 ${
                   sheetState === "open" ? "rotate-180" : ""
                 }`}
               />
-              <span className="text-[9px] tracking-[0.2em] text-accent/40 font-mono font-bold uppercase">
+              <span className="text-[9px] tracking-[0.2em] text-accent/60 font-mono font-bold uppercase">
                 {sheetState === "open" ? "collapse" : "loadout"}
               </span>
             </div>
