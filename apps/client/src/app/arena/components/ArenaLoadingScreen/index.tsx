@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DefaultLoadingManager } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { getGlobalAudioContext } from '../../../../context/SoundContext';
@@ -184,6 +184,11 @@ export const ArenaLoadingScreen = ({
   const allReadyExceptAudio = glbProgress === 1 && texturesProgress === 1 && isWebsocketConnected && isInitStateReceived && scriptReady;
   const isFullyLoaded = allReadyExceptAudio && audioReady;
 
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   // Handle completion fade-out
   useEffect((): (() => void) | undefined => {
     let delay: NodeJS.Timeout | undefined;
@@ -193,7 +198,7 @@ export const ArenaLoadingScreen = ({
       delay = setTimeout((): void => {
         setIsFadingOut(true);
         unmountTimer = setTimeout((): void => {
-          onComplete();
+          onCompleteRef.current();
         }, UNMOUNT_TIMER_MS);
       }, FADE_OUT_DELAY_MS);
 
@@ -203,7 +208,7 @@ export const ArenaLoadingScreen = ({
       };
     }
     return undefined;
-  }, [isFullyLoaded, onComplete]);
+  }, [isFullyLoaded]);
 
   return (
     <div className={`${styles.cyberLoaderContainer} ${isFadingOut ? styles.fadeOut : ''}`}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Eye } from 'lucide-react';
@@ -109,6 +109,10 @@ const ArenaPageContent = () => {
 
   const [loadingScreenCompleted, setLoadingScreenCompleted] = useState<boolean>(false);
 
+  const handleLoadingComplete = useCallback((): void => {
+    setLoadingScreenCompleted(true);
+  }, []);
+
   if (error) return <div className="min-h-dvh flex items-center justify-center bg-black text-red-500 font-mono">ERROR 404: {error}</div>;
 
   const robots = uiState?.robots || [];
@@ -161,7 +165,7 @@ const ArenaPageContent = () => {
           uiState={uiState}
           scriptReady={!loading && (isSpectator || !!script)}
           isSpectator={isSpectator}
-          onComplete={(): void => setLoadingScreenCompleted(true)}
+          onComplete={handleLoadingComplete}
         />
       )}
 

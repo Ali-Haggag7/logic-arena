@@ -148,6 +148,7 @@ export const RobotModelInner = memo(({
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh;
         const applyMat = (m: Material) => {
+          if (!m) return m;
           const mat = (m as MeshStandardMaterial).clone();
 
           // Skip tinting for native/default paint — preserve original GLTF materials
@@ -215,14 +216,17 @@ export const RobotModelInner = memo(({
       clonedScene.traverse((child: Object3D) => {
         if ((child as Mesh).isMesh) {
           const mesh = child as Mesh;
-          const disposeMat = (mat: Material) => {
-            (mat as MeshStandardMaterial).map?.dispose();
-            mat.dispose();
-          };
-          if (Array.isArray(mesh.material)) {
-            mesh.material.forEach(disposeMat);
-          } else {
-            disposeMat(mesh.material);
+          if (mesh.material) {
+            const disposeMat = (mat: Material) => {
+              if (mat && typeof mat.dispose === 'function') {
+                mat.dispose();
+              }
+            };
+            if (Array.isArray(mesh.material)) {
+              mesh.material.forEach(disposeMat);
+            } else {
+              disposeMat(mesh.material);
+            }
           }
         }
       });
@@ -427,7 +431,7 @@ export const RobotModelInner = memo(({
   return (
     <group ref={groupRef}>
       <group ref={modelMotionRef}>
-        <primitive object={clonedScene} scale={scale} position={[0, 0, 0]} />
+        <primitive key={clonedScene.uuid} object={clonedScene} scale={scale} position={[0, 0, 0]} />
       </group>
       {inStasis && (
         <pointLight position={[0, 0.4, 0]} intensity={1.0} distance={5} color="#4488ff" />
