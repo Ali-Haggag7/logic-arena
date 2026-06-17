@@ -123,6 +123,39 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const structuredData = JSON.stringify([
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Logic Arena",
+    "url": baseUrl,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${baseUrl}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Logic Arena",
+    "url": baseUrl,
+    "description":
+      "Write code, battle robots, and climb the leaderboard in Logic Arena - the competitive real-time programming battle simulator where your logic controls your robot.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web Browser",
+    "author": { "@type": "Person", "name": "Ali Haggag" },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+    },
+  },
+]);
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -175,48 +208,14 @@ export default function RootLayout({
             gtag('config', 'G-1QN8VTS98H');
           `}
         </Script>
-      </head>
-      <body className="min-h-dvh w-full flex flex-col bg-bg-primary">
-        {/* JSON-LD Structured Data for SEO */}
         <Script
           id="json-ld"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify([
-              {
-                "@context": "https://schema.org",
-                "@type": "WebSite",
-                "name": "Logic Arena",
-                "url": baseUrl,
-                "potentialAction": {
-                  "@type": "SearchAction",
-                  "target": {
-                    "@type": "EntryPoint",
-                    "urlTemplate": `${baseUrl}/search?q={search_term_string}`,
-                  },
-                  "query-input": "required name=search_term_string",
-                },
-              },
-              {
-                "@context": "https://schema.org",
-                "@type": "VideoGame",
-                "name": "Logic Arena",
-                "url": baseUrl,
-                "description":
-                  "Write code, battle robots, and climb the leaderboard in Logic Arena — the competitive real-time programming battle simulator where your logic controls your robot.",
-                "applicationCategory": "GameApplication",
-                "operatingSystem": "Web Browser",
-                "author": { "@type": "Person", "name": "Ali Haggag" },
-                "offers": {
-                  "@type": "Offer",
-                  "price": "0",
-                  "priceCurrency": "USD",
-                },
-              },
-            ]),
-          }}
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: structuredData }}
         />
-
+      </head>
+      <body className="min-h-dvh w-full flex flex-col bg-bg-primary">
         <ThemeProvider>
           <SoundProvider>
           <AuthProvider>

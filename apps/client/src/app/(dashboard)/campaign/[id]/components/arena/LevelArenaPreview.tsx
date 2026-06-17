@@ -1,13 +1,13 @@
 "use client";
 import React, { memo } from "react";
 import dynamic from "next/dynamic";
+import { CAMPAIGN_MATCH_MAX_STEPS } from "@logic-arena/engine/constants";
 import { getSceneForLevel } from "./scenes";
 import type { CampaignFrame, FightResult } from "../../../hooks/useCampaignFight";
 import { BattleHUD } from "../layout/BattleHUD";
 
 const HUD_UPDATE_INTERVAL_MS = 100;
 const DEFAULT_STAT_VALUE = 100;
-const DEFAULT_MAX_TICKS = 1500;
 
 const ArenaCanvas = dynamic(
   () => import("./ArenaCanvas").then((module) => module.ArenaCanvas),
@@ -39,11 +39,14 @@ interface LevelArenaPreviewProps {
   enemyScript?: string;
   onBattleEnd?: (winner: 'player' | 'enemy' | 'draw') => void;
   latestFrameRef?: React.MutableRefObject<CampaignFrame | null>;
+  replayFramesRef?: React.MutableRefObject<CampaignFrame[]>;
   isReplaying?: boolean;
   fightResult?: FightResult | null;
   waitingForReplay?: boolean;
+  serverPaused?: boolean;
+  onPauseFight?: () => void;
+  onResumeFight?: () => void;
   isMobile?: boolean;
-  maxTicks?: number;
   isBossLevel?: boolean;
   bossIntroActive?: boolean;
 }
@@ -56,11 +59,14 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
   enemyScript,
   onBattleEnd,
   latestFrameRef,
+  replayFramesRef,
   isReplaying,
   fightResult,
   waitingForReplay,
+  serverPaused = false,
+  onPauseFight,
+  onResumeFight,
   isMobile = false,
-  maxTicks = DEFAULT_MAX_TICKS,
   isBossLevel = false,
   bossIntroActive = false,
 }: LevelArenaPreviewProps) {
@@ -179,7 +185,7 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
             enemyHealth={hudSnapshot.enemyHealth}
             playerEnergy={hudSnapshot.playerEnergy}
             tick={hudSnapshot.tick}
-            maxTicks={maxTicks}
+            maxTicks={CAMPAIGN_MATCH_MAX_STEPS}
             isMobile={true}
             isBossLevel={isBossLevel}
           />
@@ -194,8 +200,12 @@ export const LevelArenaPreview = memo(function LevelArenaPreview({
           enemyScript={enemyScript}
           onBattleEnd={onBattleEnd}
           latestFrameRef={latestFrameRef}
+          replayFramesRef={replayFramesRef}
           isReplaying={isReplaying}
           fightResult={fightResult}
+          serverPaused={serverPaused}
+          onPauseFight={onPauseFight}
+          onResumeFight={onResumeFight}
           aspectRatio={compact ? 16 / 6 : 16 / 7}
           waitingForReplay={waitingForReplay}
           isBossLevel={isBossLevel}

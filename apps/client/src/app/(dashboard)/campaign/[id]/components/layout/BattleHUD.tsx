@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Skull } from "lucide-react";
+import { Skull, Zap } from "lucide-react";
 
 const MAX_STAT_VALUE = 100;
 const CRITICAL_HEALTH_PERCENT = 30;
@@ -51,11 +51,14 @@ function StatBlock({ label, health, energy, align }: StatBlockProps) {
         />
       </div>
       {energyPercent !== null && (
-        <div className="mt-1 h-1 rounded-full border border-accent/10 bg-bg-primary/70 overflow-hidden">
-          <div
-            className="h-full w-full origin-left bg-accent/60 transition-transform duration-300 ease-out"
-            style={{ transform: `scaleX(${energyPercent / PERCENT_SCALE})` }}
-          />
+        <div className={`mt-1 flex items-center gap-1 ${align === "right" ? "flex-row-reverse" : ""}`}>
+          <Zap className="h-2.5 w-2.5 shrink-0 text-accent/45" aria-hidden="true" />
+          <div className="h-1 flex-1 rounded-full border border-accent/10 bg-bg-primary/70 overflow-hidden">
+            <div
+              className="h-full w-full origin-left bg-accent/60 transition-transform duration-300 ease-out"
+              style={{ transform: `scaleX(${energyPercent / PERCENT_SCALE})` }}
+            />
+          </div>
         </div>
       )}
     </div>

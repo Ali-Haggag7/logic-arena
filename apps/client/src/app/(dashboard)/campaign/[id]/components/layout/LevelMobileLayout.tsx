@@ -32,15 +32,19 @@ interface LevelMobileLayoutProps {
   handleFight: () => void;
   onBattleEnd: (winner: 'player' | 'enemy' | 'draw') => void;
   latestFrameRef?: React.MutableRefObject<CampaignFrame | null>;
+  replayFramesRef?: React.MutableRefObject<CampaignFrame[]>;
   isReplaying?: boolean;
   fightResult?: FightResult | null;
   waitingForReplay?: boolean;
+  serverPaused?: boolean;
+  onPauseFight?: () => void;
+  onResumeFight?: () => void;
   isBossLevel?: boolean;
   bossIntroActive?: boolean;
   router: AppRouterInstance;
 }
 
-export function LevelMobileLayout({ level, script, setScript, modal, handleFight, onBattleEnd, latestFrameRef, isReplaying, fightResult, waitingForReplay, isBossLevel = false, bossIntroActive = false, router }: LevelMobileLayoutProps) {
+export function LevelMobileLayout({ level, script, setScript, modal, handleFight, onBattleEnd, latestFrameRef, replayFramesRef, isReplaying, fightResult, waitingForReplay, serverPaused = false, onPauseFight, onResumeFight, isBossLevel = false, bossIntroActive = false, router }: LevelMobileLayoutProps) {
   const dc = DIFFICULTY_CONFIG[level.difficulty];
   const fightDisabled = !script.trim() || modal === "loading";
 
@@ -149,11 +153,14 @@ export function LevelMobileLayout({ level, script, setScript, modal, handleFight
           userScript={modal === "loading" || modal === "fighting" ? script : undefined}
           onBattleEnd={onBattleEnd}
           latestFrameRef={latestFrameRef}
+          replayFramesRef={replayFramesRef}
           isReplaying={isReplaying}
           fightResult={fightResult}
           waitingForReplay={waitingForReplay}
+          serverPaused={serverPaused}
+          onPauseFight={onPauseFight}
+          onResumeFight={onResumeFight}
           isMobile
-          maxTicks={level.maxTicks}
           isBossLevel={isBossLevel}
           bossIntroActive={bossIntroActive}
           compact

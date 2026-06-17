@@ -21,6 +21,7 @@ const BOSS_INTRO_SHAKE_MS = 560;
 
 interface CompleteLevelResponse {
   pointsAwarded?: number;
+  alreadyClaimed?: boolean;
   stars?: number;
 }
 
@@ -40,7 +41,16 @@ export default function CampaignLevelPageClient() {
   const [pendingWinner, setPendingWinner] = useState<'player' | 'enemy' | 'draw' | null>(null);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
   const [bossIntroActive, setBossIntroActive] = useState(false);
-  const { fight, status: fightStatus, result: fightResult, latestFrameRef } = useCampaignFight();
+  const {
+    fight,
+    status: fightStatus,
+    result: fightResult,
+    latestFrameRef,
+    replayFramesRef,
+    serverPaused,
+    pauseFight,
+    resumeFight,
+  } = useCampaignFight();
   const { prefetchNextLevel } = useCampaignPrefetch();
   const fightStartTimeMsRef = useRef<number>(0);
   const fightStartTickRef = useRef<number>(0);
@@ -171,7 +181,6 @@ export default function CampaignLevelPageClient() {
     if (!winner) return;
     if (winner === 'draw') { setModal("draw"); return; }
     if (winner === 'enemy') { setModal("defeat"); return; }
-    setModal("victory");
 
     if (pendingToken) {
       const fightDurationTicks = fightEndTickRef.current || getFightDurationTicks();
@@ -179,16 +188,33 @@ export default function CampaignLevelPageClient() {
         .then((res) => {
           const pts = res.data?.pointsAwarded ?? level?.pointsReward ?? DEFAULT_REWARD;
           const awardedStars = res.data?.stars ?? DEFAULT_STARS;
+          const displayedStars = Math.max(level?.bestStars ?? DEFAULT_STARS, awardedStars);
           setReward(pts);
-          setStars(awardedStars);
+          setStars(displayedStars);
+          if (level) {
+            const completedLevel = {
+              ...level,
+              completed: true,
+              bestStars: displayedStars,
+            };
+            setLevel(completedLevel);
+            cacheCampaignLevel(completedLevel);
+          }
+          setModal("victory");
           window.dispatchEvent(new Event("global-refresh"));
           router.refresh();
         })
         .catch(() => {
           setReward(level?.pointsReward ?? DEFAULT_REWARD);
-          setStars(DEFAULT_STARS);
+          setStars(level?.bestStars ?? DEFAULT_STARS);
+          setModal("victory");
         });
+      return;
     }
+
+    setReward(DEFAULT_REWARD);
+    setStars(level?.bestStars ?? DEFAULT_STARS);
+    setModal("victory");
   }, [pendingWinner, pendingToken, levelId, level, getFightDurationTicks, router]);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -244,9 +270,13 @@ export default function CampaignLevelPageClient() {
           handleFight={handleFight}
           onBattleEnd={handleBattleEnd}
           latestFrameRef={latestFrameRef}
+          replayFramesRef={replayFramesRef}
           isReplaying={isReplaying}
           fightResult={fightResult}
           waitingForReplay={waitingForReplay}
+          serverPaused={serverPaused}
+          onPauseFight={pauseFight}
+          onResumeFight={resumeFight}
           isBossLevel={isBossLevel}
           bossIntroActive={bossIntroActive}
           router={router}
@@ -260,9 +290,13 @@ export default function CampaignLevelPageClient() {
           handleFight={handleFight}
           onBattleEnd={handleBattleEnd}
           latestFrameRef={latestFrameRef}
+          replayFramesRef={replayFramesRef}
           isReplaying={isReplaying}
           fightResult={fightResult}
           waitingForReplay={waitingForReplay}
+          serverPaused={serverPaused}
+          onPauseFight={pauseFight}
+          onResumeFight={resumeFight}
           isBossLevel={isBossLevel}
           bossIntroActive={bossIntroActive}
           router={router}

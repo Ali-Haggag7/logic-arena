@@ -4,6 +4,7 @@ import { RedisService } from '../../../common/redis.service';
 import { CampaignService } from '../../campaign/campaign.service';
 import { checkWinCondition } from './match.win-condition';
 import { AuthenticatedSocket } from './types';
+import { CAMPAIGN_MATCH_MAX_STEPS } from '@logic-arena/engine/constants';
 import type { Obstacle, ObstacleType } from '@logic-arena/engine';
 
 type CampaignObstaclePayload = {
@@ -14,6 +15,51 @@ type CampaignObstaclePayload = {
   type?: ObstacleType;
 };
 
+type CampaignWinner = 'player' | 'enemy' | 'draw';
+
+type CampaignFramePayload = {
+  robots: Array<{
+    id: string;
+    position: { x: number; y: number };
+    rotation: number;
+    health: number;
+    energy?: number;
+    isAlive: boolean;
+    color?: string;
+    tracerColor?: string;
+    scanActive: boolean;
+  }>;
+  projectiles: Array<{
+    id: string | number;
+    position: { x: number; y: number };
+    ownerId?: string;
+    color?: string;
+  }>;
+  tick: number;
+};
+
+export type CampaignPauseState = {
+  paused: boolean;
+  tick: number;
+};
+
+export type CampaignSession = {
+  interval: NodeJS.Timeout;
+  paused: boolean;
+  engine: MatchEngine;
+  stepCount: number;
+  logicCounter: number;
+  simulationTimeMs: number;
+  winner: CampaignWinner;
+  matchOver: boolean;
+  lastScanTicks: Map<string, number>;
+  totalPausedMs: number;
+  pauseStartedAt: number | null;
+  client: AuthenticatedSocket;
+  userId: string;
+  levelId: string;
+};
+
 export type CampaignFightData = {
   levelId: string;
   userScript: string;
@@ -22,11 +68,23 @@ export type CampaignFightData = {
   enemySpawn?: { x: number; y: number; angle?: number };
 };
 
+const ARENA_W = 800;
+const ARENA_H = 600;
+const FIXED_DT = 1 / 60;
+const MS_PER_STEP = FIXED_DT * 1000;
+const LOGIC_EVERY = 6;
+const INTERVAL_MS = 50;
+const CAMPAIGN_FRAME_STEPS = 3;
+const SCAN_ACTIVE_TICKS = 3;
+const STALE_SCAN_TICK = -999;
+const DEFAULT_PLAYER_SPAWN = { x: 275, y: 300, angle: 0 };
+const DEFAULT_ENEMY_SPAWN = { x: 525, y: 300, angle: Math.PI };
+
 export class CampaignFightRunner {
   constructor(
     private campaignService: CampaignService,
     private redisService: RedisService,
-    private campaignIntervals: Map<string, NodeJS.Timeout>,
+    private campaignSessions: Map<string, CampaignSession>,
   ) {}
 
   async handle(
@@ -68,15 +126,10 @@ export class CampaignFightRunner {
       return;
     }
 
-    const existing = this.campaignIntervals.get(userId);
-    if (existing) clearInterval(existing);
+    this.clearSession(userId);
 
-    const CAMPAIGN_PLAYER_SPAWN = playerSpawn ?? { x: 275, y: 300, angle: 0 };
-    const CAMPAIGN_ENEMY_SPAWN = enemySpawn ?? {
-      x: 525,
-      y: 300,
-      angle: Math.PI,
-    };
+    const CAMPAIGN_PLAYER_SPAWN = playerSpawn ?? DEFAULT_PLAYER_SPAWN;
+    const CAMPAIGN_ENEMY_SPAWN = enemySpawn ?? DEFAULT_ENEMY_SPAWN;
 
     const playerFacing =
       typeof CAMPAIGN_PLAYER_SPAWN.angle === 'number'
@@ -93,8 +146,6 @@ export class CampaignFightRunner {
             CAMPAIGN_PLAYER_SPAWN.x - CAMPAIGN_ENEMY_SPAWN.x,
           );
 
-    const ARENA_W = 800;
-    const ARENA_H = 600;
     const mappedObstacles: Obstacle[] = obstacles.map(
       (o: CampaignObstaclePayload) => ({
         id: `scene-obs-${Math.random().toString(36).slice(2, 7)}`,
@@ -105,17 +156,6 @@ export class CampaignFightRunner {
         rotation: 0,
       }),
     );
-
-    const FIXED_DT = 1 / 60;
-    const MS_PER_STEP = FIXED_DT * 1000;
-    const MAX_STEPS = 60 * 60;
-    const LOGIC_EVERY = 6;
-
-    let stepCount = 0;
-    let logicCounter = 0;
-    let simulationTimeMs = 0;
-    let winner: string = 'draw';
-    let matchOver = false;
 
     const lastScanTicks = new Map<string, number>();
 
@@ -142,7 +182,8 @@ export class CampaignFightRunner {
           payload.action === 'SCAN' &&
           typeof payload.robotId === 'string'
         ) {
-          lastScanTicks.set(payload.robotId, stepCount);
+          const session = this.campaignSessions.get(userId);
+          lastScanTicks.set(payload.robotId, session?.stepCount ?? 0);
         }
       },
     );
@@ -154,86 +195,179 @@ export class CampaignFightRunner {
       campaignEnemy.ignoreEnergyCost = true;
     }
 
-    const emitFrame = () => {
-      const state = engine.getState();
-      return {
-        robots: state.robots.map((r) => ({
-          id: r.id,
-          position: { x: r.position.x, y: r.position.y },
-          rotation: r.rotation,
-          health: r.health,
-          energy: r.energy,
-          isAlive: r.isAlive,
-          color: r.color,
-          tracerColor: r.tracerColor,
-          scanActive: stepCount - (lastScanTicks.get(r.id) ?? -999) < 3,
-        })),
-        projectiles: state.projectiles.map((p) => ({
-          id: p.id,
-          position: { x: p.position.x, y: p.position.y },
-          ownerId: p.ownerId,
-          color: p.color,
-        })),
-        tick: stepCount,
-      };
+    const session: CampaignSession = {
+      interval: setInterval(() => {
+        void this.advanceSession(userId);
+      }, INTERVAL_MS),
+      paused: false,
+      engine,
+      stepCount: 0,
+      logicCounter: 0,
+      simulationTimeMs: 0,
+      winner: 'draw',
+      matchOver: false,
+      lastScanTicks,
+      totalPausedMs: 0,
+      pauseStartedAt: null,
+      client,
+      userId,
+      levelId,
     };
 
-    client.emit('campaignFrame', emitFrame());
+    this.campaignSessions.set(userId, session);
+    client.emit('campaignFrame', this.createFrame(session));
+    client.emit('campaign:pause-state', this.createPauseState(session));
+  }
 
-    const interval = setInterval(async () => {
-      if (matchOver) return;
+  pause(client: AuthenticatedSocket): CampaignPauseState | null {
+    const session = this.getSessionForClient(client);
+    if (!session || session.matchOver) return null;
 
-      for (let i = 0; i < 3; i++) {
-        simulationTimeMs += MS_PER_STEP;
-        engine.setVirtualTime(simulationTimeMs);
-        engine.getGameLoop().update(FIXED_DT);
+    if (!session.paused) {
+      session.paused = true;
+      session.pauseStartedAt = Date.now();
+    }
 
-        logicCounter++;
-        if (logicCounter >= LOGIC_EVERY) {
-          logicCounter = 0;
-          engine.tick();
-        }
+    const state = this.createPauseState(session);
+    session.client.emit('campaign:pause-state', state);
+    return state;
+  }
 
-        stepCount++;
-        if (stepCount >= MAX_STEPS) {
-          matchOver = true;
-          break;
-        }
+  resume(client: AuthenticatedSocket): CampaignPauseState | null {
+    const session = this.getSessionForClient(client);
+    if (!session || session.matchOver) return null;
+
+    if (session.paused && session.pauseStartedAt !== null) {
+      const pausedDuration = Date.now() - session.pauseStartedAt;
+      session.totalPausedMs += pausedDuration;
+      session.engine.shiftTimestamps(pausedDuration);
+    }
+
+    session.paused = false;
+    session.pauseStartedAt = null;
+    const state = this.createPauseState(session);
+    session.client.emit('campaign:pause-state', state);
+    return state;
+  }
+
+  clearSession(userId: string): void {
+    const session = this.campaignSessions.get(userId);
+    if (!session) return;
+
+    clearInterval(session.interval);
+    this.campaignSessions.delete(userId);
+  }
+
+  clearAllSessions(): void {
+    for (const session of this.campaignSessions.values()) {
+      clearInterval(session.interval);
+    }
+    this.campaignSessions.clear();
+  }
+
+  private async advanceSession(userId: string): Promise<void> {
+    const session = this.campaignSessions.get(userId);
+    if (!session || session.matchOver || session.paused) return;
+
+    for (let i = 0; i < CAMPAIGN_FRAME_STEPS; i++) {
+      session.simulationTimeMs += MS_PER_STEP;
+      session.engine.setVirtualTime(session.simulationTimeMs);
+      session.engine.getGameLoop().update(FIXED_DT);
+
+      session.logicCounter++;
+      if (session.logicCounter >= LOGIC_EVERY) {
+        session.logicCounter = 0;
+        session.engine.tick();
       }
 
-      client.emit('campaignFrame', emitFrame());
+      session.stepCount++;
+      if (session.stepCount >= CAMPAIGN_MATCH_MAX_STEPS) {
+        session.matchOver = true;
+        break;
+      }
+    }
 
-      const state = engine.getState();
-      const { matchIsOver, winner: matchWinner } = checkWinCondition(
-        state,
-        'COMBAT',
+    session.client.emit('campaignFrame', this.createFrame(session));
+
+    const state = session.engine.getState();
+    const { matchIsOver, winner: matchWinner } = checkWinCondition(
+      state,
+      'COMBAT',
+    );
+
+    if (matchIsOver) {
+      session.matchOver = true;
+      if (matchWinner) {
+        session.winner = matchWinner.id === 'player' ? 'player' : 'enemy';
+      }
+    }
+
+    if (session.matchOver) {
+      await this.finishSession(session);
+    }
+  }
+
+  private async finishSession(session: CampaignSession): Promise<void> {
+    clearInterval(session.interval);
+    this.campaignSessions.delete(session.userId);
+
+    let completionToken: string | null = null;
+    if (session.winner === 'player' && !session.client.isGuest) {
+      completionToken = crypto.randomUUID();
+      await this.redisService.set(
+        `campaign:token:${session.userId}:${session.levelId}`,
+        completionToken,
+        120,
       );
+    }
 
-      if (matchIsOver) {
-        matchOver = true;
-        if (matchWinner) {
-          winner = matchWinner.id === 'player' ? 'player' : 'enemy';
-        }
-      }
+    session.client.emit('campaignFightResult', {
+      winner: session.winner,
+      completionToken,
+      tick: session.stepCount,
+      fightDurationTicks: session.stepCount,
+    });
+  }
 
-      if (matchOver) {
-        clearInterval(interval);
-        this.campaignIntervals.delete(userId);
+  private createFrame(session: CampaignSession): CampaignFramePayload {
+    const state = session.engine.getState();
+    return {
+      robots: state.robots.map((r) => ({
+        id: r.id,
+        position: { x: r.position.x, y: r.position.y },
+        rotation: r.rotation,
+        health: r.health,
+        energy: r.energy,
+        isAlive: r.isAlive,
+        color: r.color,
+        tracerColor: r.tracerColor,
+        scanActive:
+          session.stepCount -
+            (session.lastScanTicks.get(r.id) ?? STALE_SCAN_TICK) <
+          SCAN_ACTIVE_TICKS,
+      })),
+      projectiles: state.projectiles.map((p) => ({
+        id: p.id,
+        position: { x: p.position.x, y: p.position.y },
+        ownerId: p.ownerId,
+        color: p.color,
+      })),
+      tick: session.stepCount,
+    };
+  }
 
-        let completionToken: string | null = null;
-        if (winner === 'player' && !client.isGuest) {
-          completionToken = crypto.randomUUID();
-          await this.redisService.set(
-            `campaign:token:${userId}:${levelId}`,
-            completionToken,
-            120,
-          );
-        }
+  private createPauseState(session: CampaignSession): CampaignPauseState {
+    return {
+      paused: session.paused,
+      tick: session.stepCount,
+    };
+  }
 
-        client.emit('campaignFightResult', { winner, completionToken });
-      }
-    }, 50);
-
-    this.campaignIntervals.set(userId, interval);
+  private getSessionForClient(
+    client: AuthenticatedSocket,
+  ): CampaignSession | null {
+    const userId = client.isGuest ? 'guest' : client.userId;
+    if (!userId) return null;
+    return this.campaignSessions.get(userId) ?? null;
   }
 }

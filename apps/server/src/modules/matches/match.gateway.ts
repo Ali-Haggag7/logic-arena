@@ -25,6 +25,8 @@ import { authenticateSocket } from './gateway/match.auth';
 import {
   CampaignFightRunner,
   CampaignFightData,
+  CampaignPauseState,
+  CampaignSession,
 } from './gateway/match.campaign';
 import { CleanupManager } from './gateway/match.cleanup';
 import { SpectatorManager } from './gateway/match.spectator';
@@ -52,7 +54,7 @@ export class MatchGateway
   private lobbyManager!: MatchLobbyManager;
   private socialManager!: MatchSocialManager;
   private loopManager!: MatchLoopManager;
-  private campaignIntervals = new Map<string, NodeJS.Timeout>();
+  private campaignSessions = new Map<string, CampaignSession>();
   private campaignRunner!: CampaignFightRunner;
   private cleanupManager!: CleanupManager;
   private spectatorManager!: SpectatorManager;
@@ -97,7 +99,7 @@ export class MatchGateway
     this.campaignRunner = new CampaignFightRunner(
       this.campaignService,
       this.redisService,
-      this.campaignIntervals,
+      this.campaignSessions,
     );
     this.friendsGateway.bindServer(this.server);
     this.loopManager.startLoop();
@@ -106,9 +108,7 @@ export class MatchGateway
   onModuleDestroy() {
     this.loopManager?.stopLoop();
     this.cleanupManager.clearAll();
-    for (const interval of this.campaignIntervals.values())
-      clearInterval(interval);
-    this.campaignIntervals.clear();
+    this.campaignRunner?.clearAllSessions();
     for (const [matchId, match] of this.state.matches.entries()) {
       match.stop();
       this.state.cleanupMatch(matchId);
@@ -132,11 +132,7 @@ export class MatchGateway
         const isActuallyOffline =
           (await this.server.in(client.userId!).fetchSockets()).length === 0;
         if (isActuallyOffline) {
-          const ci = this.campaignIntervals.get(client.userId!);
-          if (ci) {
-            clearInterval(ci);
-            this.campaignIntervals.delete(client.userId!);
-          }
+          this.campaignRunner.clearSession(client.userId!);
           await this.redisService.del(`user:online:${client.userId}`);
 
           if (!client.isSpectator) {
@@ -363,5 +359,19 @@ export class MatchGateway
     @MessageBody() data: CampaignFightData,
   ) {
     return this.campaignRunner.handle(client, data);
+  }
+
+  @SubscribeMessage('campaign:pause')
+  handleCampaignPause(
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ): CampaignPauseState | null {
+    return this.campaignRunner.pause(client);
+  }
+
+  @SubscribeMessage('campaign:resume')
+  handleCampaignResume(
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ): CampaignPauseState | null {
+    return this.campaignRunner.resume(client);
   }
 }

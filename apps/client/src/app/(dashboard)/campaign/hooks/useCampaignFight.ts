@@ -43,6 +43,29 @@ export type CampaignFrame = {
   tick?: number;
 };
 
+export type CampaignPauseState = {
+  paused: boolean;
+  tick: number;
+};
+
+function cloneCampaignFrame(frame: CampaignFrame): CampaignFrame {
+  return {
+    tick: frame.tick,
+    robots: frame.robots?.map((robot) => ({
+      ...robot,
+      position: robot.position
+        ? { x: robot.position.x, y: robot.position.y }
+        : undefined,
+    })),
+    projectiles: frame.projectiles?.map((projectile) => ({
+      ...projectile,
+      position: projectile.position
+        ? { x: projectile.position.x, y: projectile.position.y }
+        : undefined,
+    })),
+  };
+}
+
 function buildWsUrl(): string {
   return API_BASE_URL
     .replace('https://', 'wss://')
@@ -54,7 +77,9 @@ export function useCampaignFight() {
   const socketRef = useRef<Socket | null>(null);
   const [status, setStatus] = useState<FightStatus>('idle');
   const [result, setResult] = useState<FightResult | null>(null);
+  const [serverPaused, setServerPaused] = useState(false);
   const latestFrameRef = useRef<CampaignFrame | null>(null);
+  const replayFramesRef = useRef<CampaignFrame[]>([]);
 
   // ── Connect once on mount, reuse across fights ────────────────────────────
   useEffect(() => {
@@ -68,16 +93,23 @@ export function useCampaignFight() {
 
     socket.on('campaignFrame', (frame: CampaignFrame) => {
       latestFrameRef.current = frame;
+      replayFramesRef.current.push(cloneCampaignFrame(frame));
       setStatus('streaming');
+    });
+
+    socket.on('campaign:pause-state', (data: CampaignPauseState) => {
+      setServerPaused(data.paused);
     });
 
     socket.on('campaignFightResult', (data: FightResult) => {
       setResult(data);
+      setServerPaused(false);
       setStatus('done');
     });
 
     socket.on('campaignFightError', (data: { message: string }) => {
       console.error('[campaignFight] error:', data.message);
+      setServerPaused(false);
       setStatus('error');
     });
 
@@ -103,7 +135,9 @@ export function useCampaignFight() {
     if (!socket) return;
 
     latestFrameRef.current = null;
+    replayFramesRef.current = [];
     setResult(null);
+    setServerPaused(false);
 
     if (!socket.connected) {
       setStatus('connecting');
@@ -118,5 +152,22 @@ export function useCampaignFight() {
     }
   }, []);
 
-  return { fight, status, result, latestFrameRef };
+  const pauseFight = useCallback((): void => {
+    socketRef.current?.emit('campaign:pause');
+  }, []);
+
+  const resumeFight = useCallback((): void => {
+    socketRef.current?.emit('campaign:resume');
+  }, []);
+
+  return {
+    fight,
+    status,
+    result,
+    latestFrameRef,
+    replayFramesRef,
+    serverPaused,
+    pauseFight,
+    resumeFight,
+  };
 }

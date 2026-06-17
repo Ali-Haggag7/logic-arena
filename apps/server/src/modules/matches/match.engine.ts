@@ -341,6 +341,26 @@ export class MatchEngine {
     this.deps.actionExecutor.setVirtualTime(ms);
   }
 
+  /** Shift raw wall-clock timestamps forward after a campaign pause. */
+  shiftTimestamps(offsetMs: number): void {
+    if (offsetMs <= 0) return;
+
+    for (const robot of this.gameLoop.getRobots()) {
+      if (typeof robot.hitWallTimestamp === 'number') {
+        robot.hitWallTimestamp += offsetMs;
+      }
+      if (typeof robot.shieldHitTimestamp === 'number') {
+        robot.shieldHitTimestamp += offsetMs;
+      }
+    }
+
+    for (const obstacle of this.gameLoop.getObstacles()) {
+      if (obstacle.type === 'MINE' && typeof obstacle.createdAt === 'number') {
+        obstacle.createdAt += offsetMs;
+      }
+    }
+  }
+
   getState() {
     return this.gameLoop.getGameState();
   }

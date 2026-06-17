@@ -1,4 +1,4 @@
-import { FovConfig, Obstacle } from './types';
+import type { FovConfig, Obstacle } from './types';
 
 export const ARENA_WIDTH = 800;
 export const ARENA_HEIGHT = 600;
@@ -107,3 +107,5 @@ export const RACING_OBSTACLES: Obstacle[] = [
 ];
 
 export const LAVA_DPS = 5; // HP per second deducted while inside a LAVA zone
+
+export const CAMPAIGN_MATCH_MAX_STEPS = 60 * 60;
