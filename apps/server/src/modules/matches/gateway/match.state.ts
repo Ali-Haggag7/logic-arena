@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MatchEngine } from '../match.engine';
-import { ModeData } from '@logic-arena/engine';
+import { ModeData, type AIDifficulty } from '@logic-arena/engine';
 
 export type ArenaMatchMode = 'CLASSIC' | 'TACTICAL';
 export type ArenaMatchPhase = 'WAITING' | 'ROUND_ACTIVE' | 'BREAK' | 'FINISHED';
@@ -41,6 +41,7 @@ export class MatchState {
   roundConfigs = new Map<string, TacticalRoundConfig>();
   dummyKilledThisTick = new Map<string, Set<string>>();
   modeDataMap = new Map<string, ModeData>();
+  aiDifficulty = new Map<string, AIDifficulty | null>();
 
   /** Tracks per-user match status for the leaderboard presence system */
   userStatus = new Map<string, UserMatchStatus>();
@@ -65,5 +66,6 @@ export class MatchState {
     this.dummyKilledThisTick.delete(matchId);
     this.spectatorSockets.delete(matchId);
     this.modeDataMap.delete(matchId);
+    this.aiDifficulty.delete(matchId);
   }
 }

@@ -271,6 +271,8 @@ export type GameMode =
 
 export type MapTheme = 'CYBER' | 'LAVA' | 'ICE';
 
+export type AIDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface GameConfig {
   mode?: GameMode;
   mapTheme?: MapTheme;

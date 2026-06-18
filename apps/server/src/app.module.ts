@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import {
+  ThrottlerModule,
+  ThrottlerGuard,
+  type ThrottlerModuleOptions,
+} from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,16 +23,34 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AchievementsModule } from './modules/achievements/achievements.module';
 import { FriendsModule } from './modules/friends/friends.module';
 
+/**
+ * Returns throttler config that bypasses limits in dev when THROTTLE_SKIP=true.
+ */
+function throttlerConfig(): ThrottlerModuleOptions {
+  const skip =
+    process.env.THROTTLE_SKIP === 'true' &&
+    process.env.NODE_ENV !== 'production';
+
+  if (skip) {
+    return [
+      { name: 'global', ttl: 1, limit: 999_999 },
+      { name: 'auth', ttl: 1, limit: 999_999 },
+    ];
+  }
+
+  return [
+    { name: 'global', ttl: 60_000, limit: 60 },
+    { name: 'auth', ttl: 900_000, limit: 5 },
+  ];
+}
+
 @Module({
   imports: [
     // ── Global Redis (singleton) ─────────────────────────────────────────────
     RedisModule,
 
     // ── Rate-limiting ────────────────────────────────────────────────────────
-    ThrottlerModule.forRoot([
-      { name: 'global', ttl: 60_000, limit: 60 }, // 60 req / min
-      { name: 'auth', ttl: 900_000, limit: 5 }, // 5 req / 15 min (auth only)
-    ]),
+    ThrottlerModule.forRoot(throttlerConfig()),
 
     // ── Feature modules ──────────────────────────────────────────────────────
     AuthModule,

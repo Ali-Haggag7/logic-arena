@@ -4,6 +4,7 @@ import { apiClient } from "../../../../lib/api-client";
 import { RobotScript } from "../components/script-card/types";
 import { useAuthState } from "../../../../hooks/useAuthState";
 import { setSelectedScriptId, getSelectedScriptId } from "../../../../lib/client-security";
+import type { AIDifficulty } from "@logic-arena/engine";
 import { useSafeTimeout } from "../../../../hooks/useSafeTimeout";
 
 export type GameMode = "COMBAT" | "SURVIVAL" | "CAPTURE_THE_FLAG" | "KING_OF_THE_HILL" | "RACING" | "TRAINING_SOLO";
@@ -125,6 +126,23 @@ export function useScripts() {
         router.push(`/arena?scriptId=${scriptId}&mode=${selectedMode}&theme=${selectedTheme}&matchMode=${matchMode}`);
     }, [router, selectedMode, selectedTheme, scripts]);
 
+    const handleGoToArenaAI = useCallback((mode: GameMode, difficulty: AIDifficulty) => {
+        let scriptId = getSelectedScriptId();
+        if (!scriptId && scripts.length > 0) {
+            scriptId = scripts[0].id;
+            setSelectedScriptId(scriptId);
+        }
+        if (!scriptId) {
+            setStatus({ message: "[ERR] No script selected. Create or select a script first.", type: "error" });
+            clearStatusAfter(3000);
+            return;
+        }
+        const script = scripts.find((s) => s.id === scriptId);
+        const matchMode = script?.matchMode || "HYBRID";
+        const matchId = crypto.randomUUID();
+        router.push(`/arena?scriptId=${scriptId}&matchId=${matchId}&mode=${mode}&theme=${selectedTheme}&matchMode=${matchMode}&aiDifficulty=${difficulty}`);
+    }, [router, selectedTheme, scripts, clearStatusAfter]);
+
     const handleGoToLobby = useCallback((scriptId: string) => {
         setSelectedScriptId(scriptId);
         router.push("/lobby");
@@ -223,6 +241,7 @@ export function useScripts() {
         setShowAuthModal,
         handleCreateScript,
         handleGoToArena,
+        handleGoToArenaAI,
         handleGoToLobby,
         handleEditScript,
         handleOptimisticUpdate,

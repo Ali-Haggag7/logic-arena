@@ -7,6 +7,7 @@ import { checkWinCondition } from './match.win-condition';
 import { persistMatchResults } from './match.persistence';
 import { computeDeltaDiff, generateSafeSnapshot } from './match.delta-diff';
 import { AchievementsService } from '../../achievements/achievements.service';
+import { calculateAiMatchPoints } from '../ai-points';
 
 const ROUND_START_COUNTDOWN_SECONDS = 3;
 const SECONDS_PER_MS = 1000;
@@ -87,11 +88,37 @@ export class MatchLoopManager {
             this.achievementsService,
           );
 
+          // ── AI match points ──────────────────────────────────────────
+          const aiDifficulty = this.state.aiDifficulty.get(matchId);
+          let aiPoints: ReturnType<typeof calculateAiMatchPoints> | null = null;
+          if (aiDifficulty) {
+            const liveRobots = state.robots;
+            const playerId = liveRobots.find(
+              (r) => !r.id.startsWith('bot-') && !r.id.startsWith('dummy-'),
+            )?.id;
+            const playerRobot = liveRobots.find((r) => r.id === playerId);
+            const durationSecs = match.getDuration();
+            aiPoints = calculateAiMatchPoints(
+              mode,
+              aiDifficulty,
+              playerRobot,
+              state.modeData,
+              durationSecs,
+            );
+            if (aiPoints.pointsAwarded > 0 && playerId) {
+              await this.prisma.user.update({
+                where: { id: playerId },
+                data: { points: { increment: aiPoints.pointsAwarded } },
+              });
+            }
+          }
+
           this.server.to(matchId).emit('matchOver', {
             winner: winner ? { id: winner.id, color: winner.color } : null,
             draw: !winner && mode !== 'RACING',
             efficiencyScores,
             playerStats: persistenceResult?.playerStats || {},
+            aiPoints: aiPoints,
           });
 
           match.stop();

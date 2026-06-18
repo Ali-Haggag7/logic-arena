@@ -22,6 +22,8 @@ import {
 import { MatchHazards } from './match-hazards';
 import { MatchModeManager } from './match-modes';
 
+const TICK_INTERVAL_MS = 100;
+
 export class MatchEngine {
   private readonly logger = new Logger(MatchEngine.name);
   private gameLoop: GameLoop;
@@ -41,6 +43,7 @@ export class MatchEngine {
   private config?: GameConfig;
   private readonly mapTheme: MapTheme;
   private tickCount: number = 0;
+  private durationMs: number = 0;
 
   /** Accumulate match-level tracking for efficiency score */
   private lastTickTime: number = Date.now();
@@ -131,8 +134,9 @@ export class MatchEngine {
     this.start();
   }
 
-  start(tickRate: number = 100): void {
+  start(tickRate: number = TICK_INTERVAL_MS): void {
     if (this.tickInterval) return;
+    this.durationMs = 0;
     this.gameLoop.start();
     this.lastTickTime = Date.now();
     this.tickInterval = setInterval(() => this.tick(), tickRate);
@@ -154,6 +158,7 @@ export class MatchEngine {
   tick(): void {
     try {
       this.tickCount += 1;
+      this.durationMs += TICK_INTERVAL_MS;
       this.hazards.processHazards(
         this.gameLoop.getObstacles(),
         this.gameLoop.getRobots(),
@@ -363,6 +368,10 @@ export class MatchEngine {
 
   getState() {
     return this.gameLoop.getGameState();
+  }
+
+  getDuration(): number {
+    return this.durationMs;
   }
 
   getInitialPlayers(): {

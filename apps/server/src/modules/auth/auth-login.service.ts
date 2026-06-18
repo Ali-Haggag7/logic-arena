@@ -40,7 +40,11 @@ export class AuthLoginService {
     if (!user || !isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    if (!user.isVerified) {
+    const skipVerify =
+      process.env.THROTTLE_SKIP === 'true' &&
+      process.env.NODE_ENV !== 'production';
+
+    if (!user.isVerified && !skipVerify) {
       throw new UnauthorizedException('Please verify your email first');
     }
 

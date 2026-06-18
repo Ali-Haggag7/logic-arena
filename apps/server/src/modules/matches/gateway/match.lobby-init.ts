@@ -4,7 +4,7 @@ import { RedisService } from '../../../common/redis.service';
 import { MatchState } from './match.state';
 import { AuthenticatedSocket } from './types';
 import { MatchEngine } from '../match.engine';
-import { GameMode, MapTheme } from '@logic-arena/engine';
+import { GameMode, MapTheme, AIDifficulty, AI_SCRIPTS } from '@logic-arena/engine';
 import { BLACK_MARKET_ITEMS } from '../../users/black-market.constants';
 import { combatLoadoutKey } from '../../users/types';
 
@@ -81,9 +81,15 @@ export async function createAndStartMatch(
   mode: GameMode,
   matchMode: 'CLASSIC' | 'TACTICAL' | 'HYBRID' = 'CLASSIC',
   mapTheme: MapTheme = 'CYBER',
+  aiDifficulty?: AIDifficulty | null,
 ): Promise<MatchEngine> {
   const engineMode: GameMode =
     mode === 'CLASSIC' || mode === 'TACTICAL' ? 'COMBAT' : mode;
+
+  const aiScript = aiDifficulty
+    ? AI_SCRIPTS[engineMode]?.[aiDifficulty] ?? ''
+    : '';
+
   let initialPlayers: {
     id: string;
     script: string;
@@ -95,7 +101,14 @@ export async function createAndStartMatch(
   }[];
 
   if (engineMode === 'RACING') {
-    initialPlayers = [playerToken];
+    if (aiScript) {
+      initialPlayers = [
+        playerToken,
+        { id: 'bot-2', script: aiScript, color: '#ff00ff', model: 'unit-02' },
+      ];
+    } else {
+      initialPlayers = [playerToken];
+    }
   } else if (engineMode === 'TRAINING_SOLO') {
     initialPlayers = [
       playerToken,
@@ -114,7 +127,7 @@ export async function createAndStartMatch(
       },
       {
         id: 'bot-2',
-        script: '',
+        script: aiScript,
         color: '#ff00ff',
         model: 'unit-02',
         spawnPosition: { x: 700, y: 300 },
@@ -125,7 +138,7 @@ export async function createAndStartMatch(
     // COMBAT and KING_OF_THE_HILL
     initialPlayers = [
       playerToken,
-      { id: 'bot-2', script: '', color: '#ff00ff', model: 'unit-02' },
+      { id: 'bot-2', script: aiScript, color: '#ff00ff', model: 'unit-02' },
     ];
   }
 

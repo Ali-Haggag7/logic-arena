@@ -200,6 +200,7 @@ export class MatchGateway
       matchId: string;
       scriptId: string;
       mode?: 'COMBAT' | 'RACING' | 'TRAINING_SOLO';
+      aiDifficulty?: 'easy' | 'medium' | 'hard';
     },
   ) {
     return this.lobbyManager.handleJoinMatch(client, data);
@@ -207,7 +208,7 @@ export class MatchGateway
   @SubscribeMessage('createMatch')
   async handleCreateMatch(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { scriptId: string; mode?: 'CLASSIC' | 'TACTICAL' },
+    @MessageBody() data: { scriptId: string; mode?: 'CLASSIC' | 'TACTICAL'; aiDifficulty?: 'easy' | 'medium' | 'hard' },
   ) {
     return this.lobbyManager.handleCreateMatch(client, data);
   }

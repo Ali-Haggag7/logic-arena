@@ -26,13 +26,17 @@ export const useGameState = (
   matchMode?: string,
   isSpectator = false,
 ) => {
+  // aiDifficulty is read from URL search params directly since it's a user choice,
+  // not part of the core game state flow
   const searchParams = useSearchParams();
   const matchIdFromUrl = searchParams.get('matchId');
   const themeFromUrl = searchParams.get('theme') || 'CYBER';
+  const aiDifficultyFromUrl = searchParams.get('aiDifficulty') || null;
 
   // Capture parameters in refs on mount to prevent socket reconnection cascades
   const themeFromUrlRef = useRef(themeFromUrl);
   const modeRef = useRef(mode);
+  const aiDifficultyRef = useRef(aiDifficultyFromUrl);
   const scriptIdRef = useRef(scriptId);
   const isSpectatorRef = useRef(isSpectator);
 
@@ -60,6 +64,7 @@ export const useGameState = (
     draw: boolean;
     efficiencyScores: Record<string, number>;
     playerStats?: Record<string, { eloDelta: number; newStats: any; durationSecs: number; rank: number }>;
+    aiPoints?: { pointsAwarded: number; breakdown: { base: number; difficultyMultiplier: number; performance: number; performanceLabel: string } };
   } | null>(null);
   const [serverConfirmedMode, setServerConfirmedMode] = useState<string>(mode || 'COMBAT');
   const [matchPhase, setMatchPhase] = useState<MatchPhaseState>({
@@ -110,6 +115,7 @@ export const useGameState = (
           mode: modeRef.current || 'COMBAT',
           matchMode: matchMode || 'HYBRID',
           mapTheme: themeFromUrlRef.current,
+          aiDifficulty: aiDifficultyRef.current,
         });
       }
     };
@@ -271,12 +277,14 @@ export const useGameState = (
       draw: boolean;
       efficiencyScores: Record<string, number>;
       playerStats?: Record<string, any>;
+      aiPoints?: { pointsAwarded: number; breakdown: { base: number; difficultyMultiplier: number; performance: number; performanceLabel: string } };
     }) => {
       setMatchResult({
         winner: data.winner,
         draw: data.draw,
         efficiencyScores: data.efficiencyScores ?? {},
         playerStats: data.playerStats,
+        aiPoints: data.aiPoints,
       });
     };
 

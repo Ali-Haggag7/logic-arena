@@ -4,7 +4,7 @@ import { RedisService } from '../../../common/redis.service';
 import { MatchState, type ArenaMatchMode } from './match.state';
 import { AuthenticatedSocket } from './types';
 import { MatchEngine } from '../match.engine';
-import { GameMode, MapTheme } from '@logic-arena/engine';
+import { GameMode, MapTheme, AIDifficulty } from '@logic-arena/engine';
 import * as crypto from 'crypto';
 import {
   loadPlayerScriptAndLoadout,
@@ -42,6 +42,7 @@ export class MatchLobbyManager {
       mode?: GameMode;
       matchMode?: 'CLASSIC' | 'TACTICAL' | 'HYBRID';
       mapTheme?: MapTheme;
+      aiDifficulty?: AIDifficulty | null;
     },
   ) {
     if (!client.userId) {
@@ -80,6 +81,7 @@ export class MatchLobbyManager {
     }
 
     if (!match) {
+      this.state.aiDifficulty.set(data.matchId, data.aiDifficulty ?? null);
       match = await createAndStartMatch(
         this.state,
         this.server,
@@ -95,6 +97,7 @@ export class MatchLobbyManager {
         mode,
         data.matchMode || 'CLASSIC',
         data.mapTheme || 'CYBER',
+        data.aiDifficulty,
       );
     } else {
       if (this.state.lobbyMatches.has(data.matchId)) {

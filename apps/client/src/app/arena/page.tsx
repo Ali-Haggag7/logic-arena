@@ -41,6 +41,7 @@ const ArenaPageContent = () => {
   const urlScriptId = searchParams.get('scriptId');
   const urlMode = searchParams.get('mode') || 'COMBAT';
   const urlMatchMode = searchParams.get('matchMode') || 'HYBRID';
+  const urlAiDifficulty = searchParams.get('aiDifficulty');
   const isSpectator = searchParams.get('spectate') === 'true';
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const isPortrait = useMediaQuery("(orientation: portrait)");

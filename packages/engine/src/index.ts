@@ -1,5 +1,6 @@
 export * from './types';
 export * from './constants';
+export * from './ai-scripts';
 export * from './utils/animation-loop';
 export * from './core/robot-updater';
 export * from './core/game-loop';

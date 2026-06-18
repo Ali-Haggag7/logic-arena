@@ -43,12 +43,18 @@ interface PlayerStatsEntry {
   rank: string | number;
 }
 
+interface AiPointsInfo {
+  pointsAwarded: number;
+  breakdown: { base: number; difficultyMultiplier: number; performance: number; performanceLabel: string };
+}
+
 interface WinnerScreenProps {
   matchResult: {
     winner: { id: string; color: string } | null;
     draw: boolean;
     efficiencyScores: Record<string, number>;
     playerStats?: Record<string, PlayerStatsEntry>;
+    aiPoints?: AiPointsInfo;
   };
   currentUserId: string | null;
   socket: Socket;
@@ -66,7 +72,7 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const scriptId = searchParams.get('scriptId');
-  const { winner, draw, efficiencyScores, playerStats } = matchResult;
+  const { winner, draw, efficiencyScores, playerStats, aiPoints } = matchResult;
   const username = getAuthUsername() ?? 'PLAYER';
   const { isGuest } = useAuthState();
 
@@ -310,6 +316,18 @@ const WinnerScreen: React.FC<WinnerScreenProps> = ({
               </div>
               <div className={eloDeltaClass}>
                 POINTS {animatedElo >= 0 ? '+' : ''}{animatedElo}
+              </div>
+            </div>
+          )}
+
+          {/* AI match points */}
+          {matchResult.aiPoints && (
+            <div className={styles.elo}>
+              <div className="text-[10px] font-black tracking-widest text-accent/70 uppercase">
+                AI BONUS
+              </div>
+              <div className="text-lg font-black text-accent">
+                +{matchResult.aiPoints.pointsAwarded}
               </div>
             </div>
           )}

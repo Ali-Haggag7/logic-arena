@@ -1,7 +1,8 @@
 "use client";
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { GameMode } from '../hooks/useScripts';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { AIDifficulty } from "@logic-arena/engine";
+import { ChevronLeft, ChevronRight, Swords, Sparkles, X, BrainCircuit } from 'lucide-react';
 import Image from 'next/image';
 
 interface ArenaSelectorProps {
@@ -9,6 +10,7 @@ interface ArenaSelectorProps {
     setSelectedMode: (mode: GameMode) => void;
     selectedTheme: string;
     setSelectedTheme: (theme: string) => void;
+    onStartAIMatch: (mode: GameMode, difficulty: AIDifficulty) => void;
 }
 
 const MODES: { value: GameMode; label: string; description: string; image: string }[] = [
@@ -54,11 +56,33 @@ export const ArenaSelector: React.FC<ArenaSelectorProps> = ({
     selectedMode,
     setSelectedMode,
     selectedTheme,
-    setSelectedTheme
+    setSelectedTheme,
+    onStartAIMatch
 }) => {
     const modesRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
+    const [pendingMode, setPendingMode] = useState<GameMode | null>(null);
+    const [showAIDifficulty, setShowAIDifficulty] = useState(false);
+
+    const closeModal = useCallback(() => {
+        setPendingMode(null);
+        setShowAIDifficulty(false);
+    }, []);
+
+    const handlePlaySolo = useCallback(() => {
+        if (pendingMode) {
+            setSelectedMode(pendingMode);
+            closeModal();
+        }
+    }, [pendingMode, setSelectedMode, closeModal]);
+
+    const handleAIDifficulty = useCallback((difficulty: AIDifficulty) => {
+        if (pendingMode) {
+            onStartAIMatch(pendingMode, difficulty);
+            closeModal();
+        }
+    }, [pendingMode, onStartAIMatch, closeModal]);
 
     const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -179,7 +203,10 @@ export const ArenaSelector: React.FC<ArenaSelectorProps> = ({
                                 <button
                                     key={mode.value}
                                     type="button"
-                                    onClick={() => setSelectedMode(mode.value)}
+                                    onClick={() => {
+                                        setPendingMode(mode.value);
+                                        setShowAIDifficulty(false);
+                                    }}
                                     className={`relative flex-shrink-0 w-[160px] md:w-[200px] aspect-[16/10] rounded-[20px] overflow-hidden snap-start transition-all duration-300 group border text-left cursor-pointer ${
                                         isSelected 
                                         ? 'border-accent shadow-[0_0_25px_rgba(var(--accent-rgb),0.25)] scale-[1.02] bg-accent/5' 
@@ -242,6 +269,82 @@ export const ArenaSelector: React.FC<ArenaSelectorProps> = ({
                 </div>
                 
             </div>
+
+            {/* Mode Selection Modal */}
+            {pendingMode && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-primary/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={closeModal}>
+                    <div className="relative w-full max-w-sm bg-bg-secondary border border-accent/20 rounded-[24px] shadow-[0_0_60px_rgba(var(--accent-rgb),0.12)] overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                        {/* Top accent line */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-80" />
+
+                        {/* Close button */}
+                        <button type="button" aria-label="Close" onClick={closeModal} className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-bg-secondary/80 hover:bg-accent/15 text-text-secondary hover:text-accent border border-accent/10 transition-all cursor-pointer">
+                            <X size={16} />
+                        </button>
+
+                        <div className="p-6 pt-10 flex flex-col gap-5">
+                            {/* Mode Info */}
+                            <div className="flex flex-col gap-1 text-center">
+                                <h3 className="text-accent font-black text-lg tracking-[0.15em] uppercase">
+                                    {MODES.find(m => m.value === pendingMode)?.label}
+                                </h3>
+                                <p className="text-text-secondary text-[10px] font-black tracking-widest uppercase">
+                                    {MODES.find(m => m.value === pendingMode)?.description}
+                                </p>
+                            </div>
+
+                            {/* Play Solo */}
+                            <button type="button" onClick={handlePlaySolo} className="group relative flex items-center gap-3 w-full p-4 rounded-xl bg-accent/5 border border-accent/20 hover:border-accent/50 hover:bg-accent/10 transition-all text-left cursor-pointer">
+                                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-accent/25 bg-accent/5 text-accent group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.2)] transition-shadow">
+                                    <Swords size={18} />
+                                </span>
+                                <span className="flex flex-col min-w-0">
+                                    <span className="text-sm font-black tracking-[0.15em] text-text-primary uppercase">Play Solo</span>
+                                    <span className="text-[9px] text-text-secondary font-black tracking-wider uppercase">Select this game mode</span>
+                                </span>
+                            </button>
+
+                            {/* Practice vs AI */}
+                            <div className="flex flex-col gap-2">
+                                <button type="button" onClick={() => setShowAIDifficulty(v => !v)} className="group relative flex items-center gap-3 w-full p-4 rounded-xl bg-accent/5 border border-accent/20 hover:border-accent/50 hover:bg-accent/10 transition-all text-left cursor-pointer">
+                                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-accent/25 bg-accent/5 text-accent group-hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.2)] transition-shadow">
+                                        <BrainCircuit size={18} />
+                                    </span>
+                                    <span className="flex flex-col min-w-0">
+                                        <span className="text-sm font-black tracking-[0.15em] text-text-primary uppercase">Practice vs AI</span>
+                                        <span className="text-[9px] text-text-secondary font-black tracking-wider uppercase">Earn points by difficulty</span>
+                                    </span>
+                                    <Sparkles size={14} className={`ml-auto shrink-0 transition-all duration-200 ${showAIDifficulty ? 'text-accent' : 'text-text-secondary'}`} />
+                                </button>
+
+                                {/* Difficulty Picker */}
+                                {showAIDifficulty && (
+                                    <div className="flex flex-col gap-1.5 pl-2 animate-in slide-in-from-top-2 duration-150">
+                                        {([['easy', 'EASY', '1× Score'], ['medium', 'MEDIUM', '2× Score'], ['hard', 'HARD', '3× Score']] as [AIDifficulty, string, string][]).map(([value, label, multiplier]) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => handleAIDifficulty(value)}
+                                                className="flex items-center gap-3 w-full p-3 rounded-xl border border-accent/10 hover:border-accent/40 bg-transparent hover:bg-accent/5 transition-all text-left cursor-pointer"
+                                            >
+                                                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-accent/20 bg-accent/5 text-[9px] font-black text-accent uppercase tracking-widest">
+                                                    {value === 'easy' ? 'E' : value === 'medium' ? 'M' : 'H'}
+                                                </span>
+                                                <span className="flex flex-col min-w-0">
+                                                    <span className="text-xs font-black tracking-[0.15em] text-text-primary uppercase">
+                                                        {label}
+                                                    </span>
+                                                    <span className="text-[8px] text-text-secondary font-black tracking-wider">{multiplier}</span>
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };

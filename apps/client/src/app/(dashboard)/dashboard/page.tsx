@@ -23,7 +23,7 @@ export default function DashboardPage() {
         status, isLoading, selectedMode, setSelectedMode,
         selectedTheme, setSelectedTheme,
         editingScript, setEditingScript, isGuest, showAuthModal, setShowAuthModal,
-        handleCreateScript, handleGoToArena, handleGoToLobby, handleEditScript,
+        handleCreateScript, handleGoToArena, handleGoToArenaAI, handleGoToLobby, handleEditScript,
         handleOptimisticUpdate, handleChangeScriptMode, handleRevert, handleDeleteScript
     } = useScripts();
 
@@ -106,6 +106,7 @@ export default function DashboardPage() {
                             setSelectedMode={setSelectedMode}
                             selectedTheme={selectedTheme}
                             setSelectedTheme={setSelectedTheme}
+                            onStartAIMatch={handleGoToArenaAI}
                         />
                     </div>
 
