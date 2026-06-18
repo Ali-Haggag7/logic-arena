@@ -2583,3 +2583,51 @@ A sprawling release that transforms Logic Arena from a game into a world. The he
 
 * Logic Arena's arena is now a living, cinematic world: every map has its own 3D ecosystem of assets, procedural ambient sounds, and discoverable Easter Eggs. Movement is 120 FPS smooth on all devices via the interpolation architecture. Rapid arena switching is permanently clean — no ghost robots, no stale themes, no silent script failures. The spatial audio engine synthesizes a fully immersive soundscape from Web Audio primitives with proper 3D distance falloff and zero MP3 dependencies. The leaderboard scales to any user count via server-side pagination. Mobile performance is stable with VDOM thrashing and GC storms eliminated.
 * **Ready for:** Fog of War, University Competition launch, and full multiplayer stress testing.
+
+## [3.6.0] - The Battle-Hardened Engine — Workspace Resolution, Scale Unification & Memory Stabilization — 2026-06-18
+
+A major structural and performance hardening release focused on workspace parity, runtime memory leaks, structural asset degradation, and build lifecycle orchestration. This update resolves severe production bottlenecks, specifically focusing on multi-layered state leakages in the `InterpolationBuffer` causing ghostly visual artifacts, texture cache self-destruction over rapid arena reconnect cycles, and environment container mismatch issues during soft navigation. At the architectural boundary, it synchronizes the local development environment with the production Docker build orchestration layer.
+
+---
+
+### New Features
+
+* **Server-Side Campaign Pause & Dynamic Timestamp Shifting:**
+  Implemented a robust, authoritative campaign pause-and-resume engine via a new server-side session map (`CampaignSession`) tracking active interval references, logic counters, and precise simulation states. While paused, all core game loops return immediately to freeze logic advancement. To guarantee flawless timing consistency upon resume, an incremental timestamp-shifting pipeline walks the active match engine state, moving all absolute `Date.now()`-backed entities—including `Robot.hitWallTimestamp`, `Robot.shieldHitTimestamp`, and `Obstacle.createdAt` (for active mines)—forward by the exact paused duration. This isolates campaign combat math from elapsed pause time and preserves long-term correctness for wall-bound sensors and explosive arming cycles.
+
+* **Compact Absolute Canvas Overlay & Adaptive Replay Scrubber:**
+  Rebuilt the match replay panel into a highly compact, non-intrusive absolute-positioned overlay anchored securely to the canvas viewport bottom. This layout adjustment returns the 3D rendering workspace to its full aspect-ratio dimensions without layout shifting or structural shrinking. The control bar features an adaptive layout configuration where the playback scrubber utilizes `min-w-0 flex-1 basis-0` to scale dynamically down on smaller screen bounds, while the speed-cycle button preserves a strict `w-[38px] shrink-0` layout footprint—completely eliminating structural clipping and ensuring speed tiers remain fully legible across all viewport adjustments.
+
+* **Modularization of Shared Workspace Core Layers:**
+  Conducted a thorough structural refactor of monolithic systems into highly cohesive, multi-file domain sub-modules. The server-side match engine was decoupled by extracting environment hazards (Lava, Ice, Cyber EMP) into a dedicated `MatchHazards` processor, and moving combat variant logic (KOTH fortresses, CTF flags, Survival configurations) into a standalone `MatchModeManager`. On the client, the landing infrastructure, procedural planet calculations, canvas asset noise loops, and 3D environment synthesis routines were extracted into granular hooks and constants blocks—yielding a thin, maintainable component orchestration structure.
+
+---
+
+### Technical Scars and Resolutions
+
+* **Issue — "The Ghost Robot Infestation" (InterpolationBuffer Retention & Arena Identity Race):**
+  Rapidly leaving a live match and entering a different arena theme triggered a severe state overlap. Robots from the previous match would persist as invisible ghosts (executing speech bubbles and scripts but missing mesh assets), and consecutive shifts completely broke local console evaluation. The root cause was three-fold: the module-level `InterpolationBuffer` singleton never flushed historical snapshots between sessions, causing new matches to calculate positions from stale coordinates; the `selectedRobotId` and `socketUserId` tracking refs inside `useGameState` retained stale `guest_<socketId>` strings that the server rejected because the socket was reassigned a new ID on navigation; and Next.js soft navigation unmounted the arena before the `leaveMatch` socket event could clear the engine loop, triggering a cleanup race condition.
+
+  **Resolution:** Added an authoritative `clear()` cleanup method to the `InterpolationBuffer` triggered on both mounting and unmounting hooks to purge stale snapshots prior to session setup. Rewrote the core `useGameState` block to completely re-initialize structural tracking states, and updated `handleAuthenticated` to unconditionally bind identities to the active socket's `userId`. Replaced all standard `<Link>` navigation blocks with rigid `router.push()` routines that ensure `leaveMatch` signals reach the server before Next.js unmounts the component graph, passing the precise client-side match UUID down to all desktop and mobile layout controls.
+
+* **Issue — "The Texture Destruction Freeze" (WebGL Disposals Evaporating Shared GLTF Caches):**
+  Reconnecting to a match or cycling map settings repeatedly crashed the WebGL canvas context or caused robot models to become completely invisible. Profiling revealed that the unmounting cleanup hooks inside the scene graph wrapper were explicitly calling `.dispose()` on all materials and textures attached to the unmounting robot. Because these shared GLB assets were handled and cached globally by `useGLTF`, manually tearing down their textures corrupted the shared memory cache. Subsequent model instantiations fetched raw, broken material descriptors from the cache, stalling the GLTF loader and forcing invisible renders.
+
+  **Resolution:** Removed all manual material and texture `.dispose()` calls from the `RobotModel` unmount lifecycle, allowing the global asset manager to cleanly handle shared texture lifetimes. To resolve the accompanying WebGL unmount crashes, the direct parent-node DOM manipulations inside the scene graph traversal loops were replaced with a clean React `key` abstraction driven by a cloned scene UUID (`clonedScene.uuid`), delegating the unmounting logic safely to React Three Fiber's standard scene graph tree clearance. Defensive validation guards were added to all traversal paths to intercept null materials before they could trigger evaluation exceptions.
+
+* **Issue — "The Map Theme Contamination" (Stale Context State Overriding URL Search Params):**
+  After concluding a match, navigating to a different map theme and jumping into a new level would render correct level obstacles but apply the wrong visual layout (e.g., loading Magma Core obstacles inside a Neo-Cyber grid layout). This happened because the core wrapper was evaluating the active theme using `uiState?.mapTheme || searchParams.get('theme')`. Because `uiState` was never cleared on match termination, the stale theme value from the old match's final `gameState` event remained truthy and overrode the new URL search parameter on soft navigation.
+
+  **Resolution:** Integrated explicit theme resetting inside the `useGameState` cleanup hook, forcing `uiState.mapTheme` back to `undefined` on unmount. Concurrently, modified the structural `Scene3D` canvas wrapper `key` prop to derive its state exclusively from the raw URL search parameter (`searchParams.get('theme')`), completely short-circuiting the double-remount cycle and forcing immediate alignment between the visual background and active engine layouts.
+
+* **Issue — "The Broken Docker Container Assembly" (Mismatched Build Pipelines & Extends Paths):**
+  Production Docker deployments failed with a critical resolution crash: `"Cannot find module '@logic-arena/engine/constants' or its corresponding type declarations"`. This occurred despite local building passing flawlessly. The investigation revealed that the monorepo's local environment used implicit pnpm link symlinks that resolved path scopes to source layouts, whereas the clean production Docker build layer lacked those artifacts. Furthermore, the multi-stage Dockerfile was orchestrating the `server` build *before* triggering the core shared workspace compilation steps, and it omitted copying the root `tsconfig.json` which the server's local configuration directly extended.
+
+  **Resolution:** Rebuilt the `apps/server/Dockerfile` assembly to cleanly enforce dependencies by running `pnpm --filter @logic-arena/logic-parser run build` and `pnpm --filter @logic-arena/engine run build` sequentially before the server layer triggers compiling. Added explicit multi-stage copy instructions to forward the compiled `dist/` targets into runtime space, and mapped explicit wildcard aliases inside `apps/server/tsconfig.json` (`"@logic-arena/engine/*": ["../../packages/engine/src/*"]`) to synchronize subpath tracking. Finally, updated the Docker file-copy manifest to include the root `tsconfig.json` block so configuration extensions resolve across environment partitions.
+
+---
+
+### Current Status
+
+* Logic Arena's build and runtime pipelines are structurally hardened. The server-authoritative campaign pause-and-resume engine cleanly recalculates entity time vectors on the fly, and the absolute canvas overlay layout completely removes display footprint regressions during review. WebGL cache destruction loops and layout contamination parameters have been neutralized, solidifying a stable 120 FPS lifecycle over consecutive room switching. Production container compiling achieves complete parity with local workspace layouts through structured Docker building sequence modifications and rigid tsconfig subpath routing.
+* **Ready for:** Fog of War layer development, multiplayer stress testing, and official University Competition initialization.
