@@ -77,8 +77,11 @@ export const ALISCRIPT_FEATURES = [
 export const ROBOTS = [
   { name: "UNIT-01", img: "/thumbnails/chassis-unit-01.png", desc: "Balanced all-rounder. Excellent starting model." },
   { name: "UNIT-02", img: "/thumbnails/chassis-unit-02.png", desc: "Agile scout. High mobility and rapid targeting." },
-  { name: "TITAN", img: "/thumbnails/chassis-titan.png", desc: "Heavy armor. Built for taking massive damage." },
+  { name: "ARMORED MECH", img: "/thumbnails/chassis-titan.png", desc: "Heavy armor. Built for taking massive damage." },
   { name: "SANDMAN", img: "/thumbnails/chassis-sandman.png", desc: "Advanced tactical mech with extreme firepower." },
+  { name: "IRON MECHA", img: "/thumbnails/chassis-iron-mecha.png", desc: "Rugged iron-clad mech built for heavy frontline skirmishes." },
+  { name: "SENTINEL", img: "/thumbnails/chassis-sentinel.png", desc: "Advanced security warden engineered for scanning and defense." },
+  { name: "CRIMSON TITAN", img: "/thumbnails/chassis-crimson-titan.png", desc: "Devastating warmachine forged in reinforced crimson plating." },
 ] as const;
 
 export const PLATFORM_FEATURES = [
