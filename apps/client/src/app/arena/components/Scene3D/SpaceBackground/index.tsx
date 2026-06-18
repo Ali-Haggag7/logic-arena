@@ -28,7 +28,7 @@ const BackgroundProceduralPlanets = ({ mapTheme }: BackgroundProceduralPlanetsPr
     // 3 static backdrop planets
     return [
       {
-        pos: [-1250, 320, -1150] as [number, number, number],
+        pos: [0, 240, -1150] as [number, number, number],
         scale: 75,
         type: "gas" as const,
         color1: new Color("#a855f7"),
@@ -85,7 +85,7 @@ const ActiveProceduralPlanets = ({ mapTheme }: ActiveProceduralPlanetsProps) => 
     return [
       // --- Mid-ground ---
       {
-        pos: [-600, 200, -700] as [number, number, number],
+        pos: [550, 180, -600] as [number, number, number],
         scale: 45,
         type: "desert" as const,
         color1: new Color("#eab308"),
@@ -94,7 +94,7 @@ const ActiveProceduralPlanets = ({ mapTheme }: ActiveProceduralPlanetsProps) => 
         audioName: "desert" as const,
       },
       {
-        pos: [700, -250, 500] as [number, number, number],
+        pos: [700, -180, -450] as [number, number, number],
         scale: 40,
         type: "terrestrial" as const,
         color1: new Color("#10b981"),
@@ -106,7 +106,7 @@ const ActiveProceduralPlanets = ({ mapTheme }: ActiveProceduralPlanetsProps) => 
       },
       // --- Foreground (closer to arena, with sound!) ---
       {
-        pos: [-280, 150, -250] as [number, number, number],
+        pos: [-500, 160, -500] as [number, number, number],
         scale: 24,
         type: "lava" as const,
         color1: new Color("#f97316"),
@@ -116,7 +116,7 @@ const ActiveProceduralPlanets = ({ mapTheme }: ActiveProceduralPlanetsProps) => 
         audioName: "lava" as const,
       },
       {
-        pos: [420, 180, -350] as [number, number, number],
+        pos: [-400, -60, -400] as [number, number, number],
         scale: 22,
         type: "plasma" as const,
         color1: new Color("#ec4899"),

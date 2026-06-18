@@ -28,12 +28,37 @@ const DISK_FRAG = `
   uniform float minR;
   uniform float maxR;
   uniform float mult;
+  uniform float uLensing;
   varying vec2 vPos;
+
   void main() {
     float dist = length(vPos);
-    float t = clamp((dist - minR) / (maxR - minR), 0.0, 1.0);
-    float alpha = pow(1.0 - t, 2.0) * mult;
+    float theta = atan(vPos.y, vPos.x);
+
+    if (dist < minR || dist > maxR) {
+      discard;
+    }
+    
+    float t = (dist - minR) / (maxR - minR);
+    
+    // Smooth exponential decay for a soft, smoky blending zone
+    float alpha = pow(1.0 - t, 2.5) * mult;
+    
+    // Apply brightness distribution for the lensing halo
+    if (uLensing > 0.5) {
+      float verticalGlow = sin(theta);
+      float brightness = 1.0;
+      if (vPos.y > 0.0) {
+        brightness = mix(0.7, 1.4, verticalGlow); // Luminous upper arc
+      } else {
+        brightness = mix(0.7, 0.35, -verticalGlow); // Dimmer mirrored lower arc
+      }
+      alpha *= brightness;
+    }
+
+    // Smooth blending from hot white-gold to soft cream-gold
     vec3 color = mix(colorIn, colorOut, t);
+    
     gl_FragColor = vec4(color, alpha);
   }
 `;
@@ -43,16 +68,37 @@ interface GlowingDiskProps {
   maxRadius: number;
   opacityMultiplier?: number;
   rot?: [number, number, number];
+  colorIn?: Vector3;
+  colorOut?: Vector3;
+  isLensing?: boolean;
 }
 
-const GlowingDisk = ({ minRadius, maxRadius, opacityMultiplier = 1, rot = [0, 0, 0] }: GlowingDiskProps) => {
+const GlowingDisk = ({
+  minRadius,
+  maxRadius,
+  opacityMultiplier = 1,
+  rot = [0, 0, 0],
+  colorIn = new Vector3(1.0, 0.99, 0.94),
+  colorOut = new Vector3(0.95, 0.70, 0.35),
+  isLensing = false
+}: GlowingDiskProps) => {
   const uniforms = useRef({
-    colorIn: { value: new Vector3(1.0, 0.8, 0.2) }, // Golden/White core
-    colorOut: { value: new Vector3(0.4, 0.0, 0.2) }, // Deep purple edge
+    colorIn: { value: colorIn },
+    colorOut: { value: colorOut },
     minR: { value: minRadius },
     maxR: { value: maxRadius },
-    mult: { value: opacityMultiplier }
+    mult: { value: opacityMultiplier },
+    uLensing: { value: isLensing ? 1.0 : 0.0 }
   });
+
+  useLayoutEffect(() => {
+    uniforms.current.colorIn.value = colorIn;
+    uniforms.current.colorOut.value = colorOut;
+    uniforms.current.minR.value = minRadius;
+    uniforms.current.maxR.value = maxRadius;
+    uniforms.current.mult.value = opacityMultiplier;
+    uniforms.current.uLensing.value = isLensing ? 1.0 : 0.0;
+  }, [colorIn, colorOut, minRadius, maxRadius, opacityMultiplier, isLensing]);
 
   return (
     <mesh rotation={rot}>
@@ -81,20 +127,28 @@ export const BlackHole = ({ position, scale = 1 }: BlackHoleProps) => {
   const debrisMeshRef = useRef<InstancedMesh>(null);
   const _dummy = useMemo(() => new Object3D(), []);
 
-  const debrisData = useMemo(() => [...Array(count)].map(() => ({
-    pos: new Vector3(
-      (Math.random() - 0.5) * 150,
-      (Math.random() - 0.5) * 40,
-      (Math.random() - 0.5) * 150
-    ),
-    resetPos: new Vector3(
-      (Math.random() - 0.5) * 150,
-      (Math.random() - 0.5) * 40,
-      (Math.random() - 0.5) * 150
-    ),
-    color: new Color(Math.random() > 0.5 ? "#ff8800" : "#ff00ff"),
-    scale: 0.5 + Math.random() * 1.5
-  })), []);
+  const debrisData = useMemo(() => [...Array(count)].map(() => {
+    const rand = Math.random();
+    const colorVal = rand > 0.6 
+      ? "#ffffff" // white hot
+      : rand > 0.3 
+        ? "#ffd488" // soft cream-gold
+        : "#442205"; // dark warm dust
+    return {
+      pos: new Vector3(
+        (Math.random() - 0.5) * 150,
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 150
+      ),
+      resetPos: new Vector3(
+        (Math.random() - 0.5) * 150,
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 150
+      ),
+      color: new Color(colorVal),
+      scale: 0.25 + Math.random() * 0.8
+    };
+  }), []);
 
   useLayoutEffect(() => {
     if (!debrisMeshRef.current) return;
@@ -134,34 +188,49 @@ export const BlackHole = ({ position, scale = 1 }: BlackHoleProps) => {
     <group position={position} scale={scale}>
       {/* Event Horizon (Pure Black Sphere) */}
       <mesh renderOrder={0}>
-        <sphereGeometry args={[15, 16, 16]} />
+        <sphereGeometry args={[15, 64, 64]} />
         <meshBasicMaterial color="#000000" />
       </mesh>
       
       {/* Gravitational Lensing Halo (Billboarded to frame the black hole from any camera angle) */}
       <Billboard>
-        <GlowingDisk minRadius={15} maxRadius={35} opacityMultiplier={0.8} />
+        {/* Inner Lensing Ring (Photon Ring with primary/secondary Gravitational Lensing warp) */}
+        <GlowingDisk
+          minRadius={15}
+          maxRadius={32}
+          opacityMultiplier={0.85}
+          colorIn={new Vector3(1.0, 1.0, 0.98)}
+          colorOut={new Vector3(0.85, 0.55, 0.18)}
+          isLensing={true}
+        />
       </Billboard>
 
       {/* Main Equatorial Accretion Disk (Slightly tilted) */}
       <group ref={ringsRef} rotation={[0.2, 0, -0.1]}>
-        {/* Core Volumetric Blazing Rings */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[16.5, 1.5, 16, 100]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.8} blending={AdditiveBlending} depthWrite={false} />
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[19, 2.5, 16, 100]} />
-          <meshBasicMaterial color="#ffaa00" transparent opacity={0.4} blending={AdditiveBlending} depthWrite={false} />
-        </mesh>
-        {/* Smooth Extended Gradient Disk */}
-        <GlowingDisk minRadius={15.5} maxRadius={65} opacityMultiplier={1.0} rot={[-Math.PI / 2, 0, 0]} />
+        {/* Inner Bright White-Gold Ring (Photon Ring - thick & saturated across the center) */}
+        <GlowingDisk
+          minRadius={15.0}
+          maxRadius={32.0}
+          opacityMultiplier={0.95}
+          rot={[-Math.PI / 2, 0, 0]}
+          colorIn={new Vector3(1.0, 1.0, 1.0)}
+          colorOut={new Vector3(1.0, 0.88, 0.55)}
+        />
+        {/* Wide Soft Accretion Disk */}
+        <GlowingDisk
+          minRadius={15.5}
+          maxRadius={50.0}
+          opacityMultiplier={0.8}
+          rot={[-Math.PI / 2, 0, 0]}
+          colorIn={new Vector3(1.0, 0.92, 0.70)}
+          colorOut={new Vector3(0.40, 0.15, 0.01)}
+        />
       </group>
 
       {/* Matter/Debris getting sucked in */}
       <instancedMesh ref={debrisMeshRef} args={[undefined as unknown as BufferGeometry, undefined as unknown as Material, count]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial transparent opacity={0.8} blending={AdditiveBlending} depthWrite={false} />
+        <boxGeometry args={[0.4, 0.4, 0.4]} />
+        <meshBasicMaterial transparent opacity={0.5} blending={AdditiveBlending} depthWrite={false} />
       </instancedMesh>
     </group>
   );

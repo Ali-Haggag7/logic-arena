@@ -106,7 +106,7 @@ export const usePlanetAudio = (
         lfoGain.connect(osc.frequency);
         
         const humGain = ctx.createGain();
-        humGain.gain.value = 0.05;
+        humGain.gain.value = 0.015;
 
         osc.connect(humGain);
         humGain.connect(gainNode);
@@ -135,7 +135,7 @@ export const usePlanetAudio = (
         crackleGain.gain.value = 0;
 
         const lfoDepth = ctx.createGain();
-        lfoDepth.gain.value = 0.015;
+        lfoDepth.gain.value = 0.005;
 
         crackleLfo.connect(lfoDepth.gain);
         noise.connect(hpFilter);
@@ -146,7 +146,7 @@ export const usePlanetAudio = (
         const swellLfo = ctx.createOscillator();
         swellLfo.frequency.setValueAtTime(0.12, ctx.currentTime);
         const swellGain = ctx.createGain();
-        swellGain.gain.value = 0.012;
+        swellGain.gain.value = 0.004;
 
         swellLfo.connect(swellGain.gain);
         hpFilter.connect(swellGain);
