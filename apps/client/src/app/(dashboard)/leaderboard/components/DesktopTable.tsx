@@ -21,10 +21,10 @@ export function DesktopTable({
 }: LeaderboardViewProps) {
   return (
     <div
-      className="bg-card/60 backdrop-blur-xl border border-accent/10 rounded-xl overflow-hidden"
+      className="bg-card/60 backdrop-blur-xl border border-accent/10 rounded-xl"
       style={{ boxShadow: "var(--card-shadow)" }}
     >
-      <div className="overflow-x-auto no-scrollbar">
+      <div className="relative">
         <table className="w-full text-left border-collapse table-fixed">
           <thead>
             <tr className="border-b border-accent/10 bg-accent/5">

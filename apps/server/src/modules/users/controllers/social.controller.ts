@@ -66,54 +66,57 @@ export class SocialController {
 
     // ── Redis ranked-set path (O(log N) by rank) ────────────────────────────
     if (this.redis.healthy) {
-      // ZREVRANGE with WITHSCORES — [id, score, id, score, …]
-      const raw = await this.redis
-        .getClient()
-        .zrevrange(leaderboardRankKey, offset, offset + limit - 1, 'WITHSCORES');
+      const total = await this.redis.getClient().zcard(leaderboardRankKey);
+      const dbCount = await this.prisma.user.count();
 
-      const ids = raw.filter((_, i) => i % 2 === 0);
+      // Only use the Redis ranked set if it is fully populated and in sync with the DB
+      if (total > 0 && total === dbCount) {
+        // ZREVRANGE with WITHSCORES — [id, score, id, score, …]
+        const raw = await this.redis
+          .getClient()
+          .zrevrange(leaderboardRankKey, offset, offset + limit - 1, 'WITHSCORES');
 
-      if (ids.length > 0) {
-        // Total entries in the sorted set for pagination metadata
-        const total = await this.redis.getClient().zcard(leaderboardRankKey);
+        const ids = raw.filter((_, i) => i % 2 === 0);
 
-        const users = await this.prisma.user.findMany({
-          where: { id: { in: ids } },
-          select: {
-            id: true,
-            username: true,
-            rank: true,
-            combatStats: true,
-            _count: { select: { wonMatches: true } },
-            achievements: {
-              select: { achievementId: true, unlockedLevel: true },
+        if (ids.length > 0) {
+          const users = await this.prisma.user.findMany({
+            where: { id: { in: ids } },
+            select: {
+              id: true,
+              username: true,
+              rank: true,
+              combatStats: true,
+              _count: { select: { wonMatches: true } },
+              achievements: {
+                select: { achievementId: true, unlockedLevel: true },
+              },
             },
-          },
-        });
+          });
 
-        const byId = new Map(users.map((u) => [u.id, u]));
-        const presenceKeys = ids.map((id) => `user:online:${id}`);
-        const presenceValues = await this.redis.getClient().mget(...presenceKeys);
+          const byId = new Map(users.map((u) => [u.id, u]));
+          const presenceKeys = ids.map((id) => `user:online:${id}`);
+          const presenceValues = await this.redis.getClient().mget(...presenceKeys);
 
-        const data = ids
-          .map((id, i) => {
-            const user = byId.get(id);
-            if (!user) return null;
-            const isOnline = presenceValues[i] !== null && presenceValues[i] !== undefined;
-            return this.toEntry(user, isOnline);
-          })
-          .filter((entry): entry is LeaderboardEntry => entry !== null);
+          const data = ids
+            .map((id, i) => {
+              const user = byId.get(id);
+              if (!user) return null;
+              const isOnline = presenceValues[i] !== null && presenceValues[i] !== undefined;
+              return this.toEntry(user, isOnline);
+            })
+            .filter((entry): entry is LeaderboardEntry => entry !== null);
 
-        if (data.length > 0) {
-          const response: LeaderboardPageResponse = {
-            data,
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-          };
-          await this.redis.set(cacheKey, response, LEADERBOARD_TTL);
-          return response;
+          if (data.length > 0) {
+            const response: LeaderboardPageResponse = {
+              data,
+              total,
+              page,
+              limit,
+              totalPages: Math.ceil(total / limit),
+            };
+            await this.redis.set(cacheKey, response, LEADERBOARD_TTL);
+            return response;
+          }
         }
       }
     }
@@ -156,7 +159,22 @@ export class SocialController {
       totalPages: Math.ceil(total / limit),
     };
 
-    await this.redis.set(cacheKey, response, LEADERBOARD_TTL);
+    if (this.redis.healthy) {
+      // Rebuild the sorted set in Redis from all database users to self-heal
+      const allUsers = await this.prisma.user.findMany({
+        select: { id: true, rank: true },
+      });
+      if (allUsers.length > 0) {
+        const pipeline = this.redis.getClient().pipeline();
+        pipeline.del(leaderboardRankKey);
+        for (const u of allUsers) {
+          pipeline.zadd(leaderboardRankKey, String(u.rank), u.id);
+        }
+        await pipeline.exec();
+      }
+      await this.redis.set(cacheKey, response, LEADERBOARD_TTL);
+    }
+
     return response;
   }
 
