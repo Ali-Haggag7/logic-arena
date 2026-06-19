@@ -16,7 +16,6 @@ import { QueryFunctionsSection } from './components/QueryFunctionsSection';
 import { IdentifierReferenceSection } from './components/IdentifierReferenceSection';
 import { AdvancedLanguageFeaturesSection } from './components/AdvancedLanguageFeaturesSection';
 import { DocsSectionNav } from './components/DocsSectionNav';
-import { AiTutor } from '@/components/AiTutor';
 import './docs.css';
 
 export default function DocsPage() {
@@ -115,8 +114,6 @@ export default function DocsPage() {
           />
         </div>
       </div>
-
-      <AiTutor isMobile={isMobile} />
     </div>
   );
 }
